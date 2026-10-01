@@ -1,0 +1,499 @@
+{
+  "k": 5,
+  "hit_rate": 0.96,
+  "hits": 24,
+  "queries": 25,
+  "by_category": {
+    "travel": {
+      "hits": 5,
+      "total": 5
+    },
+    "health": {
+      "hits": 5,
+      "total": 5
+    },
+    "how-to": {
+      "hits": 4,
+      "total": 5
+    },
+    "explain": {
+      "hits": 5,
+      "total": 5
+    },
+    "compare": {
+      "hits": 3,
+      "total": 3
+    },
+    "multi-step": {
+      "hits": 2,
+      "total": 2
+    }
+  },
+  "median_search_ms": 261.95909999842115,
+  "max_search_ms": 3157.8079000009893,
+  "results": [
+    {
+      "id": 101,
+      "category": "travel",
+      "question": "What currency is used in Thailand and can I pay by card?",
+      "fts_query": "\"currency\" AND \"thailand\" AND \"pay\" AND \"card\"",
+      "expected": [
+        "Thailand",
+        "Thai baht"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Thailand #53",
+        "wikipedia: 2C2P #0",
+        "wikivoyage: Money #44",
+        "wikipedia: Apple Pay #8",
+        "wikipedia: Coins (suit) #3"
+      ]
+    },
+    {
+      "id": 102,
+      "category": "travel",
+      "question": "How do I get around Venice?",
+      "fts_query": "\"around\" AND \"venice\"",
+      "expected": [
+        "Venice"
+      ],
+      "hit_rank": 3,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Transportation #0",
+        "wikipedia: Venetian Lagoon #0",
+        "wikipedia: Venice #12",
+        "wikivoyage: Venice #18",
+        "wikipedia: Little Venice #0"
+      ]
+    },
+    {
+      "id": 103,
+      "category": "travel",
+      "question": "What should I know before visiting Machu Picchu?",
+      "fts_query": "\"visiting\" AND \"machu\" AND \"picchu\"",
+      "expected": [
+        "Machu Picchu"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Machu Picchu #7",
+        "wikivoyage: Machu Picchu #15",
+        "wikivoyage: Inca Trail #3",
+        "wikipedia: Watching (TV series) #0",
+        "wikipedia: Machu Picchu #15"
+      ]
+    },
+    {
+      "id": 104,
+      "category": "travel",
+      "question": "Is it safe to travel in Egypt?",
+      "fts_query": "\"safe\" AND \"travel\" AND \"egypt\"",
+      "expected": [
+        "Egypt"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Egypt #60",
+        "wikipedia: Safed Sanjak #5",
+        "wikipedia: Egypt #94",
+        "wikivoyage: Ancient Egypt #15",
+        "wikipedia: Egypt–United States relations #7"
+      ]
+    },
+    {
+      "id": 105,
+      "category": "travel",
+      "question": "What is jet lag and how can I reduce it?",
+      "fts_query": "\"jet\" AND \"lag\" AND \"reduce\"",
+      "expected": [
+        "Jet lag"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Jet lag #12",
+        "wikivoyage: Jet lag #1",
+        "wikipedia: Reduce (computer algebra system) #0",
+        "wikipedia: Jet lag #2",
+        "wikivoyage: Tobacco #6"
+      ]
+    },
+    {
+      "id": 106,
+      "category": "health",
+      "question": "What are the symptoms of heat stroke?",
+      "fts_query": "\"symptoms\" AND \"heat\" AND \"stroke\"",
+      "expected": [
+        "Heat stroke"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Heat illness #0",
+        "wikipedia: Heat stroke #3",
+        "wikivoyage: Tucson #40",
+        "wikivoyage: Hot weather #0",
+        "wikipedia: Signs and symptoms #6"
+      ]
+    },
+    {
+      "id": 107,
+      "category": "health",
+      "question": "How do I treat a bee sting?",
+      "fts_query": "\"treat\" AND \"bee\" AND \"sting\"",
+      "expected": [
+        "Bee sting"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Bee sting #3",
+        "wikipedia: Bee sting #0",
+        "wikivoyage: Pests #8",
+        "wikivoyage: Southwest (United States) #18",
+        "wikipedia: Apitherapy #0"
+      ]
+    },
+    {
+      "id": 108,
+      "category": "health",
+      "question": "What should I do for a nosebleed?",
+      "fts_query": "\"nosebleed\"",
+      "expected": [
+        "Nosebleed"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Nosebleed #7",
+        "wikipedia: Nosebleed section #0",
+        "wikipedia: Nosebleed #4",
+        "wikivoyage: Vienna/Innere Stadt #25",
+        "wikipedia: The Nosebleeds #0"
+      ]
+    },
+    {
+      "id": 109,
+      "category": "health",
+      "question": "What are the signs of a concussion?",
+      "fts_query": "\"signs\" AND \"concussion\"",
+      "expected": [
+        "Concussion"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Concussion #0",
+        "wikipedia: Concussions in rugby union #3",
+        "wikipedia: Grenade #0",
+        "wikivoyage: Balıkesir #6",
+        "wikivoyage: Signs #0"
+      ]
+    },
+    {
+      "id": 110,
+      "category": "health",
+      "question": "How do you treat frostbite?",
+      "fts_query": "\"treat\" AND \"frostbite\"",
+      "expected": [
+        "Frostbite"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Frostbite #4",
+        "wikivoyage: Cold weather #0",
+        "wikivoyage: Svalbard #13",
+        "wikipedia: Frostbite #5",
+        "wikivoyage: Cold weather #21"
+      ]
+    },
+    {
+      "id": 111,
+      "category": "how-to",
+      "question": "How do I read a topographic map?",
+      "fts_query": "\"read\" AND \"topographic\" AND \"map\"",
+      "expected": [
+        "Topographic map",
+        "Contour line"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Topographic map #3",
+        "wikivoyage: Maps #6",
+        "wikivoyage: E11 hiking trail #4",
+        "wikipedia: Read (system call) #0",
+        "wikipedia: Topographical disorientation #3"
+      ]
+    },
+    {
+      "id": 112,
+      "category": "how-to",
+      "question": "How do I build a snow shelter?",
+      "fts_query": "\"build\" AND \"snow\" AND \"shelter\"",
+      "expected": [
+        "Quinzhee",
+        "Snow cave",
+        "Igloo"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Shelter #0",
+        "wikipedia: Igloo #0",
+        "wikipedia: Snow #20",
+        "wikivoyage: Cold weather #19",
+        "wikipedia: SNOW #0"
+      ]
+    },
+    {
+      "id": 113,
+      "category": "how-to",
+      "question": "How do I sharpen a knife?",
+      "fts_query": "\"sharpen\" AND \"knife\"",
+      "expected": [
+        "Knife sharpening",
+        "Sharpening"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Sharpening #5",
+        "wikipedia: Knife sharpening #0",
+        "wikipedia: Knife #12",
+        "wikivoyage: Grampians National Park #3",
+        "wikivoyage: Knives #0"
+      ]
+    },
+    {
+      "id": 114,
+      "category": "how-to",
+      "question": "How does a tourniquet stop bleeding?",
+      "fts_query": "\"tourniquet\" AND \"stop\" AND \"bleeding\"",
+      "expected": [
+        "Tourniquet"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Tourniquet #0",
+        "wikipedia: Emergency tourniquet #0",
+        "wikipedia: Bleeding #6",
+        "wikivoyage: War zone safety #13",
+        "wikipedia: Stoppit and Tidyup #0"
+      ]
+    },
+    {
+      "id": 115,
+      "category": "how-to",
+      "question": "How do I signal for help in the wilderness?",
+      "fts_query": "\"signal\" AND \"help\" AND \"wilderness\"",
+      "expected": [
+        "Distress signal",
+        "Signal mirror"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Signal for Help #0",
+        "wikipedia: Distress hand signal #2",
+        "wikipedia: Wilderness #13",
+        "wikivoyage: Käsivarsi Wilderness Area #15",
+        "wikivoyage: Wilderness #0"
+      ]
+    },
+    {
+      "id": 116,
+      "category": "explain",
+      "question": "How does a microwave oven heat food?",
+      "fts_query": "\"microwave\" AND \"oven\" AND \"heat\" AND \"food\"",
+      "expected": [
+        "Microwave oven"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Microwave oven #0",
+        "wikipedia: Pungency #0",
+        "wikivoyage: Food and drink #0",
+        "wikipedia: Microwave oven #18",
+        "wikivoyage: Hot weather #6"
+      ]
+    },
+    {
+      "id": 117,
+      "category": "explain",
+      "question": "What causes lightning?",
+      "fts_query": "\"causes\" AND \"lightning\"",
+      "expected": [
+        "Lightning"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Lightning #0",
+        "wikipedia: Lightning injury #2",
+        "wikivoyage: Thunderstorms #0",
+        "wikivoyage: Mount Whitney #7",
+        "wikipedia: No One Ever Really Dies #0"
+      ]
+    },
+    {
+      "id": 118,
+      "category": "explain",
+      "question": "How do solar panels generate electricity?",
+      "fts_query": "\"solar\" AND \"panels\" AND \"generate\" AND \"electricity\"",
+      "expected": [
+        "Solar panel",
+        "Photovoltaics",
+        "Solar cell"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Solar panel #2",
+        "wikipedia: Solar power #0",
+        "wikipedia: Electricity #19",
+        "wikivoyage: Sabtang #3",
+        "wikivoyage: Electrical systems #26"
+      ]
+    },
+    {
+      "id": 119,
+      "category": "explain",
+      "question": "Why do we have seasons?",
+      "fts_query": "\"seasons\"",
+      "expected": [
+        "Season"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Season #0",
+        "wikipedia: Outline of basketball #24",
+        "wikipedia: Season #16",
+        "wikivoyage: Dubrovnik #2",
+        "wikipedia: 1997–98 Burnley F.C. season #0"
+      ]
+    },
+    {
+      "id": 120,
+      "category": "explain",
+      "question": "How does the immune system fight infection?",
+      "fts_query": "\"immune\" AND \"system\" AND \"fight\" AND \"infection\"",
+      "expected": [
+        "Immune system"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Immune system #14",
+        "wikipedia: Therapeutic vaccines #0",
+        "wikipedia: Infection #23",
+        "wikivoyage: Dengue fever #2",
+        "wikipedia: Combat #0"
+      ]
+    },
+    {
+      "id": 121,
+      "category": "compare",
+      "question": "What is the difference between a hurricane and a typhoon?",
+      "fts_query": "\"hurricane\" AND \"typhoon\"",
+      "expected": [
+        "Tropical cyclone",
+        "Typhoon"
+      ],
+      "hit_rank": 3,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Cyclones #0",
+        "wikipedia: Hurricane Ioke #0",
+        "wikipedia: Typhoon #3",
+        "wikipedia: 1992 Pacific hurricane season #25",
+        "wikipedia: List of storms named Marie #0"
+      ]
+    },
+    {
+      "id": 122,
+      "category": "compare",
+      "question": "How are frogs different from toads?",
+      "fts_query": "\"frogs\" AND \"toads\"",
+      "expected": [
+        "Frog",
+        "Toad"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Frog #2",
+        "wikipedia: List of poisonous animals #0",
+        "wikipedia: Toad #0",
+        "wikivoyage: Piedras Blancas National Park #1",
+        "wikipedia: Frog #41"
+      ]
+    },
+    {
+      "id": 123,
+      "category": "compare",
+      "question": "What is the difference between baking soda and baking powder?",
+      "fts_query": "\"baking\" AND \"soda\" AND \"powder\"",
+      "expected": [
+        "Sodium bicarbonate",
+        "Baking powder"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Baking powder #16",
+        "wikipedia: Baking powder submarine #0",
+        "wikipedia: Sodium bicarbonate #0",
+        "wikivoyage: American cuisine #13",
+        "wikivoyage: Soft drinks #0"
+      ]
+    },
+    {
+      "id": 124,
+      "category": "multi-step",
+      "question": "Who discovered penicillin and in what year?",
+      "fts_query": "\"discovered\" AND \"penicillin\" AND \"year\"",
+      "expected": [
+        "Penicillin",
+        "Alexander Fleming",
+        "Discovery of penicillin"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Penicillin #0",
+        "wikipedia: Discovery (observation) #0",
+        "wikivoyage: History of medicine #2",
+        "wikipedia: Year #0",
+        "wikipedia: Production of antibiotics #2"
+      ]
+    },
+    {
+      "id": 125,
+      "category": "multi-step",
+      "question": "What is the longest river in Africa and which countries does it flow through?",
+      "fts_query": "\"longest\" AND \"river\" AND \"africa\" AND \"countries\" AND \"flow\"",
+      "expected": [
+        "Nile"
+      ],
+      "hit_rank": 4,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: List of river systems by length #2",
+        "wikipedia: Zambezi #0",
+        "wikipedia: Africa #36",
+        "wikivoyage: Nile #0",
+        "wikivoyage: Africa #42"
+      ]
+    }
+  ]
+}

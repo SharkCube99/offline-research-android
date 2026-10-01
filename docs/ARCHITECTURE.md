@@ -50,6 +50,24 @@ ChatScreen (Compose) -> ChatViewModel -> InferenceEngine (interface)
 | Why prompt processing is only about 5 to 8 tokens per second on the Redmi | Open. Not swap (see `docs/PERFORMANCE.md`). Longer prompts and other batch sizes have not been tried |
 | `setup.sh --internal` | Never run on a device |
 
+## Knowledge index (M2)
+
+Design, sizes and search results are in `docs/KNOWLEDGE_INDEX.md`. The decisions:
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Source | Wikimedia CirrusSearch index dumps (`other/cirrus_search_index/`) | The text is already plain text, and each page carries its redirects and a page-view score. Wikitext dumps would need a markup parser; Kiwix ZIM files would need an HTML parser and a native library |
+| Pipeline dependencies | Python standard library only | Nothing to install or license |
+| One index file per corpus | `wikipedia.db`, `wikivoyage.db` | Exact per-corpus sizes, corpora can be rebuilt or left out independently |
+| Passage size | About 250 words, at most 300, ending on sentence boundaries | Inside the 200 to 300 words CLAUDE.md asks for |
+| Passage storage | zlib-compressed, title-prefixed text | About 60% smaller than plain text; Android can inflate it with `java.util.zip` |
+| FTS index | Contentless FTS5, `porter unicode61`, function words removed from the indexed body | Contentless avoids storing the text twice. Removing function words cut the index about 10% on a test build. `remove_diacritics 2` was avoided because older Android SQLite versions do not accept it |
+| FTS detail level | Full | `detail=column` and `detail=none` are much smaller but break BM25 ranking (measured) |
+| Trimming Wikipedia | Keep the most-viewed articles up to `--budget-gb 24` | All of Wikipedia is an estimated 36 GB in this format and does not fit beside the 18.6 GB model |
+| Finding articles by name | A `names` table of titles and redirects, looked up with n-grams of the question | Plain BM25 buried main articles under more specific ones; this raised the test-set hit rate from 72% to 90% |
+
+Open for M3: whether Android's built-in SQLite has FTS5 on the Redmi, and how long a search takes on a phone.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

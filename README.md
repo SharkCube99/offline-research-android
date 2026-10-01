@@ -2,9 +2,9 @@
 
 An Android app that answers research questions with no network connection, using a language model that runs on the phone.
 
-**Status: Milestone 1 (foundation).** The app loads a GGUF model through llama.cpp and streams replies in a chat screen. There is no retrieval and there are no citations yet; those arrive in later milestones (see `CLAUDE.md`, Section 7).
+**Status: Milestones 1 and 2.** The app loads a GGUF model through llama.cpp and streams replies in a chat screen. A separate pipeline builds the offline Wikipedia and Wikivoyage search index (`docs/KNOWLEDGE_INDEX.md`). The app does not use the index yet: retrieval and citations arrive in Milestone 3 (see `CLAUDE.md`, Section 7).
 
-There are no performance numbers in this README yet, because none have been measured. Measurements are logged to `docs/PERFORMANCE.md` as they are taken.
+This README quotes no performance numbers. Measured results, with their raw logs, are in `docs/PERFORMANCE.md` (speed on the phone) and `docs/KNOWLEDGE_INDEX.md` (index size and search quality).
 
 ## What you need
 
@@ -100,7 +100,8 @@ scripts/setup.sh --no-install --model /path/to/other.gguf --profile my-profile.j
 | `profiles/` | Model profiles |
 | `scripts/` | `setup.sh` (provision a phone), `measure.sh` (timed runs), `verify_offline.sh` (permission check) |
 | `docs/` | Architecture decisions, performance log, benchmark notes |
-| `data-pipeline/`, `bench/` | Placeholders for later milestones |
+| `data-pipeline/` | Builds the offline Wikipedia and Wikivoyage index (see its README) |
+| `bench/` | Placeholder for a later milestone |
 
 ## Licences
 

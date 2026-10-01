@@ -1,0 +1,985 @@
+{
+  "k": 5,
+  "hit_rate": 0.9,
+  "hits": 45,
+  "queries": 50,
+  "by_category": {
+    "travel": {
+      "hits": 12,
+      "total": 12
+    },
+    "health": {
+      "hits": 10,
+      "total": 10
+    },
+    "how-to": {
+      "hits": 5,
+      "total": 8
+    },
+    "explain": {
+      "hits": 9,
+      "total": 10
+    },
+    "compare": {
+      "hits": 6,
+      "total": 6
+    },
+    "multi-step": {
+      "hits": 3,
+      "total": 4
+    }
+  },
+  "median_search_ms": 580.9207000002061,
+  "max_search_ms": 7183.4386000009545,
+  "results": [
+    {
+      "id": 1,
+      "category": "travel",
+      "question": "What is the best way to get from Charles de Gaulle airport to central Paris?",
+      "fts_query": "\"charles\" AND \"de\" AND \"gaulle\" AND \"airport\" AND \"central\" AND \"paris\"",
+      "expected": [
+        "Paris",
+        "Paris Charles de Gaulle Airport",
+        "Charles de Gaulle Airport"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Paris Charles de Gaulle Airport #0",
+        "wikipedia: Paris Charles de Gaulle Airport #7",
+        "wikivoyage: Paris Charles de Gaulle Airport #0",
+        "wikipedia: Freight transport #1",
+        "wikipedia: Paris #46"
+      ]
+    },
+    {
+      "id": 2,
+      "category": "travel",
+      "question": "Do I need a visa to visit Japan as a tourist?",
+      "fts_query": "\"visa\" AND \"visit\" AND \"japan\" AND \"tourist\"",
+      "expected": [
+        "Japan",
+        "Visa policy of Japan"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Tourism #28",
+        "wikipedia: Visa policy of Japan #4",
+        "wikivoyage: Visa #19",
+        "wikivoyage: Japan #24",
+        "wikipedia: Tourism in India #2"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "travel",
+      "question": "What should I know about altitude sickness before trekking in Nepal?",
+      "fts_query": "\"altitude\" AND \"sickness\" AND \"trekking\" AND \"nepal\"",
+      "expected": [
+        "Altitude sickness",
+        "Trekking in Nepal",
+        "Nepal"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Trekking in Nepal #13",
+        "wikipedia: Gorakshep #0",
+        "wikipedia: Trekking Agencies Association of Nepal #0",
+        "wikivoyage: Altitude sickness #8",
+        "wikipedia: Great Himalaya Trail #7"
+      ]
+    },
+    {
+      "id": 4,
+      "category": "travel",
+      "question": "Is tap water safe to drink in Mexico?",
+      "fts_query": "\"tap\" AND \"water\" AND \"safe\" AND \"drink\" AND \"mexico\"",
+      "expected": [
+        "Mexico",
+        "Water",
+        "Drinking water"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Tap water #2",
+        "wikipedia: Drinking water #0",
+        "wikivoyage: Water #2",
+        "wikivoyage: Yucatán and the South #14",
+        "wikipedia: Drink #4"
+      ]
+    },
+    {
+      "id": 5,
+      "category": "travel",
+      "question": "What are the must-see sights in Rome?",
+      "fts_query": "\"must\" AND \"see\" AND \"sights\" AND \"rome\"",
+      "expected": [
+        "Rome"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Rome #0",
+        "wikipedia: The History of Rome (Mommsen) #38",
+        "wikipedia: Sight (device) #1",
+        "wikivoyage: Genoa #0",
+        "wikipedia: Rome #31"
+      ]
+    },
+    {
+      "id": 6,
+      "category": "travel",
+      "question": "How does tipping work in the United States?",
+      "fts_query": "\"tipping\" AND \"united\" AND \"states\"",
+      "expected": [
+        "Tipping",
+        "United States",
+        "United States of America",
+        "Gratuity"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: United States #84",
+        "wikipedia: Tipped wage #0",
+        "wikipedia: United States #16",
+        "wikipedia: 2024 United States House of Representatives elections #8",
+        "wikipedia: Tipping-point state #0"
+      ]
+    },
+    {
+      "id": 7,
+      "category": "travel",
+      "question": "What is the best time of year to visit Iceland?",
+      "fts_query": "\"time\" AND \"year\" AND \"visit\" AND \"iceland\"",
+      "expected": [
+        "Iceland"
+      ],
+      "hit_rank": 4,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Ordinal date #0",
+        "wikipedia: China–Iceland relations #2",
+        "wikipedia: Iceland–United States relations #2",
+        "wikivoyage: Iceland #30",
+        "wikipedia: Iceland #23"
+      ]
+    },
+    {
+      "id": 8,
+      "category": "travel",
+      "question": "How do I avoid pickpockets while travelling?",
+      "fts_query": "\"avoid\" AND \"pickpockets\" AND \"travelling\"",
+      "expected": [
+        "Pickpockets",
+        "Pickpocketing",
+        "Common scams"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Pickpocketing #10",
+        "wikivoyage: Pickpockets #7",
+        "wikipedia: Travel #3",
+        "wikipedia: Pickpocketing #9",
+        "wikivoyage: Pickpockets #6"
+      ]
+    },
+    {
+      "id": 9,
+      "category": "travel",
+      "question": "How do I prevent malaria when travelling?",
+      "fts_query": "\"prevent\" AND \"malaria\" AND \"travelling\"",
+      "expected": [
+        "Malaria",
+        "Malaria prophylaxis"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Malaria #51",
+        "wikipedia: Airport malaria #0",
+        "wikivoyage: Malaria #1",
+        "wikipedia: Malaria! #1",
+        "wikipedia: Malaria prophylaxis #9"
+      ]
+    },
+    {
+      "id": 10,
+      "category": "travel",
+      "question": "What is there to do in Kyoto?",
+      "fts_query": "\"kyoto\"",
+      "expected": [
+        "Kyoto"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Kyoto #0",
+        "wikipedia: The Kyoto Shimbun #0",
+        "wikipedia: Kyoto Protocol #0",
+        "wikivoyage: Kyoto/Central #0",
+        "wikivoyage: Kyoto #0"
+      ]
+    },
+    {
+      "id": 11,
+      "category": "travel",
+      "question": "How do I travel on the Trans-Siberian Railway?",
+      "fts_query": "\"travel\" AND \"trans\" AND \"siberian\" AND \"railway\"",
+      "expected": [
+        "Trans-Siberian Railway"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Trans-Siberian Railway #21",
+        "wikivoyage: Trans-Siberian Railway #1",
+        "wikipedia: Travel #2",
+        "wikipedia: Trans-Siberian Railway #0",
+        "wikipedia: .travel #0"
+      ]
+    },
+    {
+      "id": 12,
+      "category": "travel",
+      "question": "What should I pack for a multi-day hike?",
+      "fts_query": "\"pack\" AND \"multi\" AND \"day\" AND \"hike\"",
+      "expected": [
+        "Hiking",
+        "Packing list",
+        "Packing for a week of hiking",
+        "Backpacking (hiking)"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Hiking #1",
+        "wikipedia: Backpacking (hiking) #0",
+        "wikipedia: Polycephaly #0",
+        "wikivoyage: Hiking #4",
+        "wikipedia: Electoral system #0"
+      ]
+    },
+    {
+      "id": 13,
+      "category": "health",
+      "question": "How do I treat a minor burn?",
+      "fts_query": "\"treat\" AND \"minor\" AND \"burn\"",
+      "expected": [
+        "Burn",
+        "First aid"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Burn #12",
+        "wikipedia: Guinea Pig Club #1",
+        "wikipedia: Burn! #0",
+        "wikivoyage: Canberra/Belconnen #21",
+        "wikipedia: List of SpongeBob SquarePants characters #0"
+      ]
+    },
+    {
+      "id": 14,
+      "category": "health",
+      "question": "What are the symptoms of dehydration?",
+      "fts_query": "\"symptoms\" AND \"dehydration\"",
+      "expected": [
+        "Dehydration"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Dehydration #0",
+        "wikivoyage: Dehydration #1",
+        "wikipedia: Dehydration #6",
+        "wikipedia: Hangover #5",
+        "wikivoyage: Dehydration #0"
+      ]
+    },
+    {
+      "id": 15,
+      "category": "health",
+      "question": "What should I do if someone is choking?",
+      "fts_query": "\"someone\" AND \"choking\"",
+      "expected": [
+        "Choking",
+        "Abdominal thrusts"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Choking #26",
+        "wikipedia: Choking #22",
+        "wikivoyage: Interior Alaska #5",
+        "wikivoyage: Guayaquil #16",
+        "wikivoyage: Kabul #0"
+      ]
+    },
+    {
+      "id": 16,
+      "category": "health",
+      "question": "How do I recognise a heart attack?",
+      "fts_query": "\"recognise\" AND \"heart\" AND \"attack\"",
+      "expected": [
+        "Myocardial infarction"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Myocardial infarction #0",
+        "wikipedia: Borys Todurov #1",
+        "wikipedia: Kent McClard #0",
+        "wikivoyage: Langkawi #31",
+        "wikipedia: Myocardial infarction #26"
+      ]
+    },
+    {
+      "id": 17,
+      "category": "health",
+      "question": "What are the warning signs of a stroke?",
+      "fts_query": "\"warning\" AND \"signs\" AND \"stroke\"",
+      "expected": [
+        "Stroke"
+      ],
+      "hit_rank": 5,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Warning Signs #0",
+        "wikipedia: World Stroke Day #3",
+        "wikipedia: Petal (album) #0",
+        "wikivoyage: Permian Basin #2",
+        "wikipedia: Stroke #4"
+      ]
+    },
+    {
+      "id": 18,
+      "category": "health",
+      "question": "How should a snake bite be treated?",
+      "fts_query": "\"snake\" AND \"bite\" AND \"treated\"",
+      "expected": [
+        "Snakebite"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Snakebite #0",
+        "wikipedia: Neglected tropical diseases in India #6",
+        "wikipedia: Snakebite #4",
+        "wikivoyage: Dangerous snakes #3",
+        "wikipedia: King brown snake #10"
+      ]
+    },
+    {
+      "id": 19,
+      "category": "health",
+      "question": "What is hypothermia and how is it treated?",
+      "fts_query": "\"hypothermia\" AND \"treated\"",
+      "expected": [
+        "Hypothermia"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Hypothermia #2",
+        "wikipedia: Targeted temperature management #11",
+        "wikivoyage: Cold weather #0",
+        "wikivoyage: Mount Fuji #15",
+        "wikipedia: Hypothermia #10"
+      ]
+    },
+    {
+      "id": 20,
+      "category": "health",
+      "question": "How do I perform CPR?",
+      "fts_query": "\"perform\" AND \"cpr\"",
+      "expected": [
+        "Cardiopulmonary resuscitation"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Cardiopulmonary resuscitation #20",
+        "wikivoyage: Casper #0",
+        "wikivoyage: War zone safety #21",
+        "wikipedia: Performance #0",
+        "wikipedia: Cardiopulmonary resuscitation #26"
+      ]
+    },
+    {
+      "id": 21,
+      "category": "health",
+      "question": "What causes food poisoning?",
+      "fts_query": "\"causes\" AND \"food\" AND \"poisoning\"",
+      "expected": [
+        "Foodborne illness"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Foodborne illness #0",
+        "wikivoyage: Travellers' diarrhea #0",
+        "wikivoyage: Infectious diseases #11",
+        "wikipedia: Avoidant personality disorder #0",
+        "wikipedia: Substances poisonous to dogs #0"
+      ]
+    },
+    {
+      "id": 22,
+      "category": "health",
+      "question": "How is a sprained ankle treated?",
+      "fts_query": "\"sprained\" AND \"ankle\" AND \"treated\"",
+      "expected": [
+        "Sprained ankle",
+        "Sprain"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Sprained ankle #7",
+        "wikipedia: Sprained ankle #13",
+        "wikivoyage: Wilderness backpacking #29",
+        "wikivoyage: Scotland #65",
+        "wikipedia: Ankle brace #0"
+      ]
+    },
+    {
+      "id": 23,
+      "category": "how-to",
+      "question": "How do I fix a flat bicycle tire?",
+      "fts_query": "\"fix\" AND \"flat\" AND \"bicycle\" AND \"tire\"",
+      "expected": [
+        "Flat tire",
+        "Bicycle tire"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Bicycle tire #18",
+        "wikipedia: Flat tire #5",
+        "wikivoyage: Cycling #2",
+        "wikivoyage: Cycling in China #1",
+        "wikipedia: A Flat (film) #0"
+      ]
+    },
+    {
+      "id": 24,
+      "category": "how-to",
+      "question": "How can I start a fire without matches?",
+      "fts_query": "\"start\" AND \"fire\" AND \"without\" AND \"matches\"",
+      "expected": [
+        "Fire making",
+        "Bow drill",
+        "Fire striker"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Fire #7",
+        "wikipedia: King's Cross fire #5",
+        "wikipedia: Match #0",
+        "wikivoyage: Urho Kekkonen National Park #19",
+        "wikipedia: Fire!! #0"
+      ]
+    },
+    {
+      "id": 25,
+      "category": "how-to",
+      "question": "How can I purify water in the wilderness?",
+      "fts_query": "\"purify\" AND \"water\" AND \"wilderness\"",
+      "expected": [
+        "Portable water purification",
+        "Water purification"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Wilderness #0",
+        "wikipedia: Portable water purification #0",
+        "wikipedia: Water #40",
+        "wikivoyage: Ship Harbour Long Lake Wilderness Area #1",
+        "wikivoyage: Water #5"
+      ]
+    },
+    {
+      "id": 26,
+      "category": "how-to",
+      "question": "How do I jump start a car with a dead battery?",
+      "fts_query": "\"jump\" AND \"start\" AND \"car\" AND \"dead\" AND \"battery\"",
+      "expected": [
+        "Jump start (vehicle)"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Jump start (vehicle) #5",
+        "wikipedia: State of charge #0",
+        "wikivoyage: Champaign-Urbana #1",
+        "wikipedia: Jump In! #0",
+        "wikipedia: Jumper cable #0"
+      ]
+    },
+    {
+      "id": 27,
+      "category": "how-to",
+      "question": "How do I tie a bowline knot?",
+      "fts_query": "\"tie\" AND \"bowline\" AND \"knot\"",
+      "expected": [
+        "Bowline"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Bowline #1",
+        "wikipedia: Portuguese bowline #3",
+        "wikipedia: TiE #1",
+        "wikivoyage: Purchasing a kimono #14",
+        "wikipedia: Bowline #0"
+      ]
+    },
+    {
+      "id": 28,
+      "category": "how-to",
+      "question": "How do I use a compass to navigate?",
+      "fts_query": "\"compass\" AND \"navigate\"",
+      "expected": [
+        "Compass",
+        "Orienteering"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Compass #0",
+        "wikipedia: BeiDou #0",
+        "wikipedia: Navigation #1",
+        "wikivoyage: Diving the Cape Peninsula and False Bay/Insanity Reef #3",
+        "wikipedia: Compass #11"
+      ]
+    },
+    {
+      "id": 29,
+      "category": "how-to",
+      "question": "How do I change a car tire?",
+      "fts_query": "\"change\" AND \"car\" AND \"tire\"",
+      "expected": [
+        "Flat tire",
+        "Spare tire"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Tire #0",
+        "wikipedia: Tire maintenance #4",
+        "wikipedia: Car #12",
+        "wikivoyage: Cuba #18",
+        "wikivoyage: Tyre #0"
+      ]
+    },
+    {
+      "id": 30,
+      "category": "how-to",
+      "question": "How do you find north using the stars?",
+      "fts_query": "\"find\" AND \"north\" AND \"stars\"",
+      "expected": [
+        "Polaris",
+        "Celestial navigation",
+        "Pole star"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: North #6",
+        "wikipedia: Cassiopeia (2022 film) #0",
+        "wikipedia: Stars! #3",
+        "wikivoyage: Orienteering #3",
+        "wikipedia: Star #53"
+      ]
+    },
+    {
+      "id": 31,
+      "category": "explain",
+      "question": "How does a refrigerator work?",
+      "fts_query": "\"refrigerator\"",
+      "expected": [
+        "Refrigerator",
+        "Vapor-compression refrigeration",
+        "Refrigeration"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Refrigerator #0",
+        "wikipedia: Refrigerator truck #0",
+        "wikipedia: Refrigerator #11",
+        "wikivoyage: Getting ready to leave #0",
+        "wikipedia: Refrigeration #0"
+      ]
+    },
+    {
+      "id": 32,
+      "category": "explain",
+      "question": "Why is the sky blue?",
+      "fts_query": "\"sky\" AND \"blue\"",
+      "expected": [
+        "Rayleigh scattering",
+        "Diffuse sky radiation"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Sky blue #0",
+        "wikipedia: Sky blue #4",
+        "wikivoyage: Phoenix Sky Harbor International Airport #7",
+        "wikipedia: Blue sky law #0",
+        "wikivoyage: Idaho Springs #0"
+      ]
+    },
+    {
+      "id": 33,
+      "category": "explain",
+      "question": "How do vaccines work?",
+      "fts_query": "\"vaccines\"",
+      "expected": [
+        "Vaccine",
+        "Vaccination"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Vaccine #0",
+        "wikipedia: Polio vaccine #0",
+        "wikivoyage: Stay healthy #0",
+        "wikivoyage: Yellow fever #1",
+        "wikipedia: Vaccine #7"
+      ]
+    },
+    {
+      "id": 34,
+      "category": "explain",
+      "question": "What causes earthquakes?",
+      "fts_query": "\"causes\" AND \"earthquakes\"",
+      "expected": [
+        "Earthquake"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Earthquake #0",
+        "wikipedia: Namazu #0",
+        "wikivoyage: Earthquake safety #2",
+        "wikivoyage: Tsunami #0",
+        "wikipedia: Avoidant personality disorder #0"
+      ]
+    },
+    {
+      "id": 35,
+      "category": "explain",
+      "question": "How does GPS determine my location?",
+      "fts_query": "\"gps\" AND \"determine\" AND \"location\"",
+      "expected": [
+        "Global Positioning System",
+        "Satellite navigation"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Global Positioning System #24",
+        "wikipedia: Automatic vehicle location #0",
+        "wikivoyage: GPS navigation #9",
+        "wikipedia: Location #1",
+        "wikipedia: GPS tracking unit #0"
+      ]
+    },
+    {
+      "id": 36,
+      "category": "explain",
+      "question": "What is photosynthesis?",
+      "fts_query": "\"photosynthesis\"",
+      "expected": [
+        "Photosynthesis"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Photosynthesis #0",
+        "wikipedia: Anoxygenic photosynthesis #0",
+        "wikipedia: Photosynthesis #41",
+        "wikivoyage: Pisew Falls Provincial Park #0",
+        "wikipedia: Evolution of photosynthesis #0"
+      ]
+    },
+    {
+      "id": 37,
+      "category": "explain",
+      "question": "How does a jet engine work?",
+      "fts_query": "\"jet\" AND \"engine\"",
+      "expected": [
+        "Jet engine",
+        "Turbojet",
+        "Turbofan"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Jet engine #0",
+        "wikipedia: Jet engine #21",
+        "wikivoyage: Fountains #0",
+        "wikipedia: Access Database Engine #0",
+        "wikivoyage: Advice for nervous flyers #20"
+      ]
+    },
+    {
+      "id": 38,
+      "category": "explain",
+      "question": "What causes the tides?",
+      "fts_query": "\"causes\" AND \"tides\"",
+      "expected": [
+        "Tide"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Tide #9",
+        "wikipedia: Theory of tides #1",
+        "wikipedia: Human (OneRepublic album) #0",
+        "wikivoyage: Sea kayaking #4",
+        "wikivoyage: Tides and currents #0"
+      ]
+    },
+    {
+      "id": 39,
+      "category": "explain",
+      "question": "How do noise-cancelling headphones work?",
+      "fts_query": "\"noise\" AND \"cancelling\" AND \"headphones\"",
+      "expected": [
+        "Noise-cancelling headphones",
+        "Active noise control"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Noise-cancelling headphones #0",
+        "wikipedia: Noise-cancelling headphones #3",
+        "wikivoyage: Flight baggage #25",
+        "wikivoyage: Planning your flight #38",
+        "wikivoyage: Travellers with disabilities #6"
+      ]
+    },
+    {
+      "id": 40,
+      "category": "explain",
+      "question": "What is inflation in economics?",
+      "fts_query": "\"inflation\" AND \"economics\"",
+      "expected": [
+        "Inflation"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Inflation #0",
+        "wikipedia: Economics #33",
+        "wikivoyage: Germany #10",
+        "wikipedia: Inflation #44",
+        "wikipedia: Cost-push inflation #0"
+      ]
+    },
+    {
+      "id": 41,
+      "category": "compare",
+      "question": "What is the difference between a virus and a bacterium?",
+      "fts_query": "\"virus\" AND \"bacterium\"",
+      "expected": [
+        "Virus",
+        "Bacteria"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Virus #6",
+        "wikipedia: CTXφ bacteriophage #0",
+        "wikipedia: Bacteria #0",
+        "wikivoyage: Infectious diseases #0",
+        "wikipedia: Virus #0"
+      ]
+    },
+    {
+      "id": 42,
+      "category": "compare",
+      "question": "What is the difference between weather and climate?",
+      "fts_query": "\"weather\" AND \"climate\"",
+      "expected": [
+        "Climate",
+        "Weather"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Climate #4",
+        "wikipedia: Climate of the United Kingdom #0",
+        "wikipedia: Weather #0",
+        "wikivoyage: Mediterranean climates #1",
+        "wikivoyage: Weather #0"
+      ]
+    },
+    {
+      "id": 43,
+      "category": "compare",
+      "question": "How do alternating current and direct current differ?",
+      "fts_query": "\"alternating\" AND \"current\" AND \"direct\" AND \"differ\"",
+      "expected": [
+        "Alternating current",
+        "Direct current",
+        "War of the currents"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Alternating current #0",
+        "wikipedia: List of Nikola Tesla patents #6",
+        "wikipedia: Direct current #0",
+        "wikivoyage: British Virgin Islands #5",
+        "wikipedia: T cell #6"
+      ]
+    },
+    {
+      "id": 44,
+      "category": "compare",
+      "question": "What is the difference between a crocodile and an alligator?",
+      "fts_query": "\"crocodile\" AND \"alligator\"",
+      "expected": [
+        "Crocodile",
+        "Alligator",
+        "Crocodilia"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Alligator #10",
+        "wikipedia: Crocodile farm #0",
+        "wikipedia: Crocodile #2",
+        "wikivoyage: Dangerous animals #26",
+        "wikipedia: Alex Rider (book series) #0"
+      ]
+    },
+    {
+      "id": 45,
+      "category": "compare",
+      "question": "Diesel versus petrol engines: what is the difference?",
+      "fts_query": "\"diesel\" AND \"petrol\" AND \"engines\"",
+      "expected": [
+        "Diesel engine",
+        "Petrol engine"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Petrol engine #1",
+        "wikipedia: Aircraft diesel engine #3",
+        "wikipedia: Petrol engine #0",
+        "wikivoyage: Driving in France #10",
+        "wikivoyage: United Kingdom #42"
+      ]
+    },
+    {
+      "id": 46,
+      "category": "compare",
+      "question": "What is the difference between Sunni and Shia Islam?",
+      "fts_query": "\"sunni\" AND \"shia\" AND \"islam\"",
+      "expected": [
+        "Shia–Sunni relations",
+        "Sunni Islam",
+        "Shia Islam"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Islamic schools and branches #0",
+        "wikipedia: Shia–Sunni relations #0",
+        "wikipedia: Shia Islam #39",
+        "wikivoyage: Islam #0",
+        "wikipedia: Shia Islamism #13"
+      ]
+    },
+    {
+      "id": 47,
+      "category": "multi-step",
+      "question": "Why did the Roman Empire fall?",
+      "fts_query": "\"roman\" AND \"empire\" AND \"fall\"",
+      "expected": [
+        "Fall of the Western Roman Empire",
+        "Historiography of the fall of the Western Roman Empire"
+      ],
+      "hit_rank": 2,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Roman Empire #0",
+        "wikipedia: Fall of the Western Roman Empire #0",
+        "wikivoyage: Roman Empire #0",
+        "wikipedia: Autumn #0",
+        "wikipedia: Historiography of the fall of the Western Roman Empire #0"
+      ]
+    },
+    {
+      "id": 48,
+      "category": "multi-step",
+      "question": "Who was the first person to walk on the Moon and when did it happen?",
+      "fts_query": "\"first\" AND \"person\" AND \"walk\" AND \"moon\" AND \"happen\"",
+      "expected": [
+        "Neil Armstrong",
+        "Apollo 11"
+      ],
+      "hit_rank": null,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: Moon #0",
+        "wikipedia: Ali G #5",
+        "wikipedia: Moon #43",
+        "wikivoyage: Tasmanian national parks #14",
+        "wikipedia: Walking #12"
+      ]
+    },
+    {
+      "id": 49,
+      "category": "multi-step",
+      "question": "What caused the First World War?",
+      "fts_query": "\"caused\" AND \"first\" AND \"world\" AND \"war\"",
+      "expected": [
+        "Causes of World War I",
+        "World War I"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikivoyage: World War I #6",
+        "wikipedia: Causes of World War I #0",
+        "wikipedia: World War I #0",
+        "wikivoyage: South Africa #7",
+        "wikivoyage: World War I #0"
+      ]
+    },
+    {
+      "id": 50,
+      "category": "multi-step",
+      "question": "How tall is Mount Everest and who first climbed it?",
+      "fts_query": "\"tall\" AND \"mount\" AND \"everest\" AND \"first\" AND \"climbed\"",
+      "expected": [
+        "Mount Everest",
+        "Edmund Hillary",
+        "1953 British Mount Everest expedition"
+      ],
+      "hit_rank": 1,
+      "expected_in_index": true,
+      "top": [
+        "wikipedia: Mount Everest #64",
+        "wikipedia: Mount Everest in 2018 #4",
+        "wikivoyage: Mount Everest #0",
+        "wikipedia: First ascent #0",
+        "wikipedia: Naila Kiani #1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "corpora": {
+    "wikivoyage": {
+      "name": "wikivoyage",
+      "dump_date": "20260927",
+      "source": "https://dumps.wikimedia.org/other/cirrus_search_index/20260927/index_name=enwikivoyage_content/",
+      "licence": "CC BY-SA 4.0",
+      "articles": 32072,
+      "passages": 188396,
+      "staging": {
+        "docs": 0,
+        "redirects": 0,
+        "disambiguation": 0,
+        "too_short": 0
+      }
+    },
+    "wikipedia": {
+      "name": "wikipedia",
+      "dump_date": "20260927",
+      "source": "https://dumps.wikimedia.org/other/cirrus_search_index/20260927/index_name=enwiki_content/",
+      "licence": "CC BY-SA 4.0",
+      "articles": 2056411,
+      "passages": 12741441,
+      "staging": {
+        "docs": 0,
+        "redirects": 0,
+        "disambiguation": 0,
+        "too_short": 0
+      }
+    }
+  },
+  "sizes": {
+    "corpora": [
+      {
+        "name": "wikipedia",
+        "file": "wikipedia.db",
+        "bytes": 22570754048,
+        "articles": 2056411,
+        "passages": 12741441,
+        "compressed_text_bytes": 10444071922,
+        "dump_date": "20260927"
+      },
+      {
+        "name": "wikivoyage",
+        "file": "wikivoyage.db",
+        "bytes": 355127296,
+        "articles": 32072,
+        "passages": 188396,
+        "compressed_text_bytes": 160499616,
+        "dump_date": "20260927"
+      }
+    ],
+    "total_bytes": 22925881344
+  },
+  "chunking": {
+    "target_words": 250,
+    "max_words": 300,
+    "min_tail_words": 80,
+    "min_article_words": 50
+  }
+}
