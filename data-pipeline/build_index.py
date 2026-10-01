@@ -383,17 +383,24 @@ def build_corpus(corpus, config, args, params):
             if have >= args.limit:
                 break
     else:
-        print(f"[{name}] downloading (resumable)", flush=True)
-        with ThreadPoolExecutor(args.download_threads) as pool:
-            paths = list(pool.map(lambda s: download(s[0], downloads / s[1], s[2]), shards))
-        stage_paths = [stage_dir / (p.name + ".db") for p in paths]
-        jobs = [(p, s, params, None) for p, s in zip(paths, stage_paths)]
-        print(f"[{name}] staging {len(jobs)} shards with {args.workers} workers", flush=True)
-        with Pool(args.workers) as pool:
-            for done, result in enumerate(pool.imap_unordered(stage_shard, jobs), 1):
-                stats.append(result)
-                label = "already staged" if result.get("skipped") else f"{result['articles']:,} articles"
-                print(f"  staged {done}/{len(jobs)}: {result['shard']} ({label})", flush=True)
+        # A shard that is already staged is not needed again, so it is not downloaded:
+        # the staged files are enough to rebuild the index with another budget.
+        signature = stage_signature(params)
+        stage_paths = [stage_dir / (shard_name + ".db") for _, shard_name, _ in shards]
+        todo = [(shard, path) for shard, path in zip(shards, stage_paths)
+                if not stage_is_done(path, signature)]
+        print(f"[{name}] {len(shards) - len(todo)} shards already staged, {len(todo)} to do", flush=True)
+        if todo:
+            print(f"[{name}] downloading (resumable)", flush=True)
+            with ThreadPoolExecutor(args.download_threads) as pool:
+                paths = list(pool.map(lambda t: download(t[0][0], downloads / t[0][1], t[0][2]), todo))
+            jobs = [(path, stage_path, params, None) for path, (_, stage_path) in zip(paths, todo)]
+            print(f"[{name}] staging {len(jobs)} shards with {args.workers} workers", flush=True)
+            with Pool(args.workers) as pool:
+                for done, result in enumerate(pool.imap_unordered(stage_shard, jobs), 1):
+                    stats.append(result)
+                    print(f"  staged {done}/{len(jobs)}: {result['shard']} "
+                          f"({result['articles']:,} articles)", flush=True)
 
     print(f"[{name}] merging into {args.out / (name + '.db')}", flush=True)
     meta = {
@@ -413,6 +420,13 @@ def build_corpus(corpus, config, args, params):
     }
     articles, passages = merge(corpus, stage_paths, args.out / f"{name}.db",
                                args.max_articles, args.budget_gb, args.limit, meta)
+    # Read the counts back from the stage files, so they are right even when
+    # every shard was staged by an earlier run.
+    stats = []
+    for path in stage_paths:
+        stage = sqlite3.connect(path)
+        stats.append(json.loads(stage.execute("SELECT value FROM meta WHERE key='stats'").fetchone()[0]))
+        stage.close()
     filtered = {}
     for key in ("docs", "redirects", "disambiguation", "too_short"):
         filtered[key] = sum(s.get(key, 0) for s in stats)

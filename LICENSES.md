@@ -18,7 +18,9 @@ The app's own source code is released under the MIT licence (see `LICENSE`).
 | androidx.lifecycle (viewmodel-compose, runtime-compose) | 2.9.4 | Apache-2.0 | ViewModel and lifecycle-aware state collection |
 | kotlinx-coroutines-android | 1.9.0 | Apache-2.0 | Streams tokens from the engine thread to the UI |
 | kotlinx-serialization-json | 1.9.0 | Apache-2.0 | Parses model profiles and writes metrics lines; also runs in plain JVM unit tests, which Android's built-in `org.json` does not |
+| [requery sqlite-android](https://github.com/requery/sqlite-android) | 3.49.0 (from JitPack) | Apache-2.0; bundles SQLite, which is public domain | Reads the knowledge index. The phone's own SQLite is not guaranteed to have FTS5, and its version differs between Android releases |
 | JUnit | 4.13.2 | EPL-1.0 | Unit tests only; not shipped in the APK |
+| [sqlite-jdbc](https://github.com/xerial/sqlite-jdbc) | 3.53.4.0 | Apache-2.0 | Unit tests only: runs the retriever's SQL against a real FTS5 index on the build machine |
 
 llama.cpp bundles a few third-party sources of its own under `third_party/llama.cpp/vendor/`. Only the core library (`llama`, `ggml`) is built into this app; `LLAMA_BUILD_COMMON` is off. The vendored components that actually end up in the APK will be audited before release (M6).
 
@@ -30,6 +32,7 @@ Models are not stored in this repository or in the APK. They are pushed to the p
 |---|---|---|---|---|---|
 | Qwen3-4B | `Qwen3-4B-Q4_K_M.gguf` | 2.5 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> | Low tier and development (M1) |
 | Qwen3-30B-A3B | `Qwen3-30B-A3B-Q4_K_M.gguf` | 18.6 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF> | High tier (planned, M4) |
+| Qwen3-1.7B | `Qwen3-1.7B-Q8_0.gguf` | 1.83 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> | Planner: writes search queries. Q8_0 is the only file in the official repository |
 
 File names, sizes and licences were read from the Hugging Face repository pages on 2026-10-01.
 
