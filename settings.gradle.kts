@@ -10,6 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Only for requery's sqlite-android, which is published on JitPack alone.
+        maven("https://jitpack.io") {
+            content { includeGroup("com.github.requery") }
+        }
     }
 }
 

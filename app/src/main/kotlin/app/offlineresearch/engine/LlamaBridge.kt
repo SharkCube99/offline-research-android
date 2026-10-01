@@ -12,16 +12,14 @@ internal object LlamaBridge {
     }
 
     // Return codes; keep in step with llama_bridge.cpp.
-    const val LOAD_OK = 0
-    const val LOAD_ERR_MODEL = -1
-    const val LOAD_ERR_CONTEXT = -2
-    const val ERR_BUSY = -3
+    const val LOAD_ERR_MODEL = -1L
+    const val LOAD_ERR_CONTEXT = -2L
 
     const val STOP_EOS = 0
     const val STOP_MAX_TOKENS = 1
     const val STOP_CANCELLED = 2
     const val STOP_CONTEXT_FULL = 3
-    const val GEN_ERR_NOT_LOADED = -1
+    const val ERR_BUSY = -3
     const val GEN_ERR_TEMPLATE = -4
     const val GEN_ERR_TOKENIZE = -5
     const val GEN_ERR_PROMPT_TOO_LONG = -6
@@ -36,8 +34,20 @@ internal object LlamaBridge {
     const val M_GEN_MS = 5
     const val M_THREADS = 6
 
-    external fun nativeInit(nativeLibDir: String)
+    private var initialised = false
 
+    /** Loads the CPU backends once per process. */
+    @Synchronized
+    fun ensureInitialised(nativeLibDir: String) {
+        if (!initialised) {
+            nativeInit(nativeLibDir)
+            initialised = true
+        }
+    }
+
+    private external fun nativeInit(nativeLibDir: String)
+
+    /** Returns a session handle (> 0), or a LOAD_ERR_* code. */
     external fun nativeLoad(
         modelPath: String,
         nCtx: Int,
@@ -47,10 +57,11 @@ internal object LlamaBridge {
         useMlock: Boolean,
         repack: Boolean,
         chatTemplate: String,
-    ): Int
+    ): Long
 
     /** Blocks until generation stops. Returns a STOP_* code, or a negative error code. */
     external fun nativeGenerate(
+        handle: Long,
         systemUtf8: ByteArray,
         userUtf8: ByteArray,
         maxTokens: Int,
@@ -62,11 +73,14 @@ internal object LlamaBridge {
         callback: TokenCallback,
     ): Int
 
-    external fun nativeCancel()
+    external fun nativeTokenCount(handle: Long, textUtf8: ByteArray): Int
 
-    external fun nativeMetrics(): DoubleArray
+    external fun nativeCancel(handle: Long)
+
+    external fun nativeMetrics(handle: Long): DoubleArray
 
     external fun nativeSystemInfo(): String
 
-    external fun nativeUnload()
+    /** The handle must not be used again afterwards. */
+    external fun nativeUnload(handle: Long)
 }

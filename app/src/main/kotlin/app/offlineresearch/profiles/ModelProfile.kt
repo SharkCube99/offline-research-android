@@ -1,6 +1,7 @@
 package app.offlineresearch.profiles
 
 import android.content.Context
+import app.offlineresearch.rag.IndexFiles
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -13,7 +14,7 @@ import java.io.File
 @Serializable
 data class ModelProfile(
     val name: String,
-    /** File name inside the models/ directory on the device. */
+    /** The answerer: file name inside the models/ directory on the device. */
     @SerialName("model_file") val modelFile: String,
     @SerialName("n_ctx") val contextSize: Int,
     @SerialName("n_batch") val batchSize: Int,
@@ -25,14 +26,17 @@ data class ModelProfile(
     val repack: Boolean = false,
     /** "auto" = the template embedded in the GGUF file. */
     @SerialName("chat_template") val chatTemplate: String = "auto",
-    @SerialName("system_prompt") val systemPrompt: String = "",
+    /** Model-specific switches appended to every system prompt, such as "/no_think". */
+    @SerialName("prompt_suffix") val promptSuffix: String = "",
     @SerialName("max_tokens") val maxTokens: Int,
     val temperature: Float,
     @SerialName("top_k") val topK: Int,
     @SerialName("top_p") val topP: Float,
     @SerialName("presence_penalty") val presencePenalty: Float = 0f,
-    /** Token budget for retrieved passages. Not used until the RAG pipeline (M3). */
-    @SerialName("retrieval_budget_tokens") val retrievalBudgetTokens: Int = 0,
+    /** Token budget for retrieved passages in the answerer's prompt. */
+    @SerialName("retrieval_budget_tokens") val retrievalBudgetTokens: Int,
+    /** The small model that writes search queries. Null = keyword search only. */
+    val planner: PlannerProfile? = null,
 ) {
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -41,7 +45,14 @@ data class ModelProfile(
     }
 }
 
-/** Finds the active profile and its model file on the device. */
+/** Threads, batch size and memory settings are shared with the answerer. */
+@Serializable
+data class PlannerProfile(
+    @SerialName("model_file") val modelFile: String,
+    @SerialName("context_size") val contextSize: Int = 1024,
+)
+
+/** Finds the active profile, model files and index files on the device. */
 class ProfileStore(private val context: Context) {
 
     /** A profile.json pushed over adb wins over the bundled default. */
@@ -55,14 +66,19 @@ class ProfileStore(private val context: Context) {
         return ModelProfile.parse(text)
     }
 
-    /** Directories searched for model files, in order. */
-    fun modelDirs(): List<File> = listOfNotNull(
-        context.getExternalFilesDir(null)?.let { File(it, MODELS_DIR) },
-        File(context.filesDir, MODELS_DIR),
+    private fun dataDirs(name: String): List<File> = listOfNotNull(
+        context.getExternalFilesDir(null)?.let { File(it, name) },
+        File(context.filesDir, name),
     )
 
-    fun findModel(profile: ModelProfile): File? =
-        modelDirs().map { File(it, profile.modelFile) }.firstOrNull { it.isFile && it.canRead() }
+    /** Directories searched for model files, in order. */
+    fun modelDirs(): List<File> = dataDirs(MODELS_DIR)
+
+    /** Directories searched for corpus index files, in order. */
+    fun indexDirs(): List<File> = dataDirs(IndexFiles.DIR)
+
+    fun findModel(fileName: String): File? =
+        modelDirs().map { File(it, fileName) }.firstOrNull { it.isFile && it.canRead() }
 
     companion object {
         const val OVERRIDE_FILE = "profile.json"

@@ -1,0 +1,639 @@
+[
+ {
+  "question": "How do I recognise a heart attack?",
+  "tokens": [
+   "how",
+   "do",
+   "i",
+   "recognise",
+   "a",
+   "heart",
+   "attack"
+  ],
+  "terms": [
+   "recognise",
+   "heart",
+   "attack"
+  ],
+  "and_query": "\"recognise\" AND \"heart\" AND \"attack\"",
+  "name_grams": [
+   [
+    3,
+    4,
+    "recognise a heart attack"
+   ],
+   [
+    3,
+    3,
+    "recognise a heart"
+   ],
+   [
+    5,
+    2,
+    "heart attack"
+   ],
+   [
+    3,
+    1,
+    "recognise"
+   ],
+   [
+    5,
+    1,
+    "heart"
+   ],
+   [
+    6,
+    1,
+    "attack"
+   ]
+  ],
+  "index_text": "recognise heart attack"
+ },
+ {
+  "question": "What is the difference between a virus and a bacterium?",
+  "tokens": [
+   "what",
+   "is",
+   "the",
+   "difference",
+   "between",
+   "a",
+   "virus",
+   "and",
+   "a",
+   "bacterium"
+  ],
+  "terms": [
+   "virus",
+   "bacterium"
+  ],
+  "and_query": "\"virus\" AND \"bacterium\"",
+  "name_grams": [
+   [
+    3,
+    4,
+    "difference between a virus"
+   ],
+   [
+    6,
+    4,
+    "virus and a bacterium"
+   ],
+   [
+    6,
+    1,
+    "virus"
+   ],
+   [
+    9,
+    1,
+    "bacterium"
+   ]
+  ],
+  "index_text": "difference virus bacterium"
+ },
+ {
+  "question": "Who was the first person to walk on the Moon and when did it happen?",
+  "tokens": [
+   "who",
+   "was",
+   "the",
+   "first",
+   "person",
+   "to",
+   "walk",
+   "on",
+   "the",
+   "moon",
+   "and",
+   "when",
+   "did",
+   "it",
+   "happen"
+  ],
+  "terms": [
+   "first",
+   "person",
+   "walk",
+   "moon",
+   "happen"
+  ],
+  "and_query": "\"first\" AND \"person\" AND \"walk\" AND \"moon\" AND \"happen\"",
+  "name_grams": [
+   [
+    3,
+    4,
+    "first person to walk"
+   ],
+   [
+    6,
+    4,
+    "walk on the moon"
+   ],
+   [
+    4,
+    3,
+    "person to walk"
+   ],
+   [
+    3,
+    2,
+    "first person"
+   ],
+   [
+    3,
+    1,
+    "first"
+   ],
+   [
+    4,
+    1,
+    "person"
+   ],
+   [
+    6,
+    1,
+    "walk"
+   ],
+   [
+    9,
+    1,
+    "moon"
+   ],
+   [
+    14,
+    1,
+    "happen"
+   ]
+  ],
+  "index_text": "first person walk moon happen"
+ },
+ {
+  "question": "the war of the currents",
+  "tokens": [
+   "the",
+   "war",
+   "of",
+   "the",
+   "currents"
+  ],
+  "terms": [
+   "war",
+   "currents"
+  ],
+  "and_query": "\"war\" AND \"currents\"",
+  "name_grams": [
+   [
+    1,
+    4,
+    "war of the currents"
+   ],
+   [
+    1,
+    1,
+    "war"
+   ],
+   [
+    4,
+    1,
+    "currents"
+   ]
+  ],
+  "index_text": "war currents"
+ },
+ {
+  "question": "Who was he?",
+  "tokens": [
+   "who",
+   "was",
+   "he"
+  ],
+  "terms": [
+   "who",
+   "was",
+   "he"
+  ],
+  "and_query": "\"who\" AND \"was\" AND \"he\"",
+  "name_grams": [],
+  "index_text": ""
+ },
+ {
+  "question": "best way to work",
+  "tokens": [
+   "best",
+   "way",
+   "to",
+   "work"
+  ],
+  "terms": [
+   "best",
+   "way",
+   "to",
+   "work"
+  ],
+  "and_query": "\"best\" AND \"way\" AND \"to\" AND \"work\"",
+  "name_grams": [
+   [
+    0,
+    4,
+    "best way to work"
+   ],
+   [
+    1,
+    3,
+    "way to work"
+   ],
+   [
+    0,
+    2,
+    "best way"
+   ]
+  ],
+  "index_text": "best way work"
+ },
+ {
+  "question": "Diesel versus petrol engines: what is the difference?",
+  "tokens": [
+   "diesel",
+   "versus",
+   "petrol",
+   "engines",
+   "what",
+   "is",
+   "the",
+   "difference"
+  ],
+  "terms": [
+   "diesel",
+   "petrol",
+   "engines"
+  ],
+  "and_query": "\"diesel\" AND \"petrol\" AND \"engines\"",
+  "name_grams": [
+   [
+    3,
+    5,
+    "engines what is the difference"
+   ],
+   [
+    0,
+    4,
+    "diesel versus petrol engines"
+   ],
+   [
+    0,
+    3,
+    "diesel versus petrol"
+   ],
+   [
+    1,
+    3,
+    "versus petrol engines"
+   ],
+   [
+    0,
+    2,
+    "diesel versus"
+   ],
+   [
+    1,
+    2,
+    "versus petrol"
+   ],
+   [
+    2,
+    2,
+    "petrol engines"
+   ],
+   [
+    0,
+    1,
+    "diesel"
+   ],
+   [
+    2,
+    1,
+    "petrol"
+   ],
+   [
+    3,
+    1,
+    "engines"
+   ]
+  ],
+  "index_text": "diesel versus petrol engines difference"
+ },
+ {
+  "question": "How do noise-cancelling headphones work?",
+  "tokens": [
+   "how",
+   "do",
+   "noise",
+   "cancelling",
+   "headphones",
+   "work"
+  ],
+  "terms": [
+   "noise",
+   "cancelling",
+   "headphones"
+  ],
+  "and_query": "\"noise\" AND \"cancelling\" AND \"headphones\"",
+  "name_grams": [
+   [
+    2,
+    4,
+    "noise cancelling headphones work"
+   ],
+   [
+    2,
+    3,
+    "noise cancelling headphones"
+   ],
+   [
+    3,
+    3,
+    "cancelling headphones work"
+   ],
+   [
+    2,
+    2,
+    "noise cancelling"
+   ],
+   [
+    3,
+    2,
+    "cancelling headphones"
+   ],
+   [
+    4,
+    2,
+    "headphones work"
+   ],
+   [
+    2,
+    1,
+    "noise"
+   ],
+   [
+    3,
+    1,
+    "cancelling"
+   ],
+   [
+    4,
+    1,
+    "headphones"
+   ]
+  ],
+  "index_text": "noise cancelling headphones work"
+ },
+ {
+  "question": "What's the café like in São Paulo's old_town in 2024?",
+  "tokens": [
+   "what",
+   "s",
+   "the",
+   "café",
+   "like",
+   "in",
+   "são",
+   "paulo",
+   "s",
+   "old",
+   "town",
+   "in",
+   "2024"
+  ],
+  "terms": [
+   "café",
+   "like",
+   "são",
+   "paulo",
+   "old",
+   "town",
+   "2024"
+  ],
+  "and_query": "\"café\" AND \"like\" AND \"são\" AND \"paulo\" AND \"old\" AND \"town\" AND \"2024\"",
+  "name_grams": [
+   [
+    3,
+    5,
+    "café like in são paulo"
+   ],
+   [
+    4,
+    5,
+    "like in são paulo s"
+   ],
+   [
+    6,
+    5,
+    "são paulo s old town"
+   ],
+   [
+    8,
+    5,
+    "s old town in 2024"
+   ],
+   [
+    1,
+    4,
+    "s the café like"
+   ],
+   [
+    3,
+    4,
+    "café like in são"
+   ],
+   [
+    4,
+    4,
+    "like in são paulo"
+   ],
+   [
+    6,
+    4,
+    "são paulo s old"
+   ],
+   [
+    7,
+    4,
+    "paulo s old town"
+   ],
+   [
+    9,
+    4,
+    "old town in 2024"
+   ],
+   [
+    1,
+    3,
+    "s the café"
+   ],
+   [
+    4,
+    3,
+    "like in são"
+   ],
+   [
+    6,
+    3,
+    "são paulo s"
+   ],
+   [
+    7,
+    3,
+    "paulo s old"
+   ],
+   [
+    8,
+    3,
+    "s old town"
+   ],
+   [
+    10,
+    3,
+    "town in 2024"
+   ],
+   [
+    3,
+    2,
+    "café like"
+   ],
+   [
+    6,
+    2,
+    "são paulo"
+   ],
+   [
+    7,
+    2,
+    "paulo s"
+   ],
+   [
+    8,
+    2,
+    "s old"
+   ],
+   [
+    9,
+    2,
+    "old town"
+   ],
+   [
+    3,
+    1,
+    "café"
+   ],
+   [
+    4,
+    1,
+    "like"
+   ],
+   [
+    6,
+    1,
+    "são"
+   ],
+   [
+    7,
+    1,
+    "paulo"
+   ],
+   [
+    9,
+    1,
+    "old"
+   ],
+   [
+    10,
+    1,
+    "town"
+   ],
+   [
+    12,
+    1,
+    "2024"
+   ]
+  ],
+  "index_text": "s café like são paulo s old town 2024"
+ },
+ {
+  "question": "AND \"NEAR\" burn burn Burn",
+  "tokens": [
+   "and",
+   "near",
+   "burn",
+   "burn",
+   "burn"
+  ],
+  "terms": [
+   "near",
+   "burn"
+  ],
+  "and_query": "\"near\" AND \"burn\"",
+  "name_grams": [
+   [
+    1,
+    4,
+    "near burn burn burn"
+   ],
+   [
+    1,
+    3,
+    "near burn burn"
+   ],
+   [
+    2,
+    3,
+    "burn burn burn"
+   ],
+   [
+    1,
+    2,
+    "near burn"
+   ],
+   [
+    2,
+    2,
+    "burn burn"
+   ],
+   [
+    3,
+    2,
+    "burn burn"
+   ],
+   [
+    1,
+    1,
+    "near"
+   ],
+   [
+    2,
+    1,
+    "burn"
+   ],
+   [
+    3,
+    1,
+    "burn"
+   ],
+   [
+    4,
+    1,
+    "burn"
+   ]
+  ],
+  "index_text": "near burn burn burn"
+ },
+ {
+  "question": "",
+  "tokens": [],
+  "terms": [],
+  "and_query": "",
+  "name_grams": [],
+  "index_text": ""
+ }
+]

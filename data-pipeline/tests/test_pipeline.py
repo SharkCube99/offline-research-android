@@ -95,6 +95,22 @@ class NameTest(unittest.TestCase):
         self.assertEqual(single, [])
 
 
+class SharedVectorsTest(unittest.TestCase):
+    """eval/query_vectors.json is also checked by the Kotlin unit tests, so both sides agree."""
+
+    def test_vectors_match_the_reference_implementation(self):
+        import json
+        from textproc import tokenize
+        path = Path(__file__).resolve().parents[1] / "eval" / "query_vectors.json"
+        for vector in json.loads(path.read_text(encoding="utf-8")):
+            question = vector["question"]
+            self.assertEqual(tokenize(question), vector["tokens"], question)
+            self.assertEqual(retrieval.query_terms(question), vector["terms"], question)
+            self.assertEqual(retrieval.to_fts_query(question), vector["and_query"], question)
+            self.assertEqual([list(g) for g in retrieval.name_grams(question)], vector["name_grams"], question)
+            self.assertEqual(index_text(question), vector["index_text"], question)
+
+
 class IndexTextTest(unittest.TestCase):
     def test_function_words_are_removed_and_text_lowercased(self):
         self.assertEqual(index_text("The Battle of Hastings was in 1066."), "battle hastings 1066")

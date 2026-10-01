@@ -1,8 +1,9 @@
 // JNI bridge between app.offlineresearch.engine.LlamaBridge and llama.cpp.
 //
-// One model and one context at a time. All text crosses the boundary as UTF-8
-// byte arrays, because JNI strings use "modified UTF-8" and corrupt emoji and
-// other 4-byte characters.
+// Each loaded model is a Session, identified on the Kotlin side by a handle.
+// Several sessions can be loaded at once (the planner and the answerer). All
+// text crosses the boundary as UTF-8 byte arrays, because JNI strings use
+// "modified UTF-8" and corrupt emoji and other 4-byte characters.
 
 #include <jni.h>
 #include <android/log.h>
@@ -25,17 +26,15 @@
 
 namespace {
 
-// Return codes shared with LlamaBridge.kt.
-constexpr jint LOAD_OK = 0;
-constexpr jint LOAD_ERR_MODEL = -1;
-constexpr jint LOAD_ERR_CONTEXT = -2;
-constexpr jint ERR_BUSY = -3;
+// Return codes shared with LlamaBridge.kt. nativeLoad returns a handle (> 0) or one of these.
+constexpr jlong LOAD_ERR_MODEL = -1;
+constexpr jlong LOAD_ERR_CONTEXT = -2;
 
 constexpr jint STOP_EOS = 0;
 constexpr jint STOP_MAX_TOKENS = 1;
 constexpr jint STOP_CANCELLED = 2;
 constexpr jint STOP_CONTEXT_FULL = 3;
-constexpr jint GEN_ERR_NOT_LOADED = -1;
+constexpr jint ERR_BUSY = -3;
 constexpr jint GEN_ERR_TEMPLATE = -4;
 constexpr jint GEN_ERR_TOKENIZE = -5;
 constexpr jint GEN_ERR_PROMPT_TOO_LONG = -6;
@@ -63,14 +62,18 @@ struct Session {
     int n_ctx = 0;
     int n_batch = 0;
     int n_threads = 0;
+
+    std::mutex run_mutex;  // held for the whole of a generate() call
+    std::atomic<bool> cancel{false};
+
+    double metrics[M_COUNT] = {0};
+    std::mutex metrics_mutex;
+
+    ~Session() {
+        if (ctx) llama_free(ctx);
+        if (model) llama_model_free(model);
+    }
 };
-
-Session g_session;
-std::mutex g_session_mutex;  // held for the whole of load / generate / unload
-std::atomic<bool> g_cancel{false};
-
-double g_metrics[M_COUNT] = {0};
-std::mutex g_metrics_mutex;
 
 using Clock = std::chrono::steady_clock;
 
@@ -92,8 +95,8 @@ void log_to_android(enum ggml_log_level level, const char *text, void *) {
     __android_log_write(priority, "llama.cpp", text);
 }
 
-bool should_abort(void *) {
-    return g_cancel.load(std::memory_order_relaxed);
+bool should_abort(void *data) {
+    return static_cast<Session *>(data)->cancel.load(std::memory_order_relaxed);
 }
 
 // Same heuristic as llama.cpp's Android example: leave two cores for the UI and
@@ -130,35 +133,41 @@ size_t complete_utf8_prefix(const std::string &s) {
     return n;
 }
 
-void free_session_locked() {
-    if (g_session.ctx) llama_free(g_session.ctx);
-    if (g_session.model) llama_model_free(g_session.model);
-    g_session = Session();
-}
-
-std::string apply_chat_template(const std::string &system, const std::string &user) {
+std::string apply_chat_template(const Session &session, const std::string &system,
+                                const std::string &user) {
     std::vector<llama_chat_message> messages;
     if (!system.empty()) messages.push_back({"system", system.c_str()});
     messages.push_back({"user", user.c_str()});
 
     std::vector<char> buf(2 * (system.size() + user.size()) + 512);
-    int32_t n = llama_chat_apply_template(g_session.chat_template.c_str(), messages.data(),
+    int32_t n = llama_chat_apply_template(session.chat_template.c_str(), messages.data(),
                                           messages.size(), true, buf.data(), (int32_t) buf.size());
     if (n > (int32_t) buf.size()) {
         buf.resize((size_t) n);
-        n = llama_chat_apply_template(g_session.chat_template.c_str(), messages.data(),
+        n = llama_chat_apply_template(session.chat_template.c_str(), messages.data(),
                                       messages.size(), true, buf.data(), (int32_t) buf.size());
     }
     if (n < 0) return {};
     return std::string(buf.data(), (size_t) n);
 }
 
-llama_sampler *make_sampler(float temperature, int top_k, float top_p, float presence_penalty,
-                            uint32_t seed) {
+// Tokenises `text`; returns false on failure.
+bool tokenize(const Session &session, const std::string &text, bool special,
+              std::vector<llama_token> &tokens) {
+    const int n = -llama_tokenize(session.vocab, text.c_str(), (int32_t) text.size(), nullptr, 0,
+                                  special, special);
+    if (n < 0) return false;
+    tokens.resize((size_t) n);
+    return n == 0 || llama_tokenize(session.vocab, text.c_str(), (int32_t) text.size(),
+                                    tokens.data(), n, special, special) >= 0;
+}
+
+llama_sampler *make_sampler(const Session &session, float temperature, int top_k, float top_p,
+                            float presence_penalty, uint32_t seed) {
     llama_sampler *chain = llama_sampler_chain_init(llama_sampler_chain_default_params());
     if (presence_penalty != 0.0f) {
         llama_sampler_chain_add(chain, llama_sampler_init_penalties(
-                llama_vocab_n_tokens(g_session.vocab), PENALTY_LAST_N, 1.0f, 0.0f,
+                llama_vocab_n_tokens(session.vocab), PENALTY_LAST_N, 1.0f, 0.0f,
                 presence_penalty));
     }
     if (temperature <= 0.0f) {
@@ -171,6 +180,8 @@ llama_sampler *make_sampler(float temperature, int top_k, float top_p, float pre
     llama_sampler_chain_add(chain, llama_sampler_init_dist(seed));
     return chain;
 }
+
+Session *from_handle(jlong handle) { return reinterpret_cast<Session *>(handle); }
 
 }  // namespace
 
@@ -190,16 +201,10 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeInit(JNIEnv *env, jobject, jst
     LOGI("backend initialised: %s", llama_print_system_info());
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT jlong JNICALL
 Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
         JNIEnv *env, jobject, jstring model_path, jint n_ctx, jint n_batch, jint n_threads,
         jboolean use_mmap, jboolean use_mlock, jboolean repack, jstring chat_template) {
-    std::unique_lock<std::mutex> lock(g_session_mutex, std::try_to_lock);
-    if (!lock.owns_lock()) return ERR_BUSY;
-
-    free_session_locked();
-    g_cancel = false;
-
     llama_model_params model_params = llama_model_default_params();
     model_params.n_gpu_layers = 0;
     if (use_mmap) {
@@ -207,19 +212,21 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
     } else {
         model_params.load_mode = use_mlock ? LLAMA_LOAD_MODE_MLOCK : LLAMA_LOAD_MODE_NONE;
     }
-
     // Repacking copies the weights into a CPU-friendly layout held in ordinary
     // RAM, on top of the mapped file. Off keeps the weights file-backed only.
     model_params.use_extra_bufts = repack;
+
+    auto *session = new Session();
 
     const char *path = env->GetStringUTFChars(model_path, nullptr);
     LOGI("loading %s (load_mode=%s, repack=%d)", path,
          llama_load_mode_name(model_params.load_mode), (int) repack);
     const auto t_start = Clock::now();
-    llama_model *model = llama_model_load_from_file(path, model_params);
+    session->model = llama_model_load_from_file(path, model_params);
     env->ReleaseStringUTFChars(model_path, path);
-    if (model == nullptr) {
+    if (session->model == nullptr) {
         LOGE("llama_model_load_from_file failed");
+        delete session;
         return LOAD_ERR_MODEL;
     }
 
@@ -232,12 +239,12 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
     ctx_params.n_threads = threads;
     ctx_params.n_threads_batch = threads;
     ctx_params.abort_callback = should_abort;
-    ctx_params.abort_callback_data = nullptr;
+    ctx_params.abort_callback_data = session;
 
-    llama_context *ctx = llama_init_from_model(model, ctx_params);
-    if (ctx == nullptr) {
+    session->ctx = llama_init_from_model(session->model, ctx_params);
+    if (session->ctx == nullptr) {
         LOGE("llama_init_from_model failed");
-        llama_model_free(model);
+        delete session;
         return LOAD_ERR_CONTEXT;
     }
     const double load_ms = ms_since(t_start);
@@ -246,78 +253,66 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
     std::string chat_tmpl(tmpl);
     env->ReleaseStringUTFChars(chat_template, tmpl);
     if (chat_tmpl.empty() || chat_tmpl == "auto") {
-        const char *embedded = llama_model_chat_template(model, nullptr);
+        const char *embedded = llama_model_chat_template(session->model, nullptr);
         if (embedded == nullptr) LOGW("model has no chat template; falling back to chatml");
         chat_tmpl = embedded ? embedded : "chatml";
     }
 
-    g_session.model = model;
-    g_session.ctx = ctx;
-    g_session.vocab = llama_model_get_vocab(model);
-    g_session.chat_template = chat_tmpl;
-    g_session.n_ctx = (int) llama_n_ctx(ctx);
-    g_session.n_batch = n_batch;
-    g_session.n_threads = threads;
-
-    {
-        std::lock_guard<std::mutex> metrics_lock(g_metrics_mutex);
-        std::fill(g_metrics, g_metrics + M_COUNT, 0.0);
-        g_metrics[M_LOAD_MS] = load_ms;
-        g_metrics[M_THREADS] = threads;
-    }
+    session->vocab = llama_model_get_vocab(session->model);
+    session->chat_template = chat_tmpl;
+    session->n_ctx = (int) llama_n_ctx(session->ctx);
+    session->n_batch = n_batch;
+    session->n_threads = threads;
+    session->metrics[M_LOAD_MS] = load_ms;
+    session->metrics[M_THREADS] = threads;
 
     char desc[128] = {0};
-    llama_model_desc(model, desc, sizeof(desc));
+    llama_model_desc(session->model, desc, sizeof(desc));
     LOGI("loaded '%s' in %.0f ms: n_ctx=%d n_batch=%d threads=%d size=%.2f GiB", desc, load_ms,
-         g_session.n_ctx, n_batch, threads,
-         (double) llama_model_size(model) / (1024.0 * 1024.0 * 1024.0));
-    return LOAD_OK;
+         session->n_ctx, n_batch, threads,
+         (double) llama_model_size(session->model) / (1024.0 * 1024.0 * 1024.0));
+    return reinterpret_cast<jlong>(session);
 }
 
 JNIEXPORT jint JNICALL
 Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
-        JNIEnv *env, jobject, jbyteArray system_utf8, jbyteArray user_utf8, jint max_tokens,
-        jfloat temperature, jint top_k, jfloat top_p, jfloat presence_penalty, jint seed,
-        jobject callback) {
-    std::unique_lock<std::mutex> lock(g_session_mutex, std::try_to_lock);
+        JNIEnv *env, jobject, jlong handle, jbyteArray system_utf8, jbyteArray user_utf8,
+        jint max_tokens, jfloat temperature, jint top_k, jfloat top_p, jfloat presence_penalty,
+        jint seed, jobject callback) {
+    Session &session = *from_handle(handle);
+    std::unique_lock<std::mutex> lock(session.run_mutex, std::try_to_lock);
     if (!lock.owns_lock()) return ERR_BUSY;
-    if (g_session.ctx == nullptr) return GEN_ERR_NOT_LOADED;
 
-    g_cancel = false;
+    session.cancel = false;
     const auto t_start = Clock::now();
 
     jclass callback_class = env->GetObjectClass(callback);
     jmethodID on_token = env->GetMethodID(callback_class, "onToken", "([B)V");
     if (on_token == nullptr) return GEN_ERR_DECODE;  // NoSuchMethodError is pending
 
-    const std::string prompt = apply_chat_template(bytes_to_string(env, system_utf8),
+    const std::string prompt = apply_chat_template(session, bytes_to_string(env, system_utf8),
                                                    bytes_to_string(env, user_utf8));
     if (prompt.empty()) {
         LOGE("chat template could not be applied");
         return GEN_ERR_TEMPLATE;
     }
 
-    const int n_prompt = -llama_tokenize(g_session.vocab, prompt.c_str(), (int32_t) prompt.size(),
-                                         nullptr, 0, true, true);
-    if (n_prompt <= 0) return GEN_ERR_TOKENIZE;
-    std::vector<llama_token> tokens((size_t) n_prompt);
-    if (llama_tokenize(g_session.vocab, prompt.c_str(), (int32_t) prompt.size(), tokens.data(),
-                       n_prompt, true, true) < 0) {
-        return GEN_ERR_TOKENIZE;
-    }
-    if (n_prompt >= g_session.n_ctx) {
-        LOGE("prompt is %d tokens but the context holds %d", n_prompt, g_session.n_ctx);
+    std::vector<llama_token> tokens;
+    if (!tokenize(session, prompt, true, tokens) || tokens.empty()) return GEN_ERR_TOKENIZE;
+    const int n_prompt = (int) tokens.size();
+    if (n_prompt >= session.n_ctx) {
+        LOGE("prompt is %d tokens but the context holds %d", n_prompt, session.n_ctx);
         return GEN_ERR_PROMPT_TOO_LONG;
     }
 
     // Each question is answered from a clean context. Reusing the KV cache for a
     // fixed system prompt (prefix caching) is deliberately left to M5.
-    llama_memory_clear(llama_get_memory(g_session.ctx), true);
+    llama_memory_clear(llama_get_memory(session.ctx), true);
 
-    for (int i = 0; i < n_prompt; i += g_session.n_batch) {
-        const int n = std::min(g_session.n_batch, n_prompt - i);
-        const int rc = llama_decode(g_session.ctx, llama_batch_get_one(tokens.data() + i, n));
-        if (rc == 2 || g_cancel) return STOP_CANCELLED;
+    for (int i = 0; i < n_prompt; i += session.n_batch) {
+        const int n = std::min(session.n_batch, n_prompt - i);
+        const int rc = llama_decode(session.ctx, llama_batch_get_one(tokens.data() + i, n));
+        if (rc == 2 || session.cancel) return STOP_CANCELLED;
         if (rc != 0) {
             LOGE("llama_decode failed on the prompt: %d", rc);
             return GEN_ERR_DECODE;
@@ -326,14 +321,14 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     const double prompt_ms = ms_since(t_start);
     const auto t_gen_start = Clock::now();
 
-    llama_sampler *sampler = make_sampler(temperature, top_k, top_p, presence_penalty,
+    llama_sampler *sampler = make_sampler(session, temperature, top_k, top_p, presence_penalty,
                                           (uint32_t) seed);
 
     jint stop = STOP_MAX_TOKENS;
     int n_generated = 0;
     double ttft_ms = 0.0;
     std::string pending;  // bytes not yet delivered (incomplete UTF-8 tail)
-    const int budget = std::min((int) max_tokens, g_session.n_ctx - n_prompt);
+    const int budget = std::min((int) max_tokens, session.n_ctx - n_prompt);
     if (budget < (int) max_tokens) stop = STOP_CONTEXT_FULL;
 
     auto emit = [&](size_t n_bytes) -> bool {
@@ -348,20 +343,20 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     };
 
     for (int i = 0; i < budget; i++) {
-        if (g_cancel) { stop = STOP_CANCELLED; break; }
+        if (session.cancel) { stop = STOP_CANCELLED; break; }
 
-        llama_token token = llama_sampler_sample(sampler, g_session.ctx, -1);
+        llama_token token = llama_sampler_sample(sampler, session.ctx, -1);
         if (n_generated == 0) ttft_ms = ms_since(t_start);
-        if (llama_vocab_is_eog(g_session.vocab, token)) { stop = STOP_EOS; break; }
+        if (llama_vocab_is_eog(session.vocab, token)) { stop = STOP_EOS; break; }
         n_generated++;
 
         char piece[256];
-        const int n_piece = llama_token_to_piece(g_session.vocab, token, piece, sizeof(piece), 0,
+        const int n_piece = llama_token_to_piece(session.vocab, token, piece, sizeof(piece), 0,
                                                  false);
         if (n_piece > 0) pending.append(piece, (size_t) n_piece);
         if (!emit(complete_utf8_prefix(pending))) { stop = STOP_CANCELLED; break; }
 
-        const int rc = llama_decode(g_session.ctx, llama_batch_get_one(&token, 1));
+        const int rc = llama_decode(session.ctx, llama_batch_get_one(&token, 1));
         if (rc == 2) { stop = STOP_CANCELLED; break; }
         if (rc != 0) {
             LOGE("llama_decode failed during generation: %d", rc);
@@ -374,12 +369,12 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     llama_sampler_free(sampler);
 
     {
-        std::lock_guard<std::mutex> metrics_lock(g_metrics_mutex);
-        g_metrics[M_PROMPT_TOKENS] = n_prompt;
-        g_metrics[M_PROMPT_MS] = prompt_ms;
-        g_metrics[M_TTFT_MS] = ttft_ms;
-        g_metrics[M_GEN_TOKENS] = n_generated;
-        g_metrics[M_GEN_MS] = gen_ms;
+        std::lock_guard<std::mutex> metrics_lock(session.metrics_mutex);
+        session.metrics[M_PROMPT_TOKENS] = n_prompt;
+        session.metrics[M_PROMPT_MS] = prompt_ms;
+        session.metrics[M_TTFT_MS] = ttft_ms;
+        session.metrics[M_GEN_TOKENS] = n_generated;
+        session.metrics[M_GEN_MS] = gen_ms;
     }
     LOGI("generate: prompt %d tok in %.0f ms, ttft %.0f ms, %d tok in %.0f ms (%.2f tok/s), stop=%d",
          n_prompt, prompt_ms, ttft_ms, n_generated, gen_ms,
@@ -387,17 +382,28 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     return stop;
 }
 
+// Number of tokens in `text` for this model, or -1. Uses only the vocabulary,
+// so it is safe to call while a generate() is running.
+JNIEXPORT jint JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeTokenCount(JNIEnv *env, jobject, jlong handle,
+                                                             jbyteArray text_utf8) {
+    std::vector<llama_token> tokens;
+    if (!tokenize(*from_handle(handle), bytes_to_string(env, text_utf8), false, tokens)) return -1;
+    return (jint) tokens.size();
+}
+
 JNIEXPORT void JNICALL
-Java_app_offlineresearch_engine_LlamaBridge_nativeCancel(JNIEnv *, jobject) {
-    g_cancel = true;
+Java_app_offlineresearch_engine_LlamaBridge_nativeCancel(JNIEnv *, jobject, jlong handle) {
+    from_handle(handle)->cancel = true;
 }
 
 JNIEXPORT jdoubleArray JNICALL
-Java_app_offlineresearch_engine_LlamaBridge_nativeMetrics(JNIEnv *env, jobject) {
+Java_app_offlineresearch_engine_LlamaBridge_nativeMetrics(JNIEnv *env, jobject, jlong handle) {
+    Session &session = *from_handle(handle);
     jdoubleArray out = env->NewDoubleArray(M_COUNT);
     if (out == nullptr) return nullptr;
-    std::lock_guard<std::mutex> metrics_lock(g_metrics_mutex);
-    env->SetDoubleArrayRegion(out, 0, M_COUNT, g_metrics);
+    std::lock_guard<std::mutex> metrics_lock(session.metrics_mutex);
+    env->SetDoubleArrayRegion(out, 0, M_COUNT, session.metrics);
     return out;
 }
 
@@ -406,11 +412,13 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeSystemInfo(JNIEnv *env, jobjec
     return env->NewStringUTF(llama_print_system_info());
 }
 
+// The handle must not be used again after this call.
 JNIEXPORT void JNICALL
-Java_app_offlineresearch_engine_LlamaBridge_nativeUnload(JNIEnv *, jobject) {
-    g_cancel = true;  // make a running generate() return so the lock frees up
-    std::lock_guard<std::mutex> lock(g_session_mutex);
-    free_session_locked();
+Java_app_offlineresearch_engine_LlamaBridge_nativeUnload(JNIEnv *, jobject, jlong handle) {
+    Session *session = from_handle(handle);
+    session->cancel = true;  // make a running generate() return so the lock frees up
+    { std::lock_guard<std::mutex> lock(session->run_mutex); }
+    delete session;
 }
 
 }  // extern "C"

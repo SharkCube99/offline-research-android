@@ -9,31 +9,32 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
-/** [InferenceEngine] backed by llama.cpp through [LlamaBridge]. */
-class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
+/**
+ * [InferenceEngine] backed by llama.cpp through [LlamaBridge]. Each instance
+ * holds one model; several instances can be loaded at once.
+ */
+class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine") : InferenceEngine {
 
     // llama.cpp calls block for seconds to minutes; they get one dedicated thread
     // so they never run concurrently and never occupy a shared dispatcher.
     private val dispatcher = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "llama-engine")
+        Thread(runnable, name)
     }.asCoroutineDispatcher()
 
-    private var initialised = false
+    /** 0 while no model is loaded. */
+    @Volatile
+    private var handle = 0L
 
     @Volatile
     private var lastStop = StopReason.NONE
 
-    private fun ensureInitialised() {
-        if (!initialised) {
-            LlamaBridge.nativeInit(nativeLibDir)
-            initialised = true
-        }
-    }
+    private fun requireHandle(): Long = handle.also { if (it == 0L) throw EngineException("No model is loaded") }
 
     override suspend fun load(modelPath: String, config: EngineConfig) = withContext(dispatcher) {
-        ensureInitialised()
+        LlamaBridge.ensureInitialised(nativeLibDir)
+        release()
         lastStop = StopReason.NONE
-        val code = LlamaBridge.nativeLoad(
+        val result = LlamaBridge.nativeLoad(
             modelPath,
             config.contextSize,
             config.batchSize,
@@ -43,19 +44,20 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
             config.repack,
             config.chatTemplate,
         )
-        when (code) {
-            LlamaBridge.LOAD_OK -> Unit
-            LlamaBridge.LOAD_ERR_MODEL ->
+        when {
+            result > 0 -> handle = result
+            result == LlamaBridge.LOAD_ERR_MODEL ->
                 throw EngineException("llama.cpp could not load the model file: $modelPath")
-            LlamaBridge.LOAD_ERR_CONTEXT ->
+            result == LlamaBridge.LOAD_ERR_CONTEXT ->
                 throw EngineException("Could not create a context (n_ctx=${config.contextSize}); likely out of memory")
-            LlamaBridge.ERR_BUSY -> throw EngineException("Engine is busy")
-            else -> throw EngineException("Model load failed with code $code")
+            else -> throw EngineException("Model load failed with code $result")
         }
     }
 
     override fun generate(request: GenerationRequest): Flow<String> = channelFlow {
+        val session = requireHandle()
         val code = LlamaBridge.nativeGenerate(
+            session,
             request.systemPrompt.toByteArray(Charsets.UTF_8),
             request.userPrompt.toByteArray(Charsets.UTF_8),
             request.maxTokens,
@@ -67,7 +69,7 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
         ) { utf8 ->
             // The collector going away is the only way trySend fails on an
             // unlimited buffer; stop generating for nobody.
-            if (trySend(String(utf8, Charsets.UTF_8)).isFailure) LlamaBridge.nativeCancel()
+            if (trySend(String(utf8, Charsets.UTF_8)).isFailure) LlamaBridge.nativeCancel(session)
         }
         lastStop = when (code) {
             LlamaBridge.STOP_EOS -> StopReason.EOS
@@ -77,7 +79,6 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
             else -> StopReason.ERROR
         }
         when (code) {
-            LlamaBridge.GEN_ERR_NOT_LOADED -> throw EngineException("No model is loaded")
             LlamaBridge.ERR_BUSY -> throw EngineException("Engine is busy")
             LlamaBridge.GEN_ERR_TEMPLATE -> throw EngineException("The chat template could not be applied")
             LlamaBridge.GEN_ERR_TOKENIZE -> throw EngineException("The prompt could not be tokenised")
@@ -86,10 +87,18 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
         }
     }.buffer(Channel.UNLIMITED).flowOn(dispatcher)
 
-    override fun cancel() = LlamaBridge.nativeCancel()
+    override fun countTokens(text: String): Int {
+        val count = LlamaBridge.nativeTokenCount(requireHandle(), text.toByteArray(Charsets.UTF_8))
+        if (count < 0) throw EngineException("The text could not be tokenised")
+        return count
+    }
+
+    override fun cancel() {
+        handle.let { if (it != 0L) LlamaBridge.nativeCancel(it) }
+    }
 
     override fun metrics(): EngineMetrics {
-        val m = LlamaBridge.nativeMetrics()
+        val m = LlamaBridge.nativeMetrics(requireHandle())
         return EngineMetrics(
             loadMs = m[LlamaBridge.M_LOAD_MS],
             promptTokens = m[LlamaBridge.M_PROMPT_TOKENS].toInt(),
@@ -106,7 +115,16 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
 
     override suspend fun unload() {
         // Cancel from the caller's thread first: the engine thread may be inside generate().
-        LlamaBridge.nativeCancel()
-        withContext(dispatcher) { LlamaBridge.nativeUnload() }
+        cancel()
+        withContext(dispatcher) { release() }
+    }
+
+    /** Engine thread only. */
+    private fun release() {
+        val old = handle
+        if (old != 0L) {
+            handle = 0L
+            LlamaBridge.nativeUnload(old)
+        }
     }
 }

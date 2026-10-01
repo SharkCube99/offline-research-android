@@ -16,8 +16,8 @@ android {
         applicationId = "app.offlineresearch"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0-m1"
+        versionCode = 3
+        versionName = "0.3.0-m3"
 
         ndk {
             abiFilters += "arm64-v8a"
@@ -98,6 +98,8 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.coroutines.android)
     implementation(libs.serialization.json)
+    implementation(libs.sqlite.android)
 
     testImplementation(libs.junit)
+    testImplementation(libs.sqlite.jdbc)
 }

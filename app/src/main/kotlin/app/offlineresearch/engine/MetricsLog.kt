@@ -30,6 +30,35 @@ data class MetricsRecord(
     @SerialName("gen_ms") val generationMs: Double,
     @SerialName("tokens_per_sec") val tokensPerSecond: Double,
     val stop: String,
+    val rag: RagRecord? = null,
+)
+
+/** The retrieval side of one answer. */
+@Serializable
+data class RagRecord(
+    val question: String,
+    val answer: String,
+    val planner: String,
+    @SerialName("planner_fallback") val plannerFallback: Boolean,
+    val queries: List<String>,
+    @SerialName("plan_ms") val planMs: Long,
+    @SerialName("search_ms") val searchMs: Long,
+    /** From sending the question to the first answer token: plan + search + prompt processing. */
+    @SerialName("total_ttft_ms") val totalTimeToFirstTokenMs: Double,
+    val retrieved: Int,
+    val sources: List<String>,
+    val cited: List<Int>,
+    @SerialName("invalid_citations") val invalidCitations: List<Int>,
+    @SerialName("not_covered") val notCovered: Boolean,
+)
+
+/** Which model and settings an answer ran with. */
+data class RunInfo(
+    val profile: String,
+    val modelFile: String,
+    val contextSize: Int,
+    val repack: Boolean,
+    val appVersion: String,
 )
 
 /**
@@ -38,26 +67,28 @@ data class MetricsRecord(
  */
 class MetricsLog(private val logDir: File?) {
 
-    fun record(metrics: EngineMetrics, profile: String, modelFile: String, contextSize: Int, repack: Boolean, appVersion: String) {
+    /** [metrics] is null when no model ran (nothing was retrieved). */
+    fun record(metrics: EngineMetrics?, run: RunInfo, rag: RagRecord? = null) {
         val record = MetricsRecord(
             timestamp = Instant.now().toString(),
             device = "${Build.MANUFACTURER} ${Build.MODEL}",
             soc = if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL else Build.HARDWARE,
             androidSdk = Build.VERSION.SDK_INT,
-            appVersion = appVersion,
-            profile = profile,
-            modelFile = modelFile,
-            contextSize = contextSize,
-            threads = metrics.threads,
-            repack = repack,
-            loadMs = metrics.loadMs,
-            promptTokens = metrics.promptTokens,
-            promptMs = metrics.promptMs,
-            timeToFirstTokenMs = metrics.timeToFirstTokenMs,
-            generatedTokens = metrics.generatedTokens,
-            generationMs = metrics.generationMs,
-            tokensPerSecond = metrics.tokensPerSecond,
-            stop = metrics.stopReason.name,
+            appVersion = run.appVersion,
+            profile = run.profile,
+            modelFile = run.modelFile,
+            contextSize = run.contextSize,
+            threads = metrics?.threads ?: 0,
+            repack = run.repack,
+            loadMs = metrics?.loadMs ?: 0.0,
+            promptTokens = metrics?.promptTokens ?: 0,
+            promptMs = metrics?.promptMs ?: 0.0,
+            timeToFirstTokenMs = metrics?.timeToFirstTokenMs ?: 0.0,
+            generatedTokens = metrics?.generatedTokens ?: 0,
+            generationMs = metrics?.generationMs ?: 0.0,
+            tokensPerSecond = metrics?.tokensPerSecond ?: 0.0,
+            stop = (metrics?.stopReason ?: StopReason.NONE).name,
+            rag = rag,
         )
         val line = Json.encodeToString(record)
         Log.i(TAG, "METRICS $line")

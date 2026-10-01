@@ -16,6 +16,9 @@ interface InferenceEngine {
      */
     fun generate(request: GenerationRequest): Flow<String>
 
+    /** Number of tokens [text] occupies in this model's context. Safe to call from any thread. */
+    fun countTokens(text: String): Int
+
     /** Asks a running [generate] to stop. Safe to call from any thread at any time. */
     fun cancel()
 
