@@ -1,0 +1,22 @@
+# t4-repack-true on 23076RN4BI, 2026-10-01T04:24:42Z
+backend initialised: CPU : NEON = 1 | ARM_FMA = 1 | FP16_VA = 1 | DOTPROD = 1 | REPACK = 1 | 
+loading /storage/emulated/0/Android/data/app.offlineresearch/files/models/Qwen3-4B-Q4_K_M.gguf (load_mode=mmap, repack=1)
+loaded 'qwen3 4B Q4_K - Medium' in 11729 ms: n_ctx=4096 n_batch=512 threads=4 size=2.32 GiB
+load_tensors:   CPU_Mapped model buffer size =  2362.55 MiB
+load_tensors:   CPU_REPACK model buffer size =  2375.16 MiB
+## after load
+           TOTAL PSS:  4411394            TOTAL RSS:  3922656       TOTAL SWAP PSS:   537228
+MemTotal:        7614048 kB
+MemAvailable:    1477836 kB
+SwapTotal:       8388604 kB
+SwapFree:        4872776 kB
+  temperature: 350
+airplane_mode_on=1
+## after 3 questions
+           TOTAL PSS:  3195042            TOTAL RSS:  2728512       TOTAL SWAP PSS:   524029
+MemTotal:        7614048 kB
+MemAvailable:     790640 kB
+SwapTotal:       8388604 kB
+SwapFree:        4176384 kB
+  temperature: 360
+airplane_mode_on=1

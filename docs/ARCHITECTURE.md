@@ -40,13 +40,14 @@ ChatScreen (Compose) -> ChatViewModel -> InferenceEngine (interface)
 | CPU features on the Snapdragon 4 Gen 2 (SM4450) | NEON, ARM_FMA, FP16_VA, DOTPROD. No i8mm, no SVE |
 | Can `adb push` write into `/sdcard/Android/data/app.offlineresearch/files` on Android 15? | Yes. The `--internal` fallback was not needed |
 | Does Qwen3-4B Q4_K_M with `n_ctx` 4096 load on 8 GB? | Yes, but most of the app's memory went to swap. See `docs/PERFORMANCE.md` |
+| Does turning off weight repacking remove the second copy of the weights? | Yes: about 2.2 GB more memory available and no measurable speed loss at 4 threads |
+| 2 or 4 threads? | No clear winner in a small sample; left at the default |
 
 ## Still unverified
 
 | Question | How it gets answered |
 |---|---|
-| Whether 2 or 4 threads is faster on a 2 big + 6 little core layout | Push a profile override with `n_threads` 2, then 4, and compare `metrics.jsonl` |
-| Whether turning off weight repacking (`use_extra_bufts`) removes the second in-RAM copy of the weights, and what it costs in speed | Needs a profile field and a bridge change; then compare `metrics.jsonl` and `dumpsys meminfo` |
+| Why prompt processing is only about 5 to 8 tokens per second on the Redmi | Open. Not swap (see `docs/PERFORMANCE.md`). Longer prompts and other batch sizes have not been tried |
 | `setup.sh --internal` | Never run on a device |
 
 ## Decisions and defaults
@@ -61,6 +62,8 @@ ChatScreen (Compose) -> ChatViewModel -> InferenceEngine (interface)
 | OpenMP | Off | The official cross-compile instructions turn it off. llama.cpp's Android example turns it on; comparing the two is a candidate for M5 |
 | KleidiAI | Off | It is fetched from the network at build time, which hurts reproducible builds. Candidate for M5 |
 | GPU backends | None; CPU only | Boring and predictable. The Redmi's GPU is weak |
+| Weight repacking | Off in both profiles (`"repack": false`) | Measured: it holds a second copy of the weights in RAM for no speed gain on the Redmi, and cannot fit for the 30B model |
+| Asking over adb | `am start ... --es ask "question"` asks a question | Lets `scripts/measure.sh`, and later the benchmark runner, drive the app without touching the screen |
 | Thread count | Profile value, or `clamp(cores - 2, 2, 4)` when the profile says 0 | Same heuristic as llama.cpp's Android example |
 | Conversation memory | None. Each question starts from a clean context | The product is question answering over retrieved passages, not chat. Prefix caching of the system prompt is M5 |
 | Reasoning output | `/no_think` in the profile's system prompt; any `<think>` block is hidden by the UI | Reasoning tokens are slow on a phone. This is profile configuration and can be changed without code |

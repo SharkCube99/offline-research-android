@@ -75,6 +75,14 @@ adb logcat -s OfflineResearch LlamaBridge
 adb pull /sdcard/Android/data/app.offlineresearch/files/logs/metrics.jsonl
 ```
 
+To measure a configuration with the same three questions every time:
+
+```bash
+scripts/measure.sh --threads 4 --repack false
+```
+
+Results are saved under `docs/measurements/`.
+
 ## Change the model
 
 Models are configuration, not code. A profile is a small JSON file (`profiles/low.json`, `profiles/high.json`) that names the model file and its settings. To try another model, push the GGUF and a profile that names it:
@@ -90,7 +98,7 @@ scripts/setup.sh --no-install --model /path/to/other.gguf --profile my-profile.j
 | `app/` | Android app (Kotlin, Jetpack Compose) and the JNI bridge in `app/src/main/cpp/` |
 | `third_party/llama.cpp` | llama.cpp, a git submodule pinned to a release tag |
 | `profiles/` | Model profiles |
-| `scripts/` | `setup.sh` (provision a phone), `verify_offline.sh` (permission check) |
+| `scripts/` | `setup.sh` (provision a phone), `measure.sh` (timed runs), `verify_offline.sh` (permission check) |
 | `docs/` | Architecture decisions, performance log, benchmark notes |
 | `data-pipeline/`, `bench/` | Placeholders for later milestones |
 
