@@ -33,16 +33,21 @@ ChatScreen (Compose) -> ChatViewModel -> InferenceEngine (interface)
 | Qwen3 sampling, non-thinking | temperature 0.7, top_p 0.8, top_k 20, presence penalty 1.5 for quantised models | Qwen3-4B-GGUF model card |
 | Qwen3 thinking switch | `/no_think` in a system or user message turns reasoning off | Qwen3-4B-GGUF model card |
 
-## Still unverified
+## Checked on the Redmi 12 5G (2026-10-01)
 
-These need the phone. Each one has a place where the answer shows up.
+| Question | Answer |
+|---|---|
+| CPU features on the Snapdragon 4 Gen 2 (SM4450) | NEON, ARM_FMA, FP16_VA, DOTPROD. No i8mm, no SVE |
+| Can `adb push` write into `/sdcard/Android/data/app.offlineresearch/files` on Android 15? | Yes. The `--internal` fallback was not needed |
+| Does Qwen3-4B Q4_K_M with `n_ctx` 4096 load on 8 GB? | Yes, but most of the app's memory went to swap. See `docs/PERFORMANCE.md` |
+
+## Still unverified
 
 | Question | How it gets answered |
 |---|---|
-| Which CPU features the Snapdragon 4 Gen 2 exposes, and which ggml backend variant is picked | `adb logcat -s LlamaBridge OfflineResearch` prints `llama_print_system_info()` at load |
-| Whether `adb push` can write into `/sdcard/Android/data/app.offlineresearch/files` on the Redmi's Android build | `scripts/setup.sh`; if it fails, `--internal` is the fallback |
 | Whether 2 or 4 threads is faster on a 2 big + 6 little core layout | Push a profile override with `n_threads` 2, then 4, and compare `metrics.jsonl` |
-| Whether Qwen3-4B Q4_K_M with `n_ctx` 4096 fits comfortably in 8 GB | Load it; watch for a low-memory kill in logcat |
+| Whether turning off weight repacking (`use_extra_bufts`) removes the second in-RAM copy of the weights, and what it costs in speed | Needs a profile field and a bridge change; then compare `metrics.jsonl` and `dumpsys meminfo` |
+| `setup.sh --internal` | Never run on a device |
 
 ## Decisions and defaults
 
