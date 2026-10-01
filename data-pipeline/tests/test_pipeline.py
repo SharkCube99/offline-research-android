@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import retrieval  # noqa: E402
-from textproc import chunk_text, clean_text, count_words, split_sentences  # noqa: E402
+from textproc import article_names, chunk_text, clean_text, count_words, index_text, split_sentences  # noqa: E402
 
 
 def sentences(count, words_each):
@@ -63,10 +63,41 @@ class QueryTest(unittest.TestCase):
         self.assertEqual(retrieval.query_terms("Who was he?"), ["who", "was", "he"])
 
     def test_terms_are_quoted_so_fts_syntax_cannot_leak(self):
-        self.assertEqual(retrieval.to_fts_query('AND "NEAR" burn'), '"near" OR "burn"')
+        self.assertEqual(retrieval.to_fts_query('AND "NEAR" burn'), '"near" AND "burn"')
 
     def test_repeats_are_removed(self):
         self.assertEqual(retrieval.query_terms("burn burn Burn"), ["burn"])
+
+
+class NameTest(unittest.TestCase):
+    def test_title_and_distinct_aliases_become_keys(self):
+        self.assertEqual(article_names("Myocardial infarction", "Heart attack | Heart Attack | MI"),
+                         [("myocardial infarction", 1), ("heart attack", 0), ("mi", 0)])
+
+    def test_alias_equal_to_title_is_not_repeated(self):
+        self.assertEqual(article_names("Jet engine", "Jet Engine"), [("jet engine", 1)])
+
+    def test_punctuation_only_names_are_dropped(self):
+        self.assertEqual(article_names("!!!", ""), [])
+
+    def test_name_grams_are_longest_first(self):
+        grams = [key for _, _, key in retrieval.name_grams("How do I recognise a heart attack?")]
+        self.assertLess(grams.index("heart attack"), grams.index("heart"))
+
+    def test_name_grams_do_not_start_or_end_with_a_function_word(self):
+        grams = [key for _, _, key in retrieval.name_grams("the war of the currents")]
+        self.assertIn("war of the currents", grams)
+        self.assertNotIn("the war", grams)
+        self.assertNotIn("war of", grams)
+
+    def test_single_filler_words_are_not_names(self):
+        single = [key for _, length, key in retrieval.name_grams("best way to work") if length == 1]
+        self.assertEqual(single, [])
+
+
+class IndexTextTest(unittest.TestCase):
+    def test_function_words_are_removed_and_text_lowercased(self):
+        self.assertEqual(index_text("The Battle of Hastings was in 1066."), "battle hastings 1066")
 
 
 if __name__ == "__main__":

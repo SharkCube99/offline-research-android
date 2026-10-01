@@ -3,7 +3,7 @@
 {"id": 3, "category": "travel", "question": "What should I know about altitude sickness before trekking in Nepal?", "expected": ["Altitude sickness", "Trekking in Nepal", "Nepal"]}
 {"id": 4, "category": "travel", "question": "Is tap water safe to drink in Mexico?", "expected": ["Mexico", "Water", "Drinking water"]}
 {"id": 5, "category": "travel", "question": "What are the must-see sights in Rome?", "expected": ["Rome"]}
-{"id": 6, "category": "travel", "question": "How does tipping work in the United States?", "expected": ["Tipping", "United States of America", "Gratuity"]}
+{"id": 6, "category": "travel", "question": "How does tipping work in the United States?", "expected": ["Tipping", "United States", "United States of America", "Gratuity"]}
 {"id": 7, "category": "travel", "question": "What is the best time of year to visit Iceland?", "expected": ["Iceland"]}
 {"id": 8, "category": "travel", "question": "How do I avoid pickpockets while travelling?", "expected": ["Pickpockets", "Pickpocketing", "Common scams"]}
 {"id": 9, "category": "travel", "question": "How do I prevent malaria when travelling?", "expected": ["Malaria", "Malaria prophylaxis"]}

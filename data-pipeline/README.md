@@ -12,7 +12,13 @@ python data-pipeline/build_index.py
 
 That one command downloads the dumps, cleans and chunks the text, builds the indexes in `data-pipeline/work/index/` and prints the size report. Every step is resumable: rerun the same command after an interruption.
 
-The full English Wikipedia download is about 42 GB and the build needs roughly 100 GB of free disk while it runs.
+The full English Wikipedia download is about 42 GB and the build needs roughly 100 GB of free disk while it runs. On the build PC it took about 4.5 hours to download, 2.5 hours to stage and 45 minutes to merge. On Windows the script asks the system to stay awake until it finishes; on macOS or Linux run it under `caffeinate` or `systemd-inhibit`.
+
+The index described in `docs/KNOWLEDGE_INDEX.md` was built with:
+
+```bash
+python data-pipeline/build_index.py --budget-gb 24 --workers 8
+```
 
 Useful options:
 
@@ -61,6 +67,7 @@ Each `<corpus>.db` contains:
 | `articles` | `id`, `page_id`, `title`, `url`, `popularity`, `first_passage_id`, `passage_count` |
 | `passages` | `id` (the passage ID), `article_id`, `seq`, `body` |
 | `passages_fts` | FTS5 table over `title`, `aliases`, `body`; its `rowid` is the passage ID |
+| `names` | `key`, `article_id`, `is_title`: normalised article titles and redirect titles, indexed by `key` |
 | `meta` | source URL, dump date, licence, chunking settings |
 
 - `passages.body` is zlib-compressed UTF-8 text of the form `Title: passage text`.
@@ -72,9 +79,12 @@ Each `<corpus>.db` contains:
 
 `retrieval.py` is the reference implementation of query handling; the Android app must do the same thing.
 
-- The question is lower-cased and tokenised, function words and question filler are dropped, and the remaining words are joined with `OR`.
-- Passages are ranked with `bm25(passages_fts, 4.0, 3.0, 1.0)` (title, aliases, body weights).
-- Each corpus returns its best candidates; they are merged by score, keeping at most two passages per article.
+The question is lower-cased and tokenised, and function words and question filler are dropped. Two channels then run, and their results are interleaved:
+
+- **Name channel.** Word n-grams of the question (up to five words) are looked up in `names`. "heart attack" finds the article "Myocardial infarction". For each article found, its passages that best match the whole question are taken.
+- **Passage channel.** `bm25(passages_fts, 4.0, 3.0, 1.0)` (title, aliases, body weights) over all passages, requiring every remaining word. If that finds fewer than 20 passages, one word at a time is dropped.
+
+At most two passages per article are kept.
 
 ## Evaluate
 
@@ -83,6 +93,14 @@ python data-pipeline/eval_retrieval.py
 ```
 
 Runs the 50 questions in `eval/queries.jsonl` and reports how many have a passage from an expected article in the top 5. It lists every miss, and separates ranking misses from coverage misses (the expected article is not in the index at all). It exits non-zero below 80%.
+
+`eval/queries_holdout.jsonl` holds 25 more questions that were not used for tuning. Do not tune against them:
+
+```bash
+python data-pipeline/eval_retrieval.py --queries data-pipeline/eval/queries_holdout.jsonl
+```
+
+Results are in `docs/KNOWLEDGE_INDEX.md`.
 
 ## Other commands
 

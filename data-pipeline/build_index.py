@@ -8,6 +8,7 @@ Steps, each resumable:
   1. download  the Wikimedia search-index dump shards (JSON, bzip2)
   2. stage     each shard in parallel: filter, clean, chunk -> stage/<corpus>/<shard>.db
   3. merge     the staged shards, in order, into <out>/<corpus>.db with an FTS5 index
+               and a table of article names
   4. report    sizes per corpus and in total (also written to <out>/manifest.json)
 
 Only the Python standard library is used.
@@ -29,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from size_report import format_report, measure  # noqa: E402
-from textproc import chunk_text, clean_text, count_words, index_text  # noqa: E402
+from textproc import article_names, chunk_text, clean_text, count_words, index_text  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 USER_AGENT = "offline-research-index-builder/0.1 (one-off corpus build; python-urllib)"
@@ -239,6 +240,8 @@ CREATE TABLE passages(
     body BLOB NOT NULL);
 CREATE VIRTUAL TABLE passages_fts USING fts5(
     title, aliases, body, content='', tokenize='porter unicode61');
+-- Normalised titles and redirect titles, for looking an article up by name.
+CREATE TABLE names(key TEXT NOT NULL, article_id INTEGER NOT NULL, is_title INTEGER NOT NULL);
 """
 
 
@@ -276,16 +279,18 @@ def merge(corpus, stage_paths, out_path, max_articles, budget_gb, limit, meta):
     con.executescript("PRAGMA page_size=4096; PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF;"
                       "PRAGMA cache_size=-1000000; PRAGMA locking_mode=EXCLUSIVE;" + INDEX_SCHEMA)
 
-    article_rows, passage_rows, fts_rows = [], [], []
+    article_rows, passage_rows, fts_rows, name_rows = [], [], [], []
 
     def flush():
         con.executemany("INSERT INTO articles VALUES (?,?,?,?,?,?,?)", article_rows)
         con.executemany("INSERT INTO passages VALUES (?,?,?,?)", passage_rows)
         con.executemany("INSERT INTO passages_fts(rowid, title, aliases, body) VALUES (?,?,?,?)",
                         fts_rows)
+        con.executemany("INSERT INTO names VALUES (?,?,?)", name_rows)
         article_rows.clear()
         passage_rows.clear()
         fts_rows.clear()
+        name_rows.clear()
 
     article_id = passage_id = 0
     started = time.time()
@@ -308,6 +313,8 @@ def merge(corpus, stage_paths, out_path, max_articles, budget_gb, limit, meta):
                 article_id += 1
                 url = corpus["article_url"] + urllib.parse.quote(title.replace(" ", "_"), safe="/:()',!*")
                 article_rows.append([article_id, page_id, title, url, popularity, passage_id + 1, 0])
+                name_rows.extend((key, article_id, is_title)
+                                 for key, is_title in article_names(title, aliases))
             passage_id += 1
             article_rows[-1][6] += 1
             passage_rows.append((passage_id, article_id, seq, body))
@@ -321,7 +328,8 @@ def merge(corpus, stage_paths, out_path, max_articles, budget_gb, limit, meta):
         if limit is not None and article_id >= limit:
             break
 
-    print("  optimising the FTS index", flush=True)
+    print("  indexing names and optimising the FTS index", flush=True)
+    con.execute("CREATE INDEX names_key ON names(key)")
     con.execute("INSERT INTO passages_fts(passages_fts) VALUES ('optimize')")
     meta = dict(meta, articles=article_id, passages=passage_id)
     con.executemany("INSERT INTO meta VALUES (?,?)", [(k, str(v)) for k, v in meta.items()])
@@ -333,6 +341,20 @@ def merge(corpus, stage_paths, out_path, max_articles, budget_gb, limit, meta):
 
 
 # ----------------------------------------------------------------------- main
+
+def keep_awake():
+    """Asks Windows not to sleep while this process runs. A full build takes hours,
+    and a sleeping machine stops it. The request ends when the process exits.
+    Other systems: run the build under `caffeinate` (macOS) or `systemd-inhibit` (Linux).
+    """
+    if sys.platform != "win32":
+        return
+    import ctypes
+    es_continuous, es_system_required = 0x80000000, 0x00000001
+    ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | es_system_required)
+    print("asked Windows to stay awake until the build ends", flush=True)
+
+
 
 def build_corpus(corpus, config, args, params):
     name = corpus["name"]
@@ -431,6 +453,7 @@ def main():
               "min_tail_words": args.min_tail_words, "min_article_words": args.min_article_words}
 
     args.out.mkdir(parents=True, exist_ok=True)
+    keep_awake()
     started = time.time()
     built = [build_corpus(corpus, config, args, params) for corpus in corpora]
 

@@ -1,0 +1,25 @@
+{"id": 101, "category": "travel", "question": "What currency is used in Thailand and can I pay by card?", "expected": ["Thailand", "Thai baht"]}
+{"id": 102, "category": "travel", "question": "How do I get around Venice?", "expected": ["Venice"]}
+{"id": 103, "category": "travel", "question": "What should I know before visiting Machu Picchu?", "expected": ["Machu Picchu"]}
+{"id": 104, "category": "travel", "question": "Is it safe to travel in Egypt?", "expected": ["Egypt"]}
+{"id": 105, "category": "travel", "question": "What is jet lag and how can I reduce it?", "expected": ["Jet lag"]}
+{"id": 106, "category": "health", "question": "What are the symptoms of heat stroke?", "expected": ["Heat stroke"]}
+{"id": 107, "category": "health", "question": "How do I treat a bee sting?", "expected": ["Bee sting"]}
+{"id": 108, "category": "health", "question": "What should I do for a nosebleed?", "expected": ["Nosebleed"]}
+{"id": 109, "category": "health", "question": "What are the signs of a concussion?", "expected": ["Concussion"]}
+{"id": 110, "category": "health", "question": "How do you treat frostbite?", "expected": ["Frostbite"]}
+{"id": 111, "category": "how-to", "question": "How do I read a topographic map?", "expected": ["Topographic map", "Contour line"]}
+{"id": 112, "category": "how-to", "question": "How do I build a snow shelter?", "expected": ["Quinzhee", "Snow cave", "Igloo"]}
+{"id": 113, "category": "how-to", "question": "How do I sharpen a knife?", "expected": ["Knife sharpening", "Sharpening"]}
+{"id": 114, "category": "how-to", "question": "How does a tourniquet stop bleeding?", "expected": ["Tourniquet"]}
+{"id": 115, "category": "how-to", "question": "How do I signal for help in the wilderness?", "expected": ["Distress signal", "Signal mirror"]}
+{"id": 116, "category": "explain", "question": "How does a microwave oven heat food?", "expected": ["Microwave oven"]}
+{"id": 117, "category": "explain", "question": "What causes lightning?", "expected": ["Lightning"]}
+{"id": 118, "category": "explain", "question": "How do solar panels generate electricity?", "expected": ["Solar panel", "Photovoltaics", "Solar cell"]}
+{"id": 119, "category": "explain", "question": "Why do we have seasons?", "expected": ["Season"]}
+{"id": 120, "category": "explain", "question": "How does the immune system fight infection?", "expected": ["Immune system"]}
+{"id": 121, "category": "compare", "question": "What is the difference between a hurricane and a typhoon?", "expected": ["Tropical cyclone", "Typhoon"]}
+{"id": 122, "category": "compare", "question": "How are frogs different from toads?", "expected": ["Frog", "Toad"]}
+{"id": 123, "category": "compare", "question": "What is the difference between baking soda and baking powder?", "expected": ["Sodium bicarbonate", "Baking powder"]}
+{"id": 124, "category": "multi-step", "question": "Who discovered penicillin and in what year?", "expected": ["Penicillin", "Alexander Fleming", "Discovery of penicillin"]}
+{"id": 125, "category": "multi-step", "question": "What is the longest river in Africa and which countries does it flow through?", "expected": ["Nile"]}

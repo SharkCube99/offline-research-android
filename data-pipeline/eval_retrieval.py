@@ -41,13 +41,13 @@ def main():
 
     # Which expected articles exist in the index at all? A query whose expected
     # articles are all absent is a coverage miss, not a ranking miss.
+    wanted = {normalise(title) for query in queries for title in query["expected"]}
     present = set()
     for con in indexes.values():
-        for query in queries:
-            for title in query["expected"]:
-                if con.execute("SELECT 1 FROM articles WHERE title = ? COLLATE NOCASE LIMIT 1",
-                               (title,)).fetchone():
-                    present.add(normalise(title))
+        # One pass over the titles; there is no index on title to look them up by.
+        for (title,) in con.execute("SELECT title FROM articles"):
+            if normalise(title) in wanted:
+                present.add(normalise(title))
 
     results, by_category, latencies = [], {}, []
     for query in queries:

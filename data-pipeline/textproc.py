@@ -37,6 +37,21 @@ def index_text(text):
     return " ".join(token for token in tokenize(text) if token not in FUNCTION_WORDS)
 
 
+def name_key(name):
+    """A title or redirect as it is stored in, and looked up from, the names table."""
+    return " ".join(tokenize(name))
+
+
+def article_names(title, aliases):
+    """[(key, is_title)] for an article: its title and each distinct redirect title."""
+    keys = {name_key(title): 1}
+    for alias in aliases.split(" | "):
+        key = name_key(alias)
+        if key and key not in keys:
+            keys[key] = 0
+    return [(key, is_title) for key, is_title in keys.items() if key]
+
+
 def count_words(text):
     return len(text.split())
 
