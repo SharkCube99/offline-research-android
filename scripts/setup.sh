@@ -123,6 +123,9 @@ if [ -n "$PROFILE" ]; then
     echo "profile override pushed"
 fi
 
+# Restart from a stopped state: an instance that was alive during the push would
+# have tried to load a half-written model file.
+adb shell am force-stop "$PKG"
 adb shell am start -n "$ACTIVITY" >/dev/null
 echo "done. The app is starting; turn on airplane mode and ask a question."
 echo "watch metrics with: adb logcat -s OfflineResearch LlamaBridge"
