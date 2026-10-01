@@ -193,7 +193,7 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeInit(JNIEnv *env, jobject, jst
 JNIEXPORT jint JNICALL
 Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
         JNIEnv *env, jobject, jstring model_path, jint n_ctx, jint n_batch, jint n_threads,
-        jboolean use_mmap, jboolean use_mlock, jstring chat_template) {
+        jboolean use_mmap, jboolean use_mlock, jboolean repack, jstring chat_template) {
     std::unique_lock<std::mutex> lock(g_session_mutex, std::try_to_lock);
     if (!lock.owns_lock()) return ERR_BUSY;
 
@@ -208,8 +208,13 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
         model_params.load_mode = use_mlock ? LLAMA_LOAD_MODE_MLOCK : LLAMA_LOAD_MODE_NONE;
     }
 
+    // Repacking copies the weights into a CPU-friendly layout held in ordinary
+    // RAM, on top of the mapped file. Off keeps the weights file-backed only.
+    model_params.use_extra_bufts = repack;
+
     const char *path = env->GetStringUTFChars(model_path, nullptr);
-    LOGI("loading %s (load_mode=%s)", path, llama_load_mode_name(model_params.load_mode));
+    LOGI("loading %s (load_mode=%s, repack=%d)", path,
+         llama_load_mode_name(model_params.load_mode), (int) repack);
     const auto t_start = Clock::now();
     llama_model *model = llama_model_load_from_file(path, model_params);
     env->ReleaseStringUTFChars(model_path, path);

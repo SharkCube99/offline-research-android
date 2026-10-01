@@ -30,7 +30,8 @@ INSTALL=1
 INTERNAL=0
 SERIAL=""
 
-die() { echo "error: $*" >&2; exit 1; }
+# shellcheck source=scripts/_adb.sh
+source "$REPO_ROOT/scripts/_adb.sh"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -49,36 +50,7 @@ done
 [ -f "$MODEL" ] || die "model file not found: $MODEL"
 [ -z "$PROFILE" ] || [ -f "$PROFILE" ] || die "profile file not found: $PROFILE"
 
-# Find adb: PATH first, then the usual SDK locations.
-ADB="$(command -v adb || true)"
-if [ -z "$ADB" ]; then
-    for sdk in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "${LOCALAPPDATA:-}/Android/Sdk" \
-               "$HOME/Android/Sdk" "$HOME/Library/Android/sdk"; do
-        for exe in adb adb.exe; do
-            if [ -n "$sdk" ] && [ -x "$sdk/platform-tools/$exe" ]; then
-                ADB="$sdk/platform-tools/$exe"
-                break 2
-            fi
-        done
-    done
-fi
-[ -n "$ADB" ] || die "adb not found. Install Android platform-tools or set ANDROID_HOME."
-
-# Git Bash on Windows rewrites arguments that look like Unix paths (/sdcard/...)
-# into Windows paths. Turn that off for everything adb is given.
-export MSYS_NO_PATHCONV=1
-export MSYS2_ARG_CONV_EXCL='*'
-
-adb() { if [ -n "$SERIAL" ]; then "$ADB" -s "$SERIAL" "$@"; else "$ADB" "$@"; fi; }
-
-# With path rewriting off, local files must be handed to adb.exe as Windows paths.
-local_path() {
-    if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s
-' "$1"; fi
-}
-
-[ "$(adb get-state 2>/dev/null || true)" = "device" ] ||
-    die "no authorised device. Enable USB debugging, accept the prompt on the phone, check 'adb devices'."
+require_device
 
 echo "device: $(adb shell getprop ro.product.manufacturer | tr -d '\r') $(adb shell getprop ro.product.model | tr -d '\r')," \
      "Android $(adb shell getprop ro.build.version.release | tr -d '\r')," \

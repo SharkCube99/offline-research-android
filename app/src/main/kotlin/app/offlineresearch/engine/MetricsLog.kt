@@ -21,6 +21,7 @@ data class MetricsRecord(
     @SerialName("model_file") val modelFile: String,
     @SerialName("n_ctx") val contextSize: Int,
     val threads: Int,
+    val repack: Boolean,
     @SerialName("load_ms") val loadMs: Double,
     @SerialName("prompt_tokens") val promptTokens: Int,
     @SerialName("prompt_ms") val promptMs: Double,
@@ -37,7 +38,7 @@ data class MetricsRecord(
  */
 class MetricsLog(private val logDir: File?) {
 
-    fun record(metrics: EngineMetrics, profile: String, modelFile: String, contextSize: Int, appVersion: String) {
+    fun record(metrics: EngineMetrics, profile: String, modelFile: String, contextSize: Int, repack: Boolean, appVersion: String) {
         val record = MetricsRecord(
             timestamp = Instant.now().toString(),
             device = "${Build.MANUFACTURER} ${Build.MODEL}",
@@ -48,6 +49,7 @@ class MetricsLog(private val logDir: File?) {
             modelFile = modelFile,
             contextSize = contextSize,
             threads = metrics.threads,
+            repack = repack,
             loadMs = metrics.loadMs,
             promptTokens = metrics.promptTokens,
             promptMs = metrics.promptMs,

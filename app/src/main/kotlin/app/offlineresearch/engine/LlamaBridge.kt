@@ -45,6 +45,7 @@ internal object LlamaBridge {
         nThreads: Int,
         useMmap: Boolean,
         useMlock: Boolean,
+        repack: Boolean,
         chatTemplate: String,
     ): Int
 

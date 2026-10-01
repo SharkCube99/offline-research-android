@@ -21,6 +21,8 @@ data class ModelProfile(
     @SerialName("n_threads") val threads: Int = 0,
     @SerialName("use_mmap") val useMmap: Boolean = true,
     @SerialName("use_mlock") val useMlock: Boolean = false,
+    /** llama.cpp weight repacking: a second copy of the weights in RAM. */
+    val repack: Boolean = false,
     /** "auto" = the template embedded in the GGUF file. */
     @SerialName("chat_template") val chatTemplate: String = "auto",
     @SerialName("system_prompt") val systemPrompt: String = "",

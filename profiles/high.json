@@ -6,6 +6,7 @@
   "n_threads": 0,
   "use_mmap": true,
   "use_mlock": false,
+  "repack": false,
   "chat_template": "auto",
   "system_prompt": "You are a careful offline research assistant. Answer clearly and concisely. If you are not sure, say so. /no_think",
   "max_tokens": 512,

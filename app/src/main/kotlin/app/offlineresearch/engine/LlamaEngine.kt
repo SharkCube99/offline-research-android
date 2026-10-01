@@ -40,6 +40,7 @@ class LlamaEngine(private val nativeLibDir: String) : InferenceEngine {
             config.threads,
             config.useMmap,
             config.useMlock,
+            config.repack,
             config.chatTemplate,
         )
         when (code) {

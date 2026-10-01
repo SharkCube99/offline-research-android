@@ -35,6 +35,8 @@ data class EngineConfig(
     val threads: Int,
     val useMmap: Boolean,
     val useMlock: Boolean,
+    /** Let llama.cpp keep a second, repacked copy of the weights in RAM. */
+    val repack: Boolean,
     /** "auto" uses the template embedded in the model file. */
     val chatTemplate: String,
 )

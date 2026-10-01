@@ -54,6 +54,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     private var profile: ModelProfile? = null
+    private var pendingQuestion: String? = null
     private var generation: Job? = null
 
     init {
@@ -77,6 +78,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             threads = active.threads,
                             useMmap = active.useMmap,
                             useMlock = active.useMlock,
+                            repack = active.repack,
                             chatTemplate = active.chatTemplate,
                         ),
                     )
@@ -91,7 +93,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 ModelStatus.Failed(e.message ?: e.toString())
             }
             _state.update { it.copy(status = status, metrics = if (status is ModelStatus.Ready) engine.metrics() else null) }
+            if (status is ModelStatus.Ready) pendingQuestion?.let { send(it) }
+            pendingQuestion = null
         }
+    }
+
+    /** Asks [question] now, or as soon as the model has finished loading. */
+    fun ask(question: String) {
+        if (profile == null) pendingQuestion = question else send(question)
     }
 
     fun send(question: String) {
@@ -133,7 +142,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         replaceLastReply("[error] $failure")
                     } else {
                         withContext(Dispatchers.IO) {
-                            metricsLog.record(metrics, active.name, active.modelFile, active.contextSize, appVersion)
+                            metricsLog.record(metrics, active.name, active.modelFile, active.contextSize, active.repack, appVersion)
                         }
                     }
                     _state.update { it.copy(generating = false, metrics = metrics) }
