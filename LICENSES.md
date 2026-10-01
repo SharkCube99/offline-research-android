@@ -35,4 +35,19 @@ File names, sizes and licences were read from the Hugging Face repository pages 
 
 ## Data
 
-None yet. Offline corpora are added in M2, each with its licence.
+Corpora are not stored in this repository or in the APK. `data-pipeline/build_index.py` downloads them and builds the index files, which are pushed to the phone over adb.
+
+| Corpus | Source | Licence | Attribution |
+|---|---|---|---|
+| English Wikipedia (article text) | Wikimedia CirrusSearch index dump `enwiki_content`, <https://dumps.wikimedia.org/other/cirrus_search_index/> | CC BY-SA 4.0 (also GFDL) | Wikipedia contributors; each passage keeps its article title and URL |
+| English Wikivoyage (article text) | Wikimedia CirrusSearch index dump `enwikivoyage_content`, same location | CC BY-SA 4.0 | Wikivoyage contributors; each passage keeps its article title and URL |
+
+Licences were read from <https://en.wikipedia.org/wiki/Wikipedia:Copyrights> and <https://en.wikivoyage.org/wiki/Wikivoyage:Copyleft> on 2026-10-01.
+
+What CC BY-SA 4.0 requires of this project:
+
+- **Attribution.** Every passage is stored with its article title and URL, and the app must show them with any answer that uses the passage (M3).
+- **Share-alike.** The index files are an adaptation of the text (cleaned, split into passages) and are therefore themselves CC BY-SA 4.0. Each index file records its source, dump date and licence in its `meta` table.
+- **Indicating changes.** The text is unmodified apart from whitespace normalisation and splitting into passages; `data-pipeline/README.md` describes the processing.
+
+The data pipeline itself uses only the Python standard library (PSF licence) and is not shipped in the app.

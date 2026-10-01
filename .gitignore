@@ -10,3 +10,5 @@ captures/
 *.apk
 *.keystore
 .DS_Store
+data-pipeline/work/
+__pycache__/

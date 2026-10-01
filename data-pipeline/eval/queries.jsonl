@@ -1,0 +1,50 @@
+{"id": 1, "category": "travel", "question": "What is the best way to get from Charles de Gaulle airport to central Paris?", "expected": ["Paris", "Paris Charles de Gaulle Airport", "Charles de Gaulle Airport"]}
+{"id": 2, "category": "travel", "question": "Do I need a visa to visit Japan as a tourist?", "expected": ["Japan", "Visa policy of Japan"]}
+{"id": 3, "category": "travel", "question": "What should I know about altitude sickness before trekking in Nepal?", "expected": ["Altitude sickness", "Trekking in Nepal", "Nepal"]}
+{"id": 4, "category": "travel", "question": "Is tap water safe to drink in Mexico?", "expected": ["Mexico", "Water", "Drinking water"]}
+{"id": 5, "category": "travel", "question": "What are the must-see sights in Rome?", "expected": ["Rome"]}
+{"id": 6, "category": "travel", "question": "How does tipping work in the United States?", "expected": ["Tipping", "United States of America", "Gratuity"]}
+{"id": 7, "category": "travel", "question": "What is the best time of year to visit Iceland?", "expected": ["Iceland"]}
+{"id": 8, "category": "travel", "question": "How do I avoid pickpockets while travelling?", "expected": ["Pickpockets", "Pickpocketing", "Common scams"]}
+{"id": 9, "category": "travel", "question": "How do I prevent malaria when travelling?", "expected": ["Malaria", "Malaria prophylaxis"]}
+{"id": 10, "category": "travel", "question": "What is there to do in Kyoto?", "expected": ["Kyoto"]}
+{"id": 11, "category": "travel", "question": "How do I travel on the Trans-Siberian Railway?", "expected": ["Trans-Siberian Railway"]}
+{"id": 12, "category": "travel", "question": "What should I pack for a multi-day hike?", "expected": ["Hiking", "Packing list", "Packing for a week of hiking", "Backpacking (hiking)"]}
+{"id": 13, "category": "health", "question": "How do I treat a minor burn?", "expected": ["Burn", "First aid"]}
+{"id": 14, "category": "health", "question": "What are the symptoms of dehydration?", "expected": ["Dehydration"]}
+{"id": 15, "category": "health", "question": "What should I do if someone is choking?", "expected": ["Choking", "Abdominal thrusts"]}
+{"id": 16, "category": "health", "question": "How do I recognise a heart attack?", "expected": ["Myocardial infarction"]}
+{"id": 17, "category": "health", "question": "What are the warning signs of a stroke?", "expected": ["Stroke"]}
+{"id": 18, "category": "health", "question": "How should a snake bite be treated?", "expected": ["Snakebite"]}
+{"id": 19, "category": "health", "question": "What is hypothermia and how is it treated?", "expected": ["Hypothermia"]}
+{"id": 20, "category": "health", "question": "How do I perform CPR?", "expected": ["Cardiopulmonary resuscitation"]}
+{"id": 21, "category": "health", "question": "What causes food poisoning?", "expected": ["Foodborne illness"]}
+{"id": 22, "category": "health", "question": "How is a sprained ankle treated?", "expected": ["Sprained ankle", "Sprain"]}
+{"id": 23, "category": "how-to", "question": "How do I fix a flat bicycle tire?", "expected": ["Flat tire", "Bicycle tire"]}
+{"id": 24, "category": "how-to", "question": "How can I start a fire without matches?", "expected": ["Fire making", "Bow drill", "Fire striker"]}
+{"id": 25, "category": "how-to", "question": "How can I purify water in the wilderness?", "expected": ["Portable water purification", "Water purification"]}
+{"id": 26, "category": "how-to", "question": "How do I jump start a car with a dead battery?", "expected": ["Jump start (vehicle)"]}
+{"id": 27, "category": "how-to", "question": "How do I tie a bowline knot?", "expected": ["Bowline"]}
+{"id": 28, "category": "how-to", "question": "How do I use a compass to navigate?", "expected": ["Compass", "Orienteering"]}
+{"id": 29, "category": "how-to", "question": "How do I change a car tire?", "expected": ["Flat tire", "Spare tire"]}
+{"id": 30, "category": "how-to", "question": "How do you find north using the stars?", "expected": ["Polaris", "Celestial navigation", "Pole star"]}
+{"id": 31, "category": "explain", "question": "How does a refrigerator work?", "expected": ["Refrigerator", "Vapor-compression refrigeration", "Refrigeration"]}
+{"id": 32, "category": "explain", "question": "Why is the sky blue?", "expected": ["Rayleigh scattering", "Diffuse sky radiation"]}
+{"id": 33, "category": "explain", "question": "How do vaccines work?", "expected": ["Vaccine", "Vaccination"]}
+{"id": 34, "category": "explain", "question": "What causes earthquakes?", "expected": ["Earthquake"]}
+{"id": 35, "category": "explain", "question": "How does GPS determine my location?", "expected": ["Global Positioning System", "Satellite navigation"]}
+{"id": 36, "category": "explain", "question": "What is photosynthesis?", "expected": ["Photosynthesis"]}
+{"id": 37, "category": "explain", "question": "How does a jet engine work?", "expected": ["Jet engine", "Turbojet", "Turbofan"]}
+{"id": 38, "category": "explain", "question": "What causes the tides?", "expected": ["Tide"]}
+{"id": 39, "category": "explain", "question": "How do noise-cancelling headphones work?", "expected": ["Noise-cancelling headphones", "Active noise control"]}
+{"id": 40, "category": "explain", "question": "What is inflation in economics?", "expected": ["Inflation"]}
+{"id": 41, "category": "compare", "question": "What is the difference between a virus and a bacterium?", "expected": ["Virus", "Bacteria"]}
+{"id": 42, "category": "compare", "question": "What is the difference between weather and climate?", "expected": ["Climate", "Weather"]}
+{"id": 43, "category": "compare", "question": "How do alternating current and direct current differ?", "expected": ["Alternating current", "Direct current", "War of the currents"]}
+{"id": 44, "category": "compare", "question": "What is the difference between a crocodile and an alligator?", "expected": ["Crocodile", "Alligator", "Crocodilia"]}
+{"id": 45, "category": "compare", "question": "Diesel versus petrol engines: what is the difference?", "expected": ["Diesel engine", "Petrol engine"]}
+{"id": 46, "category": "compare", "question": "What is the difference between Sunni and Shia Islam?", "expected": ["Shia–Sunni relations", "Sunni Islam", "Shia Islam"]}
+{"id": 47, "category": "multi-step", "question": "Why did the Roman Empire fall?", "expected": ["Fall of the Western Roman Empire", "Historiography of the fall of the Western Roman Empire"]}
+{"id": 48, "category": "multi-step", "question": "Who was the first person to walk on the Moon and when did it happen?", "expected": ["Neil Armstrong", "Apollo 11"]}
+{"id": 49, "category": "multi-step", "question": "What caused the First World War?", "expected": ["Causes of World War I", "World War I"]}
+{"id": 50, "category": "multi-step", "question": "How tall is Mount Everest and who first climbed it?", "expected": ["Mount Everest", "Edmund Hillary", "1953 British Mount Everest expedition"]}

@@ -1,0 +1,19 @@
+{
+  "dump_root": "https://dumps.wikimedia.org/other/cirrus_search_index",
+  "corpora": [
+    {
+      "name": "wikipedia",
+      "index_name": "enwiki_content",
+      "article_url": "https://en.wikipedia.org/wiki/",
+      "licence": "CC BY-SA 4.0",
+      "attribution": "Wikipedia contributors"
+    },
+    {
+      "name": "wikivoyage",
+      "index_name": "enwikivoyage_content",
+      "article_url": "https://en.wikivoyage.org/wiki/",
+      "licence": "CC BY-SA 4.0",
+      "attribution": "Wikivoyage contributors"
+    }
+  ]
+}
