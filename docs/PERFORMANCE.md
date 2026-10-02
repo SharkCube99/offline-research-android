@@ -131,7 +131,7 @@ Run order as listed. The core capacities the phone reports are 1024 for cpu6 and
 Notes on the table:
 
 - The 8-thread run's results were saved by hand from the phone's metrics log; its `.txt` file has only the after-load readings, because the measurement script was edited while that run was using it and its last step failed.
-- The repeat baseline lost its second question: the phone dropped off adb during it. Its first question is from the run's console output; there is no `.jsonl` for it.
+- The repeat baseline lost its second question: the app was closed from the phone's recent-apps screen during it (the system log shows `Killing ... app.offlineresearch: SwipeUpClean`). Its first question is from the run's console output; there is no `.jsonl` for it.
 - In the `n_batch` 128 run the planner chose different sources for the first question, so that prompt is 992 tokens, not 847.
 
 ### Prefix caching
@@ -156,7 +156,7 @@ The answerer reuses its fixed instructions, 171 tokens, which is 18% of a 927-to
 
 ### Decisions
 
-- `low.json`: `n_threads` 2, `n_threads_batch` 8, `thread_affinity` "fastest". Not yet run from the bundled profile on the phone: the same values were measured through a pushed profile override.
+- `low.json`: `n_threads` 2, `n_threads_batch` 8, `thread_affinity` "fastest". Checked from the bundled profile after the phone had rested (`docs/measurements/2026-10-02-23076RN4BI-low-profile-check.jsonl`, one question, airplane mode off): 925 prompt tokens read in 123 s (7.54 tokens per second), 111 tokens written at 3.24 per second, first word after 142 s. The reading speed is higher than in any run above, which fits the phone having cooled; it is one question.
 - `high.json` is unchanged (`thread_affinity` "none"). Its values have to come from measurements on the 12 GB phone.
 - `n_batch` stays 512.
 
