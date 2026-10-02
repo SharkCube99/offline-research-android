@@ -47,7 +47,7 @@ internal object LlamaBridge {
 
     private external fun nativeInit(nativeLibDir: String)
 
-    /** Returns a session handle (> 0), or a LOAD_ERR_* code. */
+    /** Returns a session handle, or a LOAD_ERR_* code. A handle is a tagged pointer and may be negative. */
     external fun nativeLoad(
         modelPath: String,
         nCtx: Int,

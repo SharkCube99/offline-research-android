@@ -44,13 +44,14 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
             config.repack,
             config.chatTemplate,
         )
-        when {
-            result > 0 -> handle = result
-            result == LlamaBridge.LOAD_ERR_MODEL ->
+        // Anything but the two error codes is a handle. It is a native pointer, and
+        // Android tags the top byte of pointers, so a valid handle can be negative.
+        when (result) {
+            LlamaBridge.LOAD_ERR_MODEL ->
                 throw EngineException("llama.cpp could not load the model file: $modelPath")
-            result == LlamaBridge.LOAD_ERR_CONTEXT ->
+            LlamaBridge.LOAD_ERR_CONTEXT ->
                 throw EngineException("Could not create a context (n_ctx=${config.contextSize}); likely out of memory")
-            else -> throw EngineException("Model load failed with code $result")
+            else -> handle = result
         }
     }
 

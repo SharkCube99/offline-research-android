@@ -26,7 +26,8 @@
 
 namespace {
 
-// Return codes shared with LlamaBridge.kt. nativeLoad returns a handle (> 0) or one of these.
+// Return codes shared with LlamaBridge.kt. nativeLoad returns a handle or one of these.
+// A handle is a heap pointer; it is never -1 or -2, but with pointer tagging it can be negative.
 constexpr jlong LOAD_ERR_MODEL = -1;
 constexpr jlong LOAD_ERR_CONTEXT = -2;
 
