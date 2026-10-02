@@ -2,9 +2,9 @@
 
 An Android app that answers research questions with no network connection, using a language model that runs on the phone.
 
-**Status: Milestones 1 and 2.** The app loads a GGUF model through llama.cpp and streams replies in a chat screen. A separate pipeline builds the offline Wikipedia and Wikivoyage search index (`docs/KNOWLEDGE_INDEX.md`). The app does not use the index yet: retrieval and citations arrive in Milestone 3 (see `CLAUDE.md`, Section 7).
+**Status: Milestones 1 to 3.** The app answers questions on the phone with no network: a small model plans the search, the app searches an offline Wikipedia and Wikivoyage index, and a larger model writes an answer that cites its sources. So far it has run only on a low-end 8 GB phone with a 4B model, where an answer takes several minutes; the 30B model on a 12 GB phone is Milestone 4 (see `CLAUDE.md`, Section 7).
 
-This README quotes no performance numbers. Measured results, with their raw logs, are in `docs/PERFORMANCE.md` (speed on the phone) and `docs/KNOWLEDGE_INDEX.md` (index size and search quality).
+This README quotes no performance numbers. Measured results, with their raw logs, are in `docs/PERFORMANCE.md` (speed on the phone), `docs/KNOWLEDGE_INDEX.md` (index size and search quality) and `docs/RAG.md` (cited answers on the phone).
 
 ## What you need
 
@@ -13,7 +13,7 @@ This README quotes no performance numbers. Measured results, with their raw logs
   - **NDK (Side by side) 29.0.13113456**
   - **CMake 3.31.6**
 - An arm64 Android phone running Android 9 or newer, with USB debugging turned on.
-- A GGUF model file. The default profile expects `Qwen3-4B-Q4_K_M.gguf` (2.5 GB, Apache-2.0), from <https://huggingface.co/Qwen/Qwen3-4B-GGUF>.
+- The model files and the knowledge index listed under "Put it on a phone".
 
 ## Build
 
@@ -29,13 +29,25 @@ The first build compiles llama.cpp and takes several minutes.
 
 ## Put it on a phone
 
+Three kinds of file go on the phone, all over adb:
+
+| What | File | Where it comes from |
+|---|---|---|
+| Answerer model | `Qwen3-4B-Q4_K_M.gguf` (2.5 GB) | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> |
+| Planner model | `Qwen3-1.7B-Q8_0.gguf` (1.83 GB) | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> |
+| Knowledge index | `wikipedia.db`, `wikivoyage.db` | Built by `data-pipeline/build_index.py` (see `data-pipeline/README.md`) |
+
 ```bash
-scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf
+scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf \
+                 --model /path/to/Qwen3-1.7B-Q8_0.gguf \
+                 --index data-pipeline/work/index
 ```
 
-This installs the APK, pushes the model over adb, checks the file size on the device and starts the app. The app never downloads anything itself. On Windows, run the script from Git Bash.
+This installs the APK, pushes the files, checks each file's size on the device and starts the app. Files already on the phone are skipped. The app never downloads anything itself. On Windows, run the script from Git Bash.
 
-Then turn on airplane mode and ask a question.
+The planner model is optional: without it the app searches with the question's own keywords. The index is required.
+
+Then turn on airplane mode and ask a question. Citations like `[1]` in the answer are links; "Sources" under the answer lists the passages it was given.
 
 ### The same thing by hand
 
@@ -45,6 +57,10 @@ adb shell am start -n app.offlineresearch/.MainActivity
 adb shell am force-stop app.offlineresearch
 adb shell mkdir -p /sdcard/Android/data/app.offlineresearch/files/models
 adb push Qwen3-4B-Q4_K_M.gguf /sdcard/Android/data/app.offlineresearch/files/models/
+adb push Qwen3-1.7B-Q8_0.gguf /sdcard/Android/data/app.offlineresearch/files/models/
+adb shell mkdir -p /sdcard/Android/data/app.offlineresearch/files/index
+adb push data-pipeline/work/index/wikipedia.db /sdcard/Android/data/app.offlineresearch/files/index/
+adb push data-pipeline/work/index/wikivoyage.db /sdcard/Android/data/app.offlineresearch/files/index/
 adb shell am start -n app.offlineresearch/.MainActivity
 ```
 
@@ -53,7 +69,7 @@ The first `am start` makes Android create the app's files directory with the rig
 If `adb push` into `Android/data` is refused on your phone, use the fallback, which copies the model into the app's internal storage (debug builds only):
 
 ```bash
-scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf --internal
+scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf --index data-pipeline/work/index --internal
 ```
 
 Xiaomi, Redmi and POCO phones usually also need **Install via USB** turned on in Developer options before `adb install` works.
@@ -68,7 +84,7 @@ This inspects every built APK and fails if it declares `INTERNET` or any other n
 
 ## Read the measurements
 
-Each answer logs one line of metrics: model load time, time to first token and tokens per second.
+Each answer logs one line: the question, the search queries, the sources, the answer, which sources it cited, and the timings.
 
 ```bash
 adb logcat -s OfflineResearch LlamaBridge

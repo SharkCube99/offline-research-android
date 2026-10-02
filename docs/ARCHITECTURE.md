@@ -68,6 +68,30 @@ Design, sizes and search results are in `docs/KNOWLEDGE_INDEX.md`. The decisions
 
 Open for M3: whether Android's built-in SQLite has FTS5 on the Redmi, and how long a search takes on a phone.
 
+## Retrieval-augmented answering (M3)
+
+The pipeline, its tests and the on-device results are in `docs/RAG.md`. The decisions:
+
+| Decision | Choice | Reason |
+|---|---|---|
+| SQLite on the phone | Bundle requery sqlite-android 3.49.0 (SQLite with FTS5), from JitPack | Android's own SQLite is not guaranteed to have FTS5 and differs between releases. 3.50.4 is named in the library's README but is not published |
+| Retriever testability | The retriever uses a four-method `SqlDatabase` interface; the app backs it with the bundled SQLite, tests with JDBC | The real SQL runs against a real FTS5 index on the build machine |
+| Keeping Kotlin and Python in step | Shared test vectors, plus a parity test against the real index | The index was built by the Python code; the two must tokenise and query identically |
+| Planner model | Qwen3-1.7B Q8_0 (1.83 GB) | The only file in the official repository; there is no Q4 build |
+| Planner output | Article titles, not search phrases, with two examples in the prompt | The small model paraphrased the question until shown examples |
+| Planner fallback | Search with the question alone | The retriever already extracts keywords. Also used when no planner model is on the phone |
+| Which queries are searched | The question, then each planner query; result lists take turns | The question-only search is what M2 evaluated; the planner adds to it and cannot take it away |
+| Token counting | The answerer's own tokenizer, through the engine | A word-count estimate would be wrong by a model-dependent factor |
+| Per-source limit | Two passages per article, in the retriever and again in the budgeter | Several queries can each return two |
+| No sources | Reply "Not covered by the offline sources." without running the model | Nothing to ground an answer on, and it saves minutes |
+| Invented citation numbers | Dropped from the display, recorded in the log | A link to a source that does not exist is worse than no link |
+| Two models loaded at once | The JNI bridge keeps one session per model, addressed by handle | The planner stays resident, as CLAUDE.md asks |
+| Session handles | Any value other than the two error codes is a handle | Android tags the top byte of native pointers, so a valid handle can be negative (found on the Redmi) |
+| Low-tier budget | 800 passage tokens and 384 answer tokens in `low.json`; `high.json` keeps 1,000 and 512 | On the Redmi a 1,096-token prompt took 188 s to process |
+| Prompt wording per model | `prompt_suffix` in the profile ("/no_think"); the contract itself is in code | The contract is product behaviour; the suffix is a model quirk |
+
+Open for M4 and M5: thread pinning to the fast cores, prefix caching of the fixed part of the prompt, and whether Wikivoyage should be favoured for travel questions.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

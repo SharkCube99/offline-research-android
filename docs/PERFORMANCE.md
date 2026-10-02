@@ -83,3 +83,30 @@ Prompts were 48, 54 and 49 tokens in every configuration.
 ### Not measured
 
 Cold load time (after a reboot), longer runs, battery temperature effects, and prompts of realistic RAG length.
+
+## M3: cited answers on the Redmi 12 5G (2026-10-02)
+
+Source: `docs/measurements/2026-10-02-23076RN4BI-m3-airplane.jsonl` (five questions, airplane mode on, asked over adb) and `docs/measurements/2026-10-02-23076RN4BI-m3-adb-smoke.jsonl` (four earlier runs with a 4.1 GB index and no planner, airplane mode off).
+
+Setup for the airplane-mode run: app 0.3.0-m3, profile `low` (800 passage tokens, 384 answer tokens), Qwen3-4B Q4_K_M answerer and Qwen3-1.7B Q8_0 planner both loaded, full 22.9 GB index, 4 threads, repack off.
+
+| Question | Plan | Search | Prompt tokens | Prompt processing | First word after | Generated | Tokens per second |
+|---|---|---|---|---|---|---|---|
+| Symptoms of dehydration | 12 s | 2.1 s | 847 | 123 s | 137 s | 81 | 2.18 |
+| How a refrigerator works | 13 s | 6.0 s | 927 | 144 s | 163 s | 134 | 1.97 |
+| Airport to central Paris | 15 s | 7.8 s | 973 | 157 s | 180 s | 147 | 1.83 |
+| Hotel wifi password | 13 s | 4.0 s | 955 | 157 s | 174 s | 85 | 1.63 |
+| Apple closing price | 14 s | 6.1 s | 974 | 178 s | 199 s | 8 | 1.75 |
+| **Median** | 13.5 s | 6.0 s | 955 | | **174 s** | | **1.83** |
+
+Median prompt processing speed: 6.2 tokens per second.
+
+With the 1,000-token budget (first smoke run): a 1,096-token prompt took 188 s to process and the answer came at 1.48 tokens per second.
+
+### Observations
+
+- **Prompt processing is the whole wait.** About 6 tokens per second, the same rate as the 50-token prompts in M1, so the time grows in step with the prompt.
+- **Generation is slower than in M1** (1.6 to 2.2 tokens per second against about 4.3). M1's prompts were about 50 tokens; these are 850 to 1,100. The cause has not been isolated.
+- **Thread placement.** Sampled three times during prompt processing, the answerer's four threads were on a mix of fast cores (cpu6, cpu7) and slow cores, different each time. Core frequencies read 1.29 to 1.48 GHz on the slow cores (maximum 1.96) and 1.65 to 1.90 GHz on the fast cores (maximum 2.21). The thermal service reported status 0 and the battery 38 °C. Pinning to the two fast cores has not been tried.
+- **Search on the phone:** 2 to 8 s for two to four queries on the full index in this run, and up to 15 s in the first runs after the index was pushed.
+- **Memory:** with both models and the index open, `MemAvailable` was 2.9 GB of 7.6 GB.
