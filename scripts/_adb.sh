@@ -23,7 +23,9 @@ fi
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL='*'
 
-adb() { if [ -n "${SERIAL:-}" ]; then "$ADB" -s "$SERIAL" "$@"; else "$ADB" "$@"; fi; }
+# stdin comes from /dev/null: adb shell would otherwise swallow the input of a
+# surrounding "while read" loop.
+adb() { if [ -n "${SERIAL:-}" ]; then "$ADB" -s "$SERIAL" "$@" < /dev/null; else "$ADB" "$@" < /dev/null; fi; }
 
 # With path rewriting off, local files must be handed to adb.exe as Windows paths.
 local_path() {

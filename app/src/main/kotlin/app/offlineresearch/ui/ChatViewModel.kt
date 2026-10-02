@@ -12,6 +12,7 @@ import app.offlineresearch.engine.LlamaEngine
 import app.offlineresearch.engine.MetricsLog
 import app.offlineresearch.engine.RagRecord
 import app.offlineresearch.engine.RunInfo
+import app.offlineresearch.engine.ThreadAffinity
 import app.offlineresearch.profiles.ModelProfile
 import app.offlineresearch.profiles.ProfileStore
 import app.offlineresearch.rag.AnswerSettings
@@ -126,10 +127,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             contextSize = contextSize,
             batchSize = active.batchSize,
             threads = active.threads,
+            batchThreads = active.batchThreads,
             useMmap = active.useMmap,
             useMlock = active.useMlock,
             repack = active.repack,
             chatTemplate = active.chatTemplate,
+            threadAffinity = if (active.threadAffinity == "fastest") ThreadAffinity.FASTEST else ThreadAffinity.NONE,
         )
         answerer.load(model.absolutePath, config(active.contextSize))
         Log.i(MetricsLog.TAG, "system info: ${answerer.systemInfo()}")
@@ -227,7 +230,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private fun log(active: ModelProfile, question: String, answer: String, sources: List<Passage>, report: RagReport) {
         metricsLog.record(
             report.answerer,
-            RunInfo(active.name, active.modelFile, active.contextSize, active.repack, appVersion),
+            RunInfo(active.name, active.modelFile, active.contextSize, active.repack, appVersion, active.threadAffinity, active.batchSize),
             RagRecord(
                 question = question,
                 answer = answer,

@@ -34,7 +34,7 @@ interface InferenceEngine {
 data class EngineConfig(
     val contextSize: Int,
     val batchSize: Int,
-    /** 0 lets the engine choose from the number of cores. */
+    /** Threads for generating tokens. 0 lets the engine choose from the number of cores. */
     val threads: Int,
     val useMmap: Boolean,
     val useMlock: Boolean,
@@ -42,7 +42,18 @@ data class EngineConfig(
     val repack: Boolean,
     /** "auto" uses the template embedded in the model file. */
     val chatTemplate: String,
+    val threadAffinity: ThreadAffinity = ThreadAffinity.NONE,
+    /** Threads for processing prompts; 0 uses [threads]. */
+    val batchThreads: Int = 0,
 )
+
+enum class ThreadAffinity {
+    /** The operating system places the threads. */
+    NONE,
+
+    /** The threads are restricted to the fastest cores, as many cores as there are threads. */
+    FASTEST,
+}
 
 data class GenerationRequest(
     val systemPrompt: String,
@@ -68,12 +79,17 @@ data class EngineMetrics(
     val generationMs: Double,
     val threads: Int,
     val stopReason: StopReason,
+    /** Prompt tokens that were already in the context and were not processed again. */
+    val reusedPromptTokens: Int = 0,
+    /** Threads used for processing prompts; [threads] is for generating. */
+    val batchThreads: Int = 0,
 ) {
     val tokensPerSecond: Double
         get() = if (generationMs > 0) generatedTokens * 1000.0 / generationMs else 0.0
 
+    /** Speed over the prompt tokens that were actually processed. */
     val promptTokensPerSecond: Double
-        get() = if (promptMs > 0) promptTokens * 1000.0 / promptMs else 0.0
+        get() = if (promptMs > 0) (promptTokens - reusedPromptTokens) * 1000.0 / promptMs else 0.0
 }
 
 class EngineException(message: String) : Exception(message)

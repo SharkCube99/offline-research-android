@@ -12,12 +12,14 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <vector>
 
 #include "llama.h"
 #include "ggml-backend.h"
+#include "ggml-cpu.h"
 
 #define TAG "LlamaBridge"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
@@ -43,6 +45,10 @@ constexpr jint GEN_ERR_DECODE = -7;
 
 constexpr int PENALTY_LAST_N = 64;
 
+// Values of the affinity argument of nativeLoad; mirrored in LlamaBridge.kt.
+constexpr jint AFFINITY_NONE = 0;
+constexpr jint AFFINITY_FASTEST = 1;
+
 // Layout of the double[] returned by nativeMetrics(); mirrored in LlamaBridge.kt.
 enum MetricIndex {
     M_LOAD_MS = 0,
@@ -52,6 +58,8 @@ enum MetricIndex {
     M_GEN_TOKENS,
     M_GEN_MS,
     M_THREADS,
+    M_PROMPT_REUSED,
+    M_THREADS_BATCH,
     M_COUNT
 };
 
@@ -64,6 +72,16 @@ struct Session {
     int n_batch = 0;
     int n_threads = 0;
 
+    // Set when the threads are pinned; otherwise llama.cpp makes its own pools.
+    // One pool generates tokens, the other processes prompts; they may be the same.
+    ggml_threadpool *threadpool = nullptr;
+    ggml_threadpool *threadpool_batch = nullptr;
+    void (*threadpool_free)(ggml_threadpool *) = nullptr;
+
+    // The prompt tokens the context currently holds, so a new prompt that
+    // starts the same way (the fixed system prompt) is not processed again.
+    std::vector<llama_token> cached;
+
     std::mutex run_mutex;  // held for the whole of a generate() call
     std::atomic<bool> cancel{false};
 
@@ -72,6 +90,8 @@ struct Session {
 
     ~Session() {
         if (ctx) llama_free(ctx);
+        if (threadpool_batch && threadpool_batch != threadpool) threadpool_free(threadpool_batch);
+        if (threadpool) threadpool_free(threadpool);
         if (model) llama_model_free(model);
     }
 };
@@ -105,6 +125,68 @@ bool should_abort(void *data) {
 int default_thread_count() {
     const int online = (int) sysconf(_SC_NPROCESSORS_ONLN);
     return std::max(2, std::min(4, online - 2));
+}
+
+// The n CPUs with the highest capacity, fastest first. Android reports a
+// relative capacity per core; maximum frequency is the fallback.
+std::vector<int> fastest_cpus(int n) {
+    const int count = (int) sysconf(_SC_NPROCESSORS_CONF);
+    std::vector<std::pair<long, int>> ranked;
+    for (int cpu = 0; cpu < count; cpu++) {
+        long value = 0;
+        for (const char *leaf : {"cpu_capacity", "cpufreq/cpuinfo_max_freq"}) {
+            std::ifstream in("/sys/devices/system/cpu/cpu" + std::to_string(cpu) + "/" + leaf);
+            if (in >> value && value > 0) break;
+            value = 0;
+        }
+        ranked.emplace_back(value, cpu);
+    }
+    std::sort(ranked.begin(), ranked.end(), [](const auto &a, const auto &b) {
+        return a.first != b.first ? a.first > b.first : a.second > b.second;
+    });
+    std::vector<int> cpus;
+    for (int i = 0; i < n && i < (int) ranked.size(); i++) cpus.push_back(ranked[(size_t) i].second);
+    return cpus;
+}
+
+// Gives the context thread pools restricted to the fastest cores: `threads`
+// cores for generating tokens and `threads_batch` cores for processing prompts.
+// Without this the scheduler spreads the threads over fast and slow cores and
+// moves them around, and every operation waits for the thread on the slowest one.
+void pin_to_fastest_cpus(Session &session, int threads, int threads_batch) {
+    // The CPU backend is a separately loaded library, so its functions are looked up by name.
+    ggml_backend_dev_t cpu = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+    ggml_backend_reg_t reg = cpu ? ggml_backend_dev_backend_reg(cpu) : nullptr;
+    auto *pool_new = reg ? (decltype(ggml_threadpool_new) *)
+            ggml_backend_reg_get_proc_address(reg, "ggml_threadpool_new") : nullptr;
+    auto *pool_free = reg ? (decltype(ggml_threadpool_free) *)
+            ggml_backend_reg_get_proc_address(reg, "ggml_threadpool_free") : nullptr;
+    if (pool_new == nullptr || pool_free == nullptr) {
+        LOGW("CPU backend has no thread pool functions; threads are not pinned");
+        return;
+    }
+
+    auto make_pool = [&](int n, const char *purpose) -> ggml_threadpool * {
+        ggml_threadpool_params params = ggml_threadpool_params_default(n);
+        std::string list;
+        for (int cpu_id : fastest_cpus(n)) {
+            if (cpu_id >= GGML_MAX_N_THREADS) continue;
+            params.cpumask[cpu_id] = true;
+            list += (list.empty() ? "" : ",") + std::to_string(cpu_id);
+        }
+        ggml_threadpool *pool = pool_new(&params);
+        if (pool == nullptr) LOGW("could not create the %s thread pool", purpose);
+        else LOGI("%s: %d threads pinned to cpus %s", purpose, n, list.c_str());
+        return pool;
+    };
+
+    session.threadpool = make_pool(threads, "generation");
+    if (session.threadpool == nullptr) return;
+    session.threadpool_free = pool_free;
+    session.threadpool_batch = threads_batch == threads
+            ? session.threadpool : make_pool(threads_batch, "prompt processing");
+    if (session.threadpool_batch == nullptr) session.threadpool_batch = session.threadpool;
+    llama_attach_threadpool(session.ctx, session.threadpool, session.threadpool_batch);
 }
 
 std::string bytes_to_string(JNIEnv *env, jbyteArray array) {
@@ -205,7 +287,8 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeInit(JNIEnv *env, jobject, jst
 JNIEXPORT jlong JNICALL
 Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
         JNIEnv *env, jobject, jstring model_path, jint n_ctx, jint n_batch, jint n_threads,
-        jboolean use_mmap, jboolean use_mlock, jboolean repack, jstring chat_template) {
+        jint n_threads_batch, jboolean use_mmap, jboolean use_mlock, jboolean repack, jint affinity,
+        jstring chat_template) {
     llama_model_params model_params = llama_model_default_params();
     model_params.n_gpu_layers = 0;
     if (use_mmap) {
@@ -232,13 +315,14 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
     }
 
     const int threads = n_threads > 0 ? n_threads : default_thread_count();
+    const int threads_batch = n_threads_batch > 0 ? n_threads_batch : threads;
 
     llama_context_params ctx_params = llama_context_default_params();
     ctx_params.n_ctx = (uint32_t) n_ctx;
     ctx_params.n_batch = (uint32_t) n_batch;
     ctx_params.n_ubatch = (uint32_t) n_batch;
     ctx_params.n_threads = threads;
-    ctx_params.n_threads_batch = threads;
+    ctx_params.n_threads_batch = threads_batch;
     ctx_params.abort_callback = should_abort;
     ctx_params.abort_callback_data = session;
 
@@ -248,6 +332,7 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
         delete session;
         return LOAD_ERR_CONTEXT;
     }
+    if (affinity == AFFINITY_FASTEST) pin_to_fastest_cpus(*session, threads, threads_batch);
     const double load_ms = ms_since(t_start);
 
     const char *tmpl = env->GetStringUTFChars(chat_template, nullptr);
@@ -266,11 +351,12 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
     session->n_threads = threads;
     session->metrics[M_LOAD_MS] = load_ms;
     session->metrics[M_THREADS] = threads;
+    session->metrics[M_THREADS_BATCH] = threads_batch;
 
     char desc[128] = {0};
     llama_model_desc(session->model, desc, sizeof(desc));
-    LOGI("loaded '%s' in %.0f ms: n_ctx=%d n_batch=%d threads=%d size=%.2f GiB", desc, load_ms,
-         session->n_ctx, n_batch, threads,
+    LOGI("loaded '%s' in %.0f ms: n_ctx=%d n_batch=%d threads=%d/%d size=%.2f GiB", desc, load_ms,
+         session->n_ctx, n_batch, threads, threads_batch,
          (double) llama_model_size(session->model) / (1024.0 * 1024.0 * 1024.0));
     return reinterpret_cast<jlong>(session);
 }
@@ -306,11 +392,21 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
         return GEN_ERR_PROMPT_TOO_LONG;
     }
 
-    // Each question is answered from a clean context. Reusing the KV cache for a
-    // fixed system prompt (prefix caching) is deliberately left to M5.
-    llama_memory_clear(llama_get_memory(session.ctx), true);
+    // Prefix caching: keep the part of the context this prompt shares with the
+    // previous one (at least the fixed system prompt) and process only the rest.
+    // The last token is always processed, because sampling needs its output.
+    int n_reused = 0;
+    const int max_reuse = std::min((int) session.cached.size(), n_prompt - 1);
+    while (n_reused < max_reuse && session.cached[(size_t) n_reused] == tokens[(size_t) n_reused]) n_reused++;
+    llama_memory_t memory = llama_get_memory(session.ctx);
+    if (n_reused == 0 || !llama_memory_seq_rm(memory, 0, n_reused, -1)) {
+        llama_memory_clear(memory, true);
+        n_reused = 0;
+    }
+    // If this call stops early, only the reused prefix is known to be intact.
+    session.cached.assign(tokens.begin(), tokens.begin() + n_reused);
 
-    for (int i = 0; i < n_prompt; i += session.n_batch) {
+    for (int i = n_reused; i < n_prompt; i += session.n_batch) {
         const int n = std::min(session.n_batch, n_prompt - i);
         const int rc = llama_decode(session.ctx, llama_batch_get_one(tokens.data() + i, n));
         if (rc == 2 || session.cancel) return STOP_CANCELLED;
@@ -319,6 +415,7 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
             return GEN_ERR_DECODE;
         }
     }
+    session.cached = tokens;
     const double prompt_ms = ms_since(t_start);
     const auto t_gen_start = Clock::now();
 
@@ -376,9 +473,10 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
         session.metrics[M_TTFT_MS] = ttft_ms;
         session.metrics[M_GEN_TOKENS] = n_generated;
         session.metrics[M_GEN_MS] = gen_ms;
+        session.metrics[M_PROMPT_REUSED] = n_reused;
     }
-    LOGI("generate: prompt %d tok in %.0f ms, ttft %.0f ms, %d tok in %.0f ms (%.2f tok/s), stop=%d",
-         n_prompt, prompt_ms, ttft_ms, n_generated, gen_ms,
+    LOGI("generate: prompt %d tok (%d reused) in %.0f ms, ttft %.0f ms, %d tok in %.0f ms (%.2f tok/s), stop=%d",
+         n_prompt, n_reused, prompt_ms, ttft_ms, n_generated, gen_ms,
          gen_ms > 0 ? n_generated * 1000.0 / gen_ms : 0.0, stop);
     return stop;
 }

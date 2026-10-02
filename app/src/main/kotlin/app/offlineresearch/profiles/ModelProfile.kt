@@ -18,8 +18,12 @@ data class ModelProfile(
     @SerialName("model_file") val modelFile: String,
     @SerialName("n_ctx") val contextSize: Int,
     @SerialName("n_batch") val batchSize: Int,
-    /** 0 = let the engine choose. */
+    /** Threads for generating tokens. 0 = let the engine choose. */
     @SerialName("n_threads") val threads: Int = 0,
+    /** Threads for processing prompts. 0 = the same as n_threads. */
+    @SerialName("n_threads_batch") val batchThreads: Int = 0,
+    /** "none", or "fastest" to restrict the threads to the fastest cores. */
+    @SerialName("thread_affinity") val threadAffinity: String = "none",
     @SerialName("use_mmap") val useMmap: Boolean = true,
     @SerialName("use_mlock") val useMlock: Boolean = false,
     /** llama.cpp weight repacking: a second copy of the weights in RAM. */

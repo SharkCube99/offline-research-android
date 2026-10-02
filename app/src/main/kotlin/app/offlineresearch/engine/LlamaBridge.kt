@@ -33,6 +33,12 @@ internal object LlamaBridge {
     const val M_GEN_TOKENS = 4
     const val M_GEN_MS = 5
     const val M_THREADS = 6
+    const val M_PROMPT_REUSED = 7
+    const val M_THREADS_BATCH = 8
+
+    // Values of nativeLoad's affinity argument.
+    const val AFFINITY_NONE = 0
+    const val AFFINITY_FASTEST = 1
 
     private var initialised = false
 
@@ -53,9 +59,11 @@ internal object LlamaBridge {
         nCtx: Int,
         nBatch: Int,
         nThreads: Int,
+        nThreadsBatch: Int,
         useMmap: Boolean,
         useMlock: Boolean,
         repack: Boolean,
+        affinity: Int,
         chatTemplate: String,
     ): Long
 

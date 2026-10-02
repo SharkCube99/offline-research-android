@@ -39,9 +39,14 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
             config.contextSize,
             config.batchSize,
             config.threads,
+            config.batchThreads,
             config.useMmap,
             config.useMlock,
             config.repack,
+            when (config.threadAffinity) {
+                ThreadAffinity.NONE -> LlamaBridge.AFFINITY_NONE
+                ThreadAffinity.FASTEST -> LlamaBridge.AFFINITY_FASTEST
+            },
             config.chatTemplate,
         )
         // Anything but the two error codes is a handle. It is a native pointer, and
@@ -108,6 +113,8 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
             generatedTokens = m[LlamaBridge.M_GEN_TOKENS].toInt(),
             generationMs = m[LlamaBridge.M_GEN_MS],
             threads = m[LlamaBridge.M_THREADS].toInt(),
+            reusedPromptTokens = m[LlamaBridge.M_PROMPT_REUSED].toInt(),
+            batchThreads = m[LlamaBridge.M_THREADS_BATCH].toInt(),
             stopReason = lastStop,
         )
     }
