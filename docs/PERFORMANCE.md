@@ -141,7 +141,7 @@ The context keeps the tokens a new prompt shares with the previous one and proce
 | | First question after start | Second question |
 |---|---|---|
 | Planner prompt | 146 tokens, 0 reused | 145 tokens, 134 reused |
-| Planner prompt processing (five runs with both values) | 10.4 to 11.8 s | 3.9 to 6.2 s |
+| Planner prompt processing (the first four runs, read from the phone's log) | 10.4 to 11.8 s | 3.9 to 6.2 s |
 | Answerer prompt | 847 tokens, 0 reused | 927 tokens, 171 reused |
 
 The answerer reuses its fixed instructions, 171 tokens, which is 18% of a 927-token prompt. The retrieved sources differ for every question and cannot be reused.
