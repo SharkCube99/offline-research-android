@@ -163,3 +163,38 @@ The answerer reuses its fixed instructions, 171 tokens, which is 18% of a 927-to
 ### Not measured
 
 Each configuration is two questions, run once, on a phone that was warming up; differences of 10% are within the noise. Not tried: 4 pinned threads for reading, llama.cpp's polling and priority settings, an OpenMP or KleidiAI build, a smaller passage budget, and a smaller answerer model for the low tier.
+
+## M4: 30B on a 12 GB phone
+
+**Not measured.** No 12 GB phone has run the app. The procedure is in `docs/M4_RUNBOOK.md`. When it has been run, replace this paragraph with the filled-in template below. Do not fill in any cell that was not measured.
+
+### Template
+
+```markdown
+## M4: Qwen3-30B-A3B Q4_K_M on <phone model> (<RAM> GB), <date>
+
+Source: `docs/measurements/<date>-<device>-stress-high-30b.md`, `.jsonl`, `.txt` and `.exits.jsonl`, taken with
+`scripts/stress.sh --profile high --label high-30b`. Airplane mode: <on/off, as printed in the .txt file>.
+
+<paste the whole of the .md report here: the Result line, the setup lines, the table and the medians>
+
+### Model load
+
+| Measure | Value | Source |
+|---|---|---|
+| Load time, first load after pushing the file | <s> | `loaded '...' in N ms` line in the .txt file |
+| Memory available after load | <kB> | "after load" block in the .txt file |
+| App memory after load (TOTAL PSS) | <kB> | same block |
+
+### Observations
+
+- <Did all 20 complete? If not, at which question did it stop, and what reason does .exits.jsonl give?>
+- <Did memory available fall across the run? First and last values.>
+- <Did the thermal status leave NONE? At which question?>
+- <Did speed change between the first and last five questions?>
+- <Anything seen on the phone that the log does not show.>
+
+### Not measured
+
+<What this run did not cover: for example a cold start after reboot, a second run, other thread settings.>
+```
