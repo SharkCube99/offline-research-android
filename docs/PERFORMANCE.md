@@ -110,3 +110,56 @@ With the 1,000-token budget (first smoke run): a 1,096-token prompt took 188 s t
 - **Thread placement.** Sampled three times during prompt processing, the answerer's four threads were on a mix of fast cores (cpu6, cpu7) and slow cores, different each time. Core frequencies read 1.29 to 1.48 GHz on the slow cores (maximum 1.96) and 1.65 to 1.90 GHz on the fast cores (maximum 2.21). The thermal service reported status 0 and the battery 38 °C. Pinning to the two fast cores has not been tried.
 - **Search on the phone:** 2 to 8 s for two to four queries on the full index in this run, and up to 15 s in the first runs after the index was pushed.
 - **Memory:** with both models and the index open, `MemAvailable` was 2.9 GB of 7.6 GB.
+
+## Speed work on the Redmi 12 5G: thread pinning, thread counts, batch size, prefix caching (2026-10-02)
+
+This is M5-style tuning done before M4, on the low-end phone with the 4B model. It is not the M5 result: that has to be measured against an M4 baseline on a 12 GB phone with the 30B model.
+
+Source: `docs/measurements/2026-10-02-23076RN4BI-t*.jsonl` and `.txt`, taken with `scripts/measure.sh`. Each configuration: restart the app, ask the same two questions over adb, answers capped at 64 tokens, airplane mode on, full 22.9 GB index, profile `low` (800 passage tokens), app 0.5.0-speed. "Reading" is prompt processing over the tokens actually processed (prompt tokens minus reused tokens); "writing" is generation.
+
+Run order as listed. The core capacities the phone reports are 1024 for cpu6 and cpu7 and 478 for cpu0 to cpu5.
+
+| Configuration | Q1 prompt | Q1 reading | Q1 writing | Q2 prompt (reused) | Q2 reading | Q2 writing | Battery, start to end |
+|---|---|---|---|---|---|---|---|
+| 4 threads, not pinned (baseline) | 847 | 146 s, 5.82 tok/s | 1.45 tok/s | 927 (171) | 147 s, 5.15 tok/s | 1.69 tok/s | 35.0 to 38.0 °C |
+| 2 threads pinned to cpu6-7 | 847 | 179 s, 4.73 tok/s | 3.46 tok/s | 927 (171) | 168 s, 4.49 tok/s | 3.04 tok/s | 38.0 to 39.0 °C |
+| 8 threads, not pinned | 847 | 164 s, 5.16 tok/s | 1.89 tok/s | 927 (171) | 142 s, 5.31 tok/s | 1.59 tok/s | 39.0 °C at load |
+| 2 pinned for writing, 8 for reading | 847 | 165 s, 5.13 tok/s | 2.93 tok/s | 927 (171) | 142 s, 5.31 tok/s | 3.12 tok/s | 39.0 to 40.0 °C |
+| Same, `n_batch` 128 | 992 | 201 s, 4.94 tok/s | 2.94 tok/s | 927 (171) | 147 s, 5.14 tok/s | 2.60 tok/s | 40.0 °C |
+| 4 threads, not pinned (repeat) | 847 | 182 s, 4.64 tok/s | 1.59 tok/s | not measured | | | 40.0 °C at load |
+
+Notes on the table:
+
+- The 8-thread run's results were saved by hand from the phone's metrics log; its `.txt` file has only the after-load readings, because the measurement script was edited while that run was using it and its last step failed.
+- The repeat baseline lost its second question: the phone dropped off adb during it. Its first question is from the run's console output; there is no `.jsonl` for it.
+- In the `n_batch` 128 run the planner chose different sources for the first question, so that prompt is 992 tokens, not 847.
+
+### Prefix caching
+
+The context keeps the tokens a new prompt shares with the previous one and processes only the rest.
+
+| | First question after start | Second question |
+|---|---|---|
+| Planner prompt | 146 tokens, 0 reused | 145 tokens, 134 reused |
+| Planner prompt processing (five runs with both values) | 10.4 to 11.8 s | 3.9 to 6.2 s |
+| Answerer prompt | 847 tokens, 0 reused | 927 tokens, 171 reused |
+
+The answerer reuses its fixed instructions, 171 tokens, which is 18% of a 927-token prompt. The retrieved sources differ for every question and cannot be reused.
+
+### What this shows
+
+- **Writing is about twice as fast with two threads pinned to the fast cores:** 2.6 to 3.5 tokens per second against 1.5 to 1.9 unpinned, in every pinned run.
+- **Reading does not respond much to thread settings.** All configurations fall between 4.5 and 5.8 tokens per second. Two pinned fast cores alone reach 4.5 to 4.7; adding the six slow cores brings 5.1 to 5.3.
+- **The phone slowed as it warmed.** The baseline's first question read at 5.82 tokens per second at 35 °C battery temperature and 4.64 at 40 °C. So the first baseline flatters the unpinned setting; compared warm, 8 reading threads (5.13 to 5.31) beat 4 unpinned (4.64).
+- **Batch size 128 against 512 made no difference** on the comparable question (5.14 against 5.31 tokens per second).
+- **Total wait barely moved.** Reading 750 to 850 tokens still takes 140 to 180 s. Pinning shortens a 150-token answer by roughly 45 s; the prefix cache removes about 30 s of reading from every question after the first.
+
+### Decisions
+
+- `low.json`: `n_threads` 2, `n_threads_batch` 8, `thread_affinity` "fastest". Not yet run from the bundled profile on the phone: the same values were measured through a pushed profile override.
+- `high.json` is unchanged (`thread_affinity` "none"). Its values have to come from measurements on the 12 GB phone.
+- `n_batch` stays 512.
+
+### Not measured
+
+Each configuration is two questions, run once, on a phone that was warming up; differences of 10% are within the noise. Not tried: 4 pinned threads for reading, llama.cpp's polling and priority settings, an OpenMP or KleidiAI build, a smaller passage budget, and a smaller answerer model for the low tier.

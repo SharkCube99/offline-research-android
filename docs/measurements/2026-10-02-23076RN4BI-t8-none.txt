@@ -1,0 +1,9 @@
+# t8-none on 23076RN4BI, 2026-10-02T03:47:01Z
+loaded 'qwen3 4B Q4_K - Medium' in 3744 ms: n_ctx=4096 n_batch=512 threads=8 size=2.32 GiB
+loaded 'qwen3 1.7B Q8_0' in 3849 ms: n_ctx=1024 n_batch=512 threads=8 size=1.70 GiB
+## after load
+           TOTAL PSS:  3198938            TOTAL RSS:  3264612       TOTAL SWAP PSS:     7923
+MemAvailable:    3326332 kB
+SwapFree:        5905760 kB
+  temperature: 390
+airplane_mode_on=0

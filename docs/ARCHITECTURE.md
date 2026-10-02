@@ -92,6 +92,18 @@ The pipeline, its tests and the on-device results are in `docs/RAG.md`. The deci
 
 Open for M4 and M5: thread pinning to the fast cores, prefix caching of the fixed part of the prompt, and whether Wikivoyage should be favoured for travel questions.
 
+## Speed work (ahead of M4)
+
+Measurements are in `docs/PERFORMANCE.md`. The decisions:
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Thread placement | Profile field `thread_affinity`: "none", or "fastest" to pin threads to the cores with the highest reported capacity | Unpinned threads wandered across fast and slow cores. Pinned to the two fast cores, generation was about twice as fast on the Redmi |
+| Separate thread counts | `n_threads` for generating, `n_threads_batch` for processing prompts | Generation was fastest on the two fast cores only; prompt processing was a little faster with all eight |
+| How pinning is done | Two ggml thread pools with CPU masks, attached to the context; the CPU backend's pool functions are looked up by name | The CPU backend is a separately loaded library, so its functions cannot be linked directly |
+| Prefix caching | The bridge remembers the tokens in the context and reprocesses only what differs from the previous prompt | The system prompt is identical for every question. Saves most of the planner's prompt and 18% of the answerer's |
+| Device-specific values | Only `low.json` uses pinning, with values measured on the Redmi | Core layouts differ between phones; `high.json` waits for measurements on a 12 GB device |
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

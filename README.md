@@ -94,7 +94,7 @@ adb pull /sdcard/Android/data/app.offlineresearch/files/logs/metrics.jsonl
 To measure a configuration with the same three questions every time:
 
 ```bash
-scripts/measure.sh --threads 4 --repack false
+scripts/measure.sh --threads 2 --batch-threads 8 --affinity fastest
 ```
 
 Results are saved under `docs/measurements/`.

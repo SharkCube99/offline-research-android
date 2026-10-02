@@ -1,0 +1,19 @@
+# t2x8-fastest on 23076RN4BI, 2026-10-02T03:55:12Z
+generation: 2 threads pinned to cpus 7,6
+prompt processing: 8 threads pinned to cpus 7,6,5,4,3,2,1,0
+loaded 'qwen3 4B Q4_K - Medium' in 4641 ms: n_ctx=4096 n_batch=512 threads=2/8 size=2.32 GiB
+generation: 2 threads pinned to cpus 7,6
+prompt processing: 8 threads pinned to cpus 7,6,5,4,3,2,1,0
+loaded 'qwen3 1.7B Q8_0' in 3939 ms: n_ctx=1024 n_batch=512 threads=2/8 size=1.70 GiB
+## after load
+           TOTAL PSS:  3204421            TOTAL RSS:  3271192       TOTAL SWAP PSS:     6469
+MemAvailable:    3123132 kB
+SwapFree:        5923932 kB
+  temperature: 390
+airplane_mode_on=0
+## after 2 questions
+           TOTAL PSS:  3669053            TOTAL RSS:  3697968       TOTAL SWAP PSS:    26798
+MemAvailable:    3183156 kB
+SwapFree:        5800276 kB
+  temperature: 400
+airplane_mode_on=0
