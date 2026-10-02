@@ -41,7 +41,10 @@ def main():
     first = rows[0]
     answered = [r["stress"]["index"] for r in rows]
     complete = answered == list(range(1, args.expected + 1))
-    bad_exits = [e for e in exits if e["reason"] not in ("USER_REQUESTED", "USER_STOPPED")]
+    # Exits a person or an install caused are not failures of the app. Being
+    # swiped out of the recent-apps list is reported by Android as OTHER and counts.
+    harmless = ("USER_REQUESTED", "USER_STOPPED", "PACKAGE_UPDATED", "PACKAGE_STATE_CHANGE")
+    bad_exits = [e for e in exits if e["reason"] not in harmless]
     passed = complete and not bad_exits
 
     print(f"**Result: {'PASS' if passed else 'FAIL'}.** {len(rows)} of {args.expected} consecutive questions answered"
