@@ -58,7 +58,7 @@ Source: `docs/measurements/2026-10-02-23076RN4BI-m3-airplane.jsonl`. Five questi
 | What is the wifi password at my hotel? | WiFi password; Hotel network | Password, Wi-Fi hotspot | Says the sources do not contain it and that it "is not covered by the offline sources"; adds a cited remark about hotspots |
 | What was the closing price of Apple stock yesterday? | Apple Inc.; Apple stock | Open-high-low-close chart, Stock | Exactly "Not covered by the offline sources." |
 
-Citations: every number cited in the five answers referred to a real source. No invented citation numbers appeared in any of the 13 answers logged during M3.
+Citations: every number cited in the five answers referred to a real source. No invented citation numbers appeared in any of the 12 answers logged during M3.
 
 Timing, median of the five:
 
@@ -87,6 +87,6 @@ The first planner prompt asked for "search queries"; the 1.7B model paraphrased 
 ## Not verified
 
 - **Tapping a citation and the Sources panel.** The links and the button are visible in the screenshots, but this phone refuses simulated taps over adb, so opening the panel has not been exercised on the device. The panel's content logic is covered by the pipeline tests; the Compose sheet itself is not.
-- **Answer quality at scale.** Thirteen answers were read by hand. The 100-question benchmark is M6.
+- **Answer quality at scale.** 12 answers were read by hand. The 100-question benchmark is M6.
 - **The 1,000-token budget** of the high profile, and the 30B model, on any 12 GB phone (M4).
 - **Search time with a cold file cache.** Searches took 2 to 15 s; the slowest were the first after the 22.9 GB file was pushed.

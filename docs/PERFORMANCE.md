@@ -96,7 +96,7 @@ Setup for the airplane-mode run: app 0.3.0-m3, profile `low` (800 passage tokens
 | How a refrigerator works | 13 s | 6.0 s | 927 | 144 s | 163 s | 134 | 1.97 |
 | Airport to central Paris | 15 s | 7.8 s | 973 | 157 s | 180 s | 147 | 1.83 |
 | Hotel wifi password | 13 s | 4.0 s | 955 | 157 s | 174 s | 85 | 1.63 |
-| Apple closing price | 14 s | 6.1 s | 974 | 178 s | 199 s | 8 | 1.75 |
+| Apple closing price | 14 s | 6.1 s | 974 | 178 s | 199 s | 11 | 1.75 |
 | **Median** | 13.5 s | 6.0 s | 955 | | **174 s** | | **1.83** |
 
 Median prompt processing speed: 6.2 tokens per second.
