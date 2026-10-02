@@ -1,11 +1,13 @@
 package app.offlineresearch.profiles
 
+import android.app.ActivityManager
 import android.content.Context
 import app.offlineresearch.rag.IndexFiles
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.util.Locale
 
 /**
  * Everything that differs between models. Changing the model means changing
@@ -56,18 +58,47 @@ data class PlannerProfile(
     @SerialName("context_size") val contextSize: Int = 1024,
 )
 
+/** The active profile and a short note on why it was picked, for the status line. */
+data class LoadedProfile(val profile: ModelProfile, val source: String)
+
 /** Finds the active profile, model files and index files on the device. */
 class ProfileStore(private val context: Context) {
 
-    /** A profile.json pushed over adb wins over the bundled default. */
-    fun load(): ModelProfile {
-        val override = context.getExternalFilesDir(null)?.let { File(it, OVERRIDE_FILE) }
-        val text = if (override != null && override.isFile) {
-            override.readText()
+    private val settings = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+    /** What the user picked in settings; AUTO until they pick something. */
+    var choice: ProfileChoice
+        get() = ProfileChoice.parse(settings.getString(KEY_CHOICE, null))
+        set(value) = settings.edit().putString(KEY_CHOICE, value.name).apply()
+
+    fun totalRamBytes(): Long {
+        val info = ActivityManager.MemoryInfo()
+        (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(info)
+        return info.totalMem
+    }
+
+    private fun overrideFile(): File? =
+        context.getExternalFilesDir(null)?.let { File(it, OVERRIDE_FILE) }?.takeIf { it.isFile }
+
+    /** True when a profile.json pushed over adb is taking precedence over the settings. */
+    fun hasPushedOverride(): Boolean = overrideFile() != null
+
+    /**
+     * Order of precedence: a profile.json pushed over adb, then the profile
+     * chosen in settings, then the one that suits this phone's RAM.
+     */
+    fun load(): LoadedProfile {
+        overrideFile()?.let { return LoadedProfile(ModelProfile.parse(it.readText()), "pushed profile.json") }
+        val picked = choice
+        val ram = totalRamBytes()
+        val asset = ProfileSelector.assetFor(picked, ram)
+        val text = context.assets.open(asset).bufferedReader().use { it.readText() }
+        val source = if (picked == ProfileChoice.AUTO) {
+            String.format(Locale.US, "auto, %.1f GB RAM", ram / 1e9)
         } else {
-            context.assets.open(DEFAULT_ASSET).bufferedReader().use { it.readText() }
+            "chosen in settings"
         }
-        return ModelProfile.parse(text)
+        return LoadedProfile(ModelProfile.parse(text), source)
     }
 
     private fun dataDirs(name: String): List<File> = listOfNotNull(
@@ -86,7 +117,7 @@ class ProfileStore(private val context: Context) {
 
     companion object {
         const val OVERRIDE_FILE = "profile.json"
-        const val DEFAULT_ASSET = "low.json"
         const val MODELS_DIR = "models"
+        private const val KEY_CHOICE = "profile_choice"
     }
 }

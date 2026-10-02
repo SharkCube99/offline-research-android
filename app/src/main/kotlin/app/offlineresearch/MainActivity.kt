@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
+import app.offlineresearch.profiles.ProfileChoice
 import app.offlineresearch.ui.ChatScreen
 import app.offlineresearch.ui.ChatViewModel
 
@@ -31,13 +32,24 @@ class MainActivity : ComponentActivity() {
         askFromIntent(intent)
     }
 
-    // Lets scripts ask a question over adb:
+    // Lets scripts drive the app over adb:
     //   adb shell am start -n app.offlineresearch/.MainActivity --es ask "..."
+    //   adb shell am start -n app.offlineresearch/.MainActivity --es profile high
+    //   adb shell am start -n app.offlineresearch/.MainActivity --ei stress 20
     private fun askFromIntent(intent: Intent?) {
-        intent?.getStringExtra(EXTRA_ASK)?.takeIf { it.isNotBlank() }?.let(chatViewModel::ask)
+        if (intent == null) return
+        intent.getStringExtra(EXTRA_PROFILE)?.let { chatViewModel.setProfileChoice(ProfileChoice.parse(it)) }
+        val stress = intent.getIntExtra(EXTRA_STRESS, 0)
+        if (stress > 0) {
+            chatViewModel.runStress(stress)
+        } else {
+            intent.getStringExtra(EXTRA_ASK)?.takeIf { it.isNotBlank() }?.let(chatViewModel::ask)
+        }
     }
 
     companion object {
         const val EXTRA_ASK = "ask"
+        const val EXTRA_PROFILE = "profile"
+        const val EXTRA_STRESS = "stress"
     }
 }

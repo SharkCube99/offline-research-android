@@ -7,13 +7,18 @@ import androidx.lifecycle.viewModelScope
 import app.offlineresearch.engine.EngineConfig
 import app.offlineresearch.engine.EngineException
 import app.offlineresearch.engine.EngineMetrics
+import app.offlineresearch.engine.ExitLog
 import app.offlineresearch.engine.InferenceEngine
 import app.offlineresearch.engine.LlamaEngine
 import app.offlineresearch.engine.MetricsLog
 import app.offlineresearch.engine.RagRecord
 import app.offlineresearch.engine.RunInfo
+import app.offlineresearch.engine.StressTag
+import app.offlineresearch.engine.SystemSnapshot
+import app.offlineresearch.engine.SystemStats
 import app.offlineresearch.engine.ThreadAffinity
 import app.offlineresearch.profiles.ModelProfile
+import app.offlineresearch.profiles.ProfileChoice
 import app.offlineresearch.profiles.ProfileStore
 import app.offlineresearch.rag.AnswerSettings
 import app.offlineresearch.rag.Citations
@@ -31,6 +36,7 @@ import app.offlineresearch.rag.Retriever
 import app.offlineresearch.rag.SqlDatabase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +45,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.Instant
 import kotlin.random.Random
 
 data class ChatMessage(
@@ -55,6 +62,8 @@ sealed interface ModelStatus {
 
     data class Ready(
         val profile: String,
+        /** Why this profile is active: chosen automatically, in settings, or pushed over adb. */
+        val profileSource: String,
         val modelFile: String,
         val corpora: List<String>,
         /** Planner model file, or null when searching by keywords only. */
@@ -72,6 +81,14 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val generating: Boolean = false,
     val metrics: EngineMetrics? = null,
+    /** Memory, page faults and heat after the last answer. */
+    val system: SystemSnapshot? = null,
+    val profileChoice: ProfileChoice = ProfileChoice.AUTO,
+    val totalRamGb: Double = 0.0,
+    /** A profile.json pushed over adb is overriding the choice above. */
+    val pushedOverride: Boolean = false,
+    /** "3 of 20" while a stress test runs. */
+    val stressProgress: String? = null,
 )
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
@@ -80,11 +97,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val answerer: InferenceEngine = LlamaEngine(nativeLibDir, "llama-answerer")
     private val plannerEngine: InferenceEngine = LlamaEngine(nativeLibDir, "llama-planner")
     private val profiles = ProfileStore(application)
-    private val metricsLog = MetricsLog(application.getExternalFilesDir(null)?.let { File(it, "logs") })
+    private val logDir = application.getExternalFilesDir(null)?.let { File(it, "logs") }
+    private val metricsLog = MetricsLog(logDir)
     private val appVersion: String =
         application.packageManager.getPackageInfo(application.packageName, 0).versionName ?: "unknown"
 
-    private val _state = MutableStateFlow(ChatUiState())
+    private val _state = MutableStateFlow(
+        ChatUiState(profileChoice = profiles.choice, totalRamGb = profiles.totalRamBytes() / 1e9),
+    )
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     private var profile: ModelProfile? = null
@@ -92,14 +112,27 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var plannerName = KEYWORDS
     private var indexes: Map<String, SqlDatabase> = emptyMap()
     private var pendingQuestion: String? = null
+    private var pendingStress: Int? = null
+    private var work: Job? = null
+    private var loading: Job? = null
 
     init {
+        // Why did the previous run end? Only Android knows, and only afterwards.
+        viewModelScope.launch(Dispatchers.IO) { ExitLog.recordNew(application, logDir) }
         loadModel()
     }
 
     fun loadModel() {
-        _state.update { it.copy(status = ModelStatus.Loading) }
-        viewModelScope.launch {
+        if (_state.value.generating) return
+        profile = null
+        pipeline = null
+        _state.update {
+            it.copy(status = ModelStatus.Loading, profileChoice = profiles.choice, pushedOverride = profiles.hasPushedOverride())
+        }
+        // Only one load at a time: a second request (a profile change arriving
+        // while the first load runs) replaces the first.
+        loading?.cancel()
+        loading = viewModelScope.launch {
             val status = try {
                 load()
             } catch (e: CancellationException) {
@@ -108,16 +141,38 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e(MetricsLog.TAG, "load failed", e)
                 ModelStatus.Failed(e.message ?: e.toString())
             }
-            _state.update { it.copy(status = status, metrics = if (status is ModelStatus.Ready) answerer.metrics() else null) }
-            if (status is ModelStatus.Ready) pendingQuestion?.let { send(it) }
+            val ready = status is ModelStatus.Ready
+            _state.update {
+                it.copy(
+                    status = status,
+                    metrics = if (ready) answerer.metrics() else null,
+                    system = if (ready) SystemStats.snapshot(getApplication()) else null,
+                )
+            }
+            if (ready) {
+                pendingStress?.let { runStress(it) } ?: pendingQuestion?.let { send(it) }
+            }
             pendingQuestion = null
+            pendingStress = null
         }
     }
 
+    /** Picks the profile to use from now on and reloads the models with it. */
+    fun setProfileChoice(choice: ProfileChoice) {
+        if (_state.value.generating || choice == profiles.choice) return
+        profiles.choice = choice
+        loadModel()
+    }
+
     private suspend fun load(): ModelStatus {
-        val active = withContext(Dispatchers.IO) { profiles.load() }
+        val loaded = withContext(Dispatchers.IO) { profiles.load() }
+        val active = loaded.profile
+        Log.i(MetricsLog.TAG, "profile: ${active.name} (${loaded.source})")
         val model = withContext(Dispatchers.IO) { profiles.findModel(active.modelFile) }
-            ?: return ModelStatus.Missing("Model file ${active.modelFile}", profiles.modelDirs().map { it.absolutePath })
+            ?: return ModelStatus.Missing(
+                "Model file ${active.modelFile} (profile ${active.name}, ${loaded.source})",
+                profiles.modelDirs().map { it.absolutePath },
+            )
         val indexFiles = withContext(Dispatchers.IO) { IndexFiles.find(profiles.indexDirs()) }
         if (indexFiles.isEmpty()) {
             return ModelStatus.Missing("Knowledge index (*.db)", profiles.indexDirs().map { it.absolutePath })
@@ -134,6 +189,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             chatTemplate = active.chatTemplate,
             threadAffinity = if (active.threadAffinity == "fastest") ThreadAffinity.FASTEST else ThreadAffinity.NONE,
         )
+        // Free the old models first: two answerers do not fit in memory at once.
+        plannerEngine.unload()
+        answerer.unload()
         answerer.load(model.absolutePath, config(active.contextSize))
         Log.i(MetricsLog.TAG, "system info: ${answerer.systemInfo()}")
 
@@ -170,7 +228,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             ),
             seed = Random::nextInt,
         )
-        return ModelStatus.Ready(active.name, active.modelFile, indexFiles.keys.toList(), plannerFile?.name)
+        return ModelStatus.Ready(active.name, loaded.source, active.modelFile, indexFiles.keys.toList(), plannerFile?.name)
     }
 
     /** Asks [question] now, or as soon as loading has finished. */
@@ -179,58 +237,110 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun send(question: String) {
-        val active = profile ?: return
-        val rag = pipeline ?: return
         val text = question.trim()
-        if (text.isEmpty() || _state.value.generating) return
-
-        _state.update {
-            it.copy(
-                messages = it.messages + ChatMessage(true, text) + ChatMessage(false, "", stage = RagStage.PLANNING),
-                generating = true,
-            )
-        }
-        viewModelScope.launch {
-            val raw = StringBuilder()
-            var sources = emptyList<Passage>()
-            var report: RagReport? = null
-            var failure: String? = null
+        if (text.isEmpty() || pipeline == null || _state.value.generating) return
+        _state.update { it.copy(generating = true) }
+        work = viewModelScope.launch {
             try {
-                rag.answer(text).collect { event ->
-                    when (event) {
-                        is RagEvent.Stage -> updateReply { it.copy(stage = event.stage) }
-                        is RagEvent.Sources -> {
-                            sources = event.sources
-                            updateReply { it.copy(sources = event.sources) }
-                        }
-                        is RagEvent.Token -> {
-                            raw.append(event.text)
-                            val visible = stripThinking(raw.toString())
-                            updateReply { it.copy(text = visible) }
-                        }
-                        is RagEvent.Finished -> report = event.report
-                    }
-                }
-            } catch (e: EngineException) {
-                failure = e.message
+                answer(text, null)
             } finally {
-                withContext(NonCancellable) {
-                    val answer = stripThinking(raw.toString())
-                    updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else answer) }
-                    val finished = report
-                    if (failure == null && finished != null) {
-                        withContext(Dispatchers.IO) { log(active, text, answer, sources, finished) }
-                    }
-                    _state.update { it.copy(generating = false, metrics = finished?.answerer ?: it.metrics) }
-                }
+                _state.update { it.copy(generating = false) }
             }
         }
     }
 
-    private fun log(active: ModelProfile, question: String, answer: String, sources: List<Passage>, report: RagReport) {
+    /**
+     * Stress test: asks [count] bundled questions one after another. Each
+     * answer is logged with its position in the run, so a run that ends early
+     * (crash, low-memory kill) is visible as a missing tail.
+     */
+    fun runStress(count: Int = DEFAULT_STRESS_COUNT) {
+        if (pipeline == null) {
+            pendingStress = count
+            return
+        }
+        if (_state.value.generating) return
+        val questions = getApplication<Application>().assets.open(STRESS_ASSET).bufferedReader().useLines { lines ->
+            lines.map { it.trim() }.filter { it.isNotEmpty() }.toList()
+        }
+        val total = count.coerceIn(1, questions.size)
+        val run = Instant.now().toString()
+        Log.i(MetricsLog.TAG, "STRESS start run=$run total=$total")
+        _state.update { it.copy(generating = true, stressProgress = "0 of $total") }
+        work = viewModelScope.launch {
+            var completed = 0
+            try {
+                for (index in 1..total) {
+                    _state.update { it.copy(stressProgress = "$index of $total") }
+                    answer(questions[index - 1], StressTag(run, index, total))
+                    completed = index
+                }
+            } finally {
+                Log.i(MetricsLog.TAG, "STRESS end run=$run completed=$completed total=$total")
+                _state.update { it.copy(generating = false, stressProgress = null) }
+            }
+        }
+    }
+
+    /** Answers one question and logs it. Runs on the caller's coroutine; cancelling it stops the answer. */
+    private suspend fun answer(question: String, stress: StressTag?) {
+        val active = profile ?: return
+        val rag = pipeline ?: return
+        _state.update {
+            it.copy(messages = it.messages + ChatMessage(true, question) + ChatMessage(false, "", stage = RagStage.PLANNING))
+        }
+        val before = SystemStats.snapshot(getApplication())
+        val raw = StringBuilder()
+        var sources = emptyList<Passage>()
+        var report: RagReport? = null
+        var failure: String? = null
+        try {
+            rag.answer(question).collect { event ->
+                when (event) {
+                    is RagEvent.Stage -> updateReply { it.copy(stage = event.stage) }
+                    is RagEvent.Sources -> {
+                        sources = event.sources
+                        updateReply { it.copy(sources = event.sources) }
+                    }
+                    is RagEvent.Token -> {
+                        raw.append(event.text)
+                        val visible = stripThinking(raw.toString())
+                        updateReply { it.copy(text = visible) }
+                    }
+                    is RagEvent.Finished -> report = event.report
+                }
+            }
+        } catch (e: EngineException) {
+            failure = e.message
+        } finally {
+            withContext(NonCancellable) {
+                val text = stripThinking(raw.toString())
+                updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else text) }
+                val after = SystemStats.snapshot(getApplication())
+                val finished = report
+                if (failure == null && finished != null) {
+                    withContext(Dispatchers.IO) { log(active, question, text, sources, finished, before, after, stress) }
+                }
+                _state.update { it.copy(metrics = finished?.answerer ?: it.metrics, system = after) }
+            }
+        }
+    }
+
+    private fun log(
+        active: ModelProfile,
+        question: String,
+        answer: String,
+        sources: List<Passage>,
+        report: RagReport,
+        before: SystemSnapshot,
+        after: SystemSnapshot,
+        stress: StressTag?,
+    ) {
         metricsLog.record(
             report.answerer,
             RunInfo(active.name, active.modelFile, active.contextSize, active.repack, appVersion, active.threadAffinity, active.batchSize),
+            before,
+            after,
             RagRecord(
                 question = question,
                 answer = answer,
@@ -246,10 +356,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 invalidCitations = Citations.invalid(answer, sources.size),
                 notCovered = Citations.isNotCovered(answer),
             ),
+            stress,
         )
     }
 
+    /** Stops the current answer, and the stress test if one is running. */
     fun stop() {
+        work?.cancel()
         plannerEngine.cancel()
         answerer.cancel()
     }
@@ -263,7 +376,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         indexes.values.forEach { it.close() }
     }
 
-    private companion object {
-        const val KEYWORDS = "keywords"
+    companion object {
+        const val DEFAULT_STRESS_COUNT = 20
+        private const val STRESS_ASSET = "stress_questions.txt"
+        private const val KEYWORDS = "keywords"
     }
 }

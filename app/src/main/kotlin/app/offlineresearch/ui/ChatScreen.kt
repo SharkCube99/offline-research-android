@@ -13,13 +13,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -42,6 +46,9 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.offlineresearch.engine.EngineMetrics
+import app.offlineresearch.engine.SystemSnapshot
+import app.offlineresearch.profiles.ProfileChoice
+import app.offlineresearch.profiles.ProfileSelector
 import app.offlineresearch.rag.AnswerPart
 import app.offlineresearch.rag.Citations
 import app.offlineresearch.rag.Passage
@@ -56,8 +63,14 @@ fun ChatScreen(viewModel: ChatViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var draft by rememberSaveable { mutableStateOf("") }
     var openSources by remember { mutableStateOf<OpenSources?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val ready = state.status is ModelStatus.Ready
+
+    // An answer takes minutes. If the screen times out, Android moves the app to
+    // the background, where it gets less CPU and is the first to be killed.
+    val view = LocalView.current
+    LaunchedEffect(state.generating) { view.keepScreenOn = state.generating }
 
     // Follow the reply as it streams in.
     val lastLength = state.messages.lastOrNull()?.text?.length ?: 0
@@ -67,7 +80,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
 
     Scaffold(modifier = Modifier.fillMaxSize().imePadding()) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 12.dp)) {
-            StatusLine(state.status, onRetry = viewModel::loadModel)
+            StatusLine(state.status, state.stressProgress, onRetry = viewModel::loadModel, onSettings = { showSettings = true })
 
             LazyColumn(
                 state = listState,
@@ -83,7 +96,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 }
             }
 
-            state.metrics?.let { MetricsLine(it) }
+            state.metrics?.let { MetricsLine(it, state.system) }
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -116,19 +129,83 @@ fun ChatScreen(viewModel: ChatViewModel) {
     openSources?.let { open ->
         SourcesPanel(open, onDismiss = { openSources = null })
     }
+    if (showSettings) {
+        SettingsDialog(
+            state = state,
+            onChoice = viewModel::setProfileChoice,
+            onStress = {
+                showSettings = false
+                viewModel.runStress()
+            },
+            onDismiss = { showSettings = false },
+        )
+    }
 }
 
 @Composable
-private fun StatusLine(status: ModelStatus, onRetry: () -> Unit) {
+private fun SettingsDialog(
+    state: ChatUiState,
+    onChoice: (ProfileChoice) -> Unit,
+    onStress: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val small = MaterialTheme.typography.bodySmall
+    val auto = ProfileSelector.assetFor(ProfileChoice.AUTO, (state.totalRamGb * 1e9).toLong()).removeSuffix(".json")
+    val labels = listOf(
+        ProfileChoice.AUTO to String.format(Locale.US, "Automatic (%.1f GB RAM: %s)", state.totalRamGb, auto),
+        ProfileChoice.LOW to "Low (4B model)",
+        ProfileChoice.HIGH to "High (30B model)",
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Settings") },
+        text = {
+            Column {
+                Text("Model profile", fontWeight = FontWeight.Bold)
+                labels.forEach { (choice, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = state.profileChoice == choice,
+                                enabled = !state.generating,
+                                onClick = { onChoice(choice) },
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = state.profileChoice == choice, onClick = null, enabled = !state.generating)
+                        Text(label, modifier = Modifier.padding(start = 8.dp, top = 10.dp, bottom = 10.dp))
+                    }
+                }
+                if (state.pushedOverride) {
+                    Text("A profile.json pushed over adb is active and overrides this choice.", style = small)
+                }
+                Text("Changing the profile reloads the models.", style = small)
+                OutlinedButton(
+                    onClick = onStress,
+                    enabled = state.status is ModelStatus.Ready && !state.generating,
+                    modifier = Modifier.padding(top = 12.dp),
+                ) { Text("Run stress test (${ChatViewModel.DEFAULT_STRESS_COUNT} questions)") }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+    )
+}
+
+@Composable
+private fun StatusLine(status: ModelStatus, stressProgress: String?, onRetry: () -> Unit, onSettings: () -> Unit) {
     val small = MaterialTheme.typography.bodySmall
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         when (status) {
             ModelStatus.Loading -> Text("Loading model and index…", style = small)
-            is ModelStatus.Ready -> Text(
-                "${status.modelFile} · ${status.corpora.joinToString(", ")} · " +
-                    "search: ${status.planner ?: "keywords"} · offline",
-                style = small,
-            )
+            is ModelStatus.Ready -> {
+                Text(
+                    "${status.modelFile} · profile ${status.profile} (${status.profileSource}) · " +
+                        "${status.corpora.joinToString(", ")} · search: ${status.planner ?: "keywords"} · offline",
+                    style = small,
+                )
+                stressProgress?.let { Text("Stress test: question $it", style = small, fontWeight = FontWeight.Bold) }
+            }
             is ModelStatus.Missing -> {
                 Text("${status.what} not found", color = MaterialTheme.colorScheme.error)
                 Text(
@@ -145,6 +222,7 @@ private fun StatusLine(status: ModelStatus, onRetry: () -> Unit) {
                 OutlinedButton(onClick = onRetry) { Text("Try again") }
             }
         }
+        if (status !is ModelStatus.Loading) TextButton(onClick = onSettings) { Text("Settings") }
     }
 }
 
@@ -241,23 +319,33 @@ private fun SourcesPanel(open: OpenSources, onDismiss: () -> Unit) {
     }
 }
 
+/** The metrics overlay: speed of the last answer, memory, paging and heat. */
 @Composable
-private fun MetricsLine(metrics: EngineMetrics) {
-    val load = String.format(Locale.US, "load %.1f s", metrics.loadMs / 1000.0)
-    val run = if (metrics.generatedTokens > 0) {
-        String.format(
+private fun MetricsLine(metrics: EngineMetrics, system: SystemSnapshot?) {
+    val lines = mutableListOf(String.format(Locale.US, "load %.1f s · %d/%d threads", metrics.loadMs / 1000.0, metrics.threads, metrics.batchThreads))
+    if (metrics.generatedTokens > 0) {
+        lines += String.format(
             Locale.US,
-            " · %d prompt tokens · first token %.1f s · %.1f tok/s · %d threads",
-            metrics.promptTokens,
+            "first token %.1f s · read %d tok at %.1f/s · write %.1f tok/s",
             metrics.timeToFirstTokenMs / 1000.0,
+            metrics.promptTokens - metrics.reusedPromptTokens,
+            metrics.promptTokensPerSecond,
             metrics.tokensPerSecond,
-            metrics.threads,
         )
-    } else {
-        ""
+    }
+    if (system != null) {
+        lines += String.format(
+            Locale.US,
+            "RSS %.2f GB (peak %.2f) · free %.2f GB · %d major faults · thermal %s",
+            system.rssKb / 1e6,
+            system.peakRssKb / 1e6,
+            system.memAvailableKb / 1e6,
+            system.majorFaults,
+            system.thermal.lowercase(Locale.US),
+        )
     }
     Text(
-        text = load + run,
+        text = lines.joinToString("\n"),
         style = MaterialTheme.typography.labelSmall,
         fontFamily = FontFamily.Monospace,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

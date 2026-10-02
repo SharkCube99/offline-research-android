@@ -29,12 +29,21 @@ data class MetricsRecord(
     @SerialName("prompt_tokens") val promptTokens: Int,
     @SerialName("prompt_reused") val reusedPromptTokens: Int,
     @SerialName("prompt_ms") val promptMs: Double,
+    /** Prefill speed: prompt tokens actually processed, per second. */
+    @SerialName("prompt_tokens_per_sec") val promptTokensPerSecond: Double,
     @SerialName("ttft_ms") val timeToFirstTokenMs: Double,
     @SerialName("gen_tokens") val generatedTokens: Int,
     @SerialName("gen_ms") val generationMs: Double,
     @SerialName("tokens_per_sec") val tokensPerSecond: Double,
     val stop: String,
+    @SerialName("rss_kb") val rssKb: Long,
+    @SerialName("peak_rss_kb") val peakRssKb: Long,
+    /** Major page faults during this answer (reads from storage, mostly model weights). */
+    @SerialName("major_faults") val majorFaults: Long,
+    @SerialName("mem_available_kb") val memAvailableKb: Long,
+    val thermal: String,
     val rag: RagRecord? = null,
+    val stress: StressTag? = null,
 )
 
 /** The retrieval side of one answer. */
@@ -56,6 +65,10 @@ data class RagRecord(
     @SerialName("not_covered") val notCovered: Boolean,
 )
 
+/** Marks an answer as question [index] of [total] in stress run [run]. */
+@Serializable
+data class StressTag(val run: String, val index: Int, val total: Int)
+
 /** Which model and settings an answer ran with. */
 data class RunInfo(
     val profile: String,
@@ -73,8 +86,18 @@ data class RunInfo(
  */
 class MetricsLog(private val logDir: File?) {
 
-    /** [metrics] is null when no model ran (nothing was retrieved). */
-    fun record(metrics: EngineMetrics?, run: RunInfo, rag: RagRecord? = null) {
+    /**
+     * [metrics] is null when no model ran (nothing was retrieved). [before] and
+     * [after] are system readings taken around the answer.
+     */
+    fun record(
+        metrics: EngineMetrics?,
+        run: RunInfo,
+        before: SystemSnapshot,
+        after: SystemSnapshot,
+        rag: RagRecord? = null,
+        stress: StressTag? = null,
+    ) {
         val record = MetricsRecord(
             timestamp = Instant.now().toString(),
             device = "${Build.MANUFACTURER} ${Build.MODEL}",
@@ -93,12 +116,19 @@ class MetricsLog(private val logDir: File?) {
             promptTokens = metrics?.promptTokens ?: 0,
             reusedPromptTokens = metrics?.reusedPromptTokens ?: 0,
             promptMs = metrics?.promptMs ?: 0.0,
+            promptTokensPerSecond = metrics?.promptTokensPerSecond ?: 0.0,
             timeToFirstTokenMs = metrics?.timeToFirstTokenMs ?: 0.0,
             generatedTokens = metrics?.generatedTokens ?: 0,
             generationMs = metrics?.generationMs ?: 0.0,
             tokensPerSecond = metrics?.tokensPerSecond ?: 0.0,
             stop = (metrics?.stopReason ?: StopReason.NONE).name,
+            rssKb = after.rssKb,
+            peakRssKb = after.peakRssKb,
+            majorFaults = if (before.majorFaults >= 0 && after.majorFaults >= 0) after.majorFaults - before.majorFaults else -1,
+            memAvailableKb = after.memAvailableKb,
+            thermal = after.thermal,
             rag = rag,
+            stress = stress,
         )
         val line = Json.encodeToString(record)
         Log.i(TAG, "METRICS $line")
