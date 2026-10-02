@@ -58,10 +58,21 @@ class LlmPlanner(
         const val MAX_TOKENS = 64
 
         val SYSTEM = """
-            You write search queries for an offline encyclopedia (Wikipedia) and travel guide (Wikivoyage).
-            Given a question, reply with 1 to 3 search queries, one per line.
-            Each query is a few keywords, and should name the article most likely to contain the answer.
+            You choose encyclopedia articles to look up. The encyclopedia is Wikipedia plus the Wikivoyage travel guide.
+            Given a question, reply with the titles of 1 to 3 articles most likely to contain the answer, one per line.
+            Use the names an encyclopedia would use for the topic, not the words of the question.
             No numbering, no quotes, no explanations.
+
+            Example
+            Question: How do I recognise a heart attack?
+            Myocardial infarction
+            Chest pain
+
+            Example
+            Question: How can I keep food cold without electricity?
+            Icebox
+            Evaporative cooler
+            Food preservation
         """.trimIndent()
     }
 }
