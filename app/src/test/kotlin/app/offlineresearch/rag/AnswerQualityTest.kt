@@ -154,3 +154,55 @@ class LeadPassageTest {
         assertEquals(ranked.map { it.passageId }, retriever.withLeads(question, ranked).map { it.passageId })
     }
 }
+
+class StrictPackTest {
+
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private lateinit var general: SqlDatabase
+    private lateinit var pack: SqlDatabase
+    private lateinit var retriever: Retriever
+
+    @Before
+    fun buildIndexes() {
+        general = IndexFixture.build(
+            folder.newFile("wikipedia.db"),
+            listOf(FixtureArticle("Tide", listOf("Tides are caused by the gravity of the Moon and the Sun."))),
+        )
+        pack = IndexFixture.build(
+            folder.newFile("ethereum.db"),
+            listOf(
+                FixtureArticle(
+                    "EIP-7702: Set Code for EOAs",
+                    listOf("EIP-7702 lets an externally owned account set code. A bug in a wallet causes loss of funds."),
+                    aliases = listOf("EIP-7702", "EIP 7702"),
+                ),
+                FixtureArticle("Vegan restaurants in Berlin", listOf("Kopps is a fully vegan restaurant."), aliases = listOf("vegan restaurants in Berlin")),
+            ),
+            meta = mapOf("match" to "strict"),
+        )
+        retriever = Retriever(linkedMapOf("ethereum" to pack, "wikipedia" to general))
+    }
+
+    @After
+    fun closeIndexes() {
+        general.close()
+        pack.close()
+    }
+
+    @Test
+    fun aStrictPackStaysOutWhenOnlySomeOfTheQuestionsWordsMatch() {
+        // "causes" appears in the pack, "tides" does not: a general index would relax to either word.
+        val results = retriever.search("What causes the tides?")
+        assertEquals(listOf("wikipedia"), results.map { it.corpus }.distinct())
+    }
+
+    @Test
+    fun aStrictPackAnswersWhenItsArticleIsNamed() {
+        assertEquals("EIP-7702: Set Code for EOAs", retriever.search("What does EIP-7702 let an account do?").first().title)
+        val places = retriever.search("Tell me the best vegan restaurants in Berlin")
+        assertEquals("Vegan restaurants in Berlin", places.first().title)
+        assertTrue(places.first().named)
+    }
+}

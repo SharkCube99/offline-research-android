@@ -59,10 +59,23 @@ object IndexFixture {
     }
 
     /** Writes a corpus index to [file] and opens it. */
-    fun build(file: File, articles: List<FixtureArticle>, urlBase: String = "https://example.org/wiki/"): SqlDatabase {
+    fun build(
+        file: File,
+        articles: List<FixtureArticle>,
+        urlBase: String = "https://example.org/wiki/",
+        meta: Map<String, String> = emptyMap(),
+    ): SqlDatabase {
         file.delete()
         DriverManager.getConnection("jdbc:sqlite:${file.absolutePath}").use { c ->
             c.createStatement().use { s -> SCHEMA.forEach(s::execute) }
+            c.createStatement().use { s -> s.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)") }
+            meta.forEach { (key, value) ->
+                c.prepareStatement("INSERT INTO meta VALUES (?,?)").use { s ->
+                    s.setString(1, key)
+                    s.setString(2, value)
+                    s.execute()
+                }
+            }
             var passageId = 0L
             articles.forEachIndexed { index, article ->
                 val articleId = index + 1L

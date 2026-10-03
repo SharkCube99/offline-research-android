@@ -39,6 +39,20 @@ class Retriever(
 ) {
     private val rank = "bm25(${weights.first}, ${weights.second}, ${weights.third})"
 
+    /**
+     * Special-purpose packs (Ethereum texts, places) mark themselves "strict" in
+     * their meta table. They take part only when an article of theirs is named
+     * in the question or a passage holds every content word of it; otherwise a
+     * question about tides would pull in whatever proposal mentions "causes".
+     */
+    private val strict: Set<String> = indexes.filter { (_, db) ->
+        try {
+            db.query("SELECT value FROM meta WHERE key = 'match'") { it.string(0) }.firstOrNull() == "strict"
+        } catch (e: Exception) {
+            false // an index without that row, or without a meta table, is a general one
+        }
+    }.keys
+
     private data class Ranked(val passageId: Long, val score: Double)
 
     private data class Named(val nameLength: Int, val score: Double, val corpus: String, val ids: List<Long>)
@@ -52,7 +66,7 @@ class Retriever(
         val byCorpus = LinkedHashMap<String, List<Long>>()
         for ((corpus, db) in indexes) {
             named += nameChannel(corpus, db, question, terms)
-            byCorpus[corpus] = passageChannel(db, terms, candidates)
+            byCorpus[corpus] = passageChannel(db, terms, candidates, relax = corpus !in strict)
         }
         named.sortWith(compareBy<Named> { -it.nameLength }.thenBy { it.score })
 
@@ -125,9 +139,9 @@ class Retriever(
     }
 
     /** Passage ids, best first: all words required, then all but one. */
-    private fun passageChannel(db: SqlDatabase, terms: List<String>, limit: Int): List<Long> {
+    private fun passageChannel(db: SqlDatabase, terms: List<String>, limit: Int, relax: Boolean = true): List<Long> {
         val rows = ranked(db, QueryBuilder.match(terms, "AND"), limit)
-        if (rows.size >= limit || terms.size < 2) return rows.map { it.passageId }
+        if (rows.size >= limit || terms.size < 2 || !relax) return rows.map { it.passageId }
         val found = rows.map { it.passageId }.toSet()
         val candidates = if (terms.size == 2) {
             ranked(db, QueryBuilder.match(terms, "OR"), limit)

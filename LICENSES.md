@@ -55,6 +55,18 @@ Corpora are not stored in this repository or in the APK. `data-pipeline/build_in
 | English Wikipedia (article text) | Wikimedia CirrusSearch index dump `enwiki_content`, <https://dumps.wikimedia.org/other/cirrus_search_index/> | CC BY-SA 4.0 (also GFDL) | Wikipedia contributors; each passage keeps its article title and URL |
 | English Wikivoyage (article text) | Wikimedia CirrusSearch index dump `enwikivoyage_content`, same location | CC BY-SA 4.0 | Wikivoyage contributors; each passage keeps its article title and URL |
 
+Two smaller source packs are built by their own scripts into the same index format:
+
+| Pack | Source | Licence | Attribution |
+|---|---|---|---|
+| `ethereum.db` (`data-pipeline/build_ethereum.py`) | Ethereum Improvement Proposals <https://github.com/ethereum/EIPs>, ERCs <https://github.com/ethereum/ERCs>, consensus specifications <https://github.com/ethereum/consensus-specs> | CC0-1.0 | Ethereum contributors |
+| | English pages of ethereum.org, <https://github.com/ethereum/ethereum-org-website> | MIT | ethereum.org contributors |
+| | NIST FIPS 203, 204, 205 and SP 800-208 (PDF from nvlpubs.nist.gov) | US Government works, public domain in the United States | National Institute of Standards and Technology |
+| `places.db` (`data-pipeline/build_places.py`) | OpenStreetMap, eating places tagged vegan or vegetarian, through the Overpass API | Open Database Licence (ODbL) 1.0; the built file is a derived database under the same licence | (c) OpenStreetMap contributors |
+| | GeoNames `cities15000` and `countryInfo`, used to assign places to cities | CC BY 4.0 | GeoNames |
+
+`build_ethereum.py` reads the NIST PDFs with [pypdf](https://github.com/py-pdf/pypdf) (BSD-3-Clause), which is needed on the build computer only and is not shipped; without it the NIST texts are left out.
+
 The built index files are hosted at <https://huggingface.co/datasets/SHARK787/offline-research-index> under CC BY-SA 4.0, with the attribution and the list of changes on the dataset's description page (`data-pipeline/dataset-card/README.md`).
 
 Licences were read from <https://en.wikipedia.org/wiki/Wikipedia:Copyrights> and <https://en.wikivoyage.org/wiki/Wikivoyage:Copyleft> on 2026-10-01.

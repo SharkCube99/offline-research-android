@@ -111,10 +111,21 @@ def _ranked(con, fts_query, weights, limit, first=None, last=None):
     return con.execute(sql + " ORDER BY rank LIMIT ?", args + [limit]).fetchall()
 
 
-def passage_channel(con, terms, weights, limit):
-    """Passage ids, best first: all words required, then all but one."""
+def is_strict(con):
+    """True for a special-purpose pack (Ethereum texts, places), which marks itself
+    in its meta table. It takes part only when one of its articles is named in the
+    question or a passage holds every content word of it."""
+    try:
+        row = con.execute("SELECT value FROM meta WHERE key = 'match'").fetchone()
+    except sqlite3.Error:
+        return False
+    return bool(row) and row[0] == "strict"
+
+
+def passage_channel(con, terms, weights, limit, relax=True):
+    """Passage ids, best first: all words required, then (unless relax is off) all but one."""
     rows = _ranked(con, _match(terms, "AND"), weights, limit)
-    if len(rows) >= limit or len(terms) < 2:
+    if len(rows) >= limit or len(terms) < 2 or not relax:
         return [passage_id for passage_id, _ in rows]
     found = {passage_id for passage_id, _ in rows}
     relaxed = {}
@@ -181,7 +192,7 @@ def search(indexes, question, k=5, weights=DEFAULT_WEIGHTS, per_article=2, candi
     for corpus, con in indexes.items():
         for length, score, ids in name_channel(con, question, terms, weights):
             named.append((-length, score, corpus, ids))
-        by_corpus[corpus] = passage_channel(con, terms, weights, candidates)
+        by_corpus[corpus] = passage_channel(con, terms, weights, candidates, relax=not is_strict(con))
     named.sort()
 
     # Name channel order: the best passage of each named article, then the second best.
