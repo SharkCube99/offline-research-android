@@ -2,7 +2,7 @@
 
 An Android app that answers research questions with no network connection, using a language model that runs on the phone.
 
-**Status: Milestones 1 to 3.** The app answers questions on the phone with no network: a small model plans the search, the app searches an offline Wikipedia and Wikivoyage index, and a larger model writes an answer that cites its sources. So far it has run only on a low-end 8 GB phone with a 4B model, where an answer takes several minutes; the 30B model on a 12 GB phone is Milestone 4 (see `CLAUDE.md`, Section 7).
+**Status: work in progress.** The app answers questions on the phone with no network: a small model plans the search, the app searches an offline Wikipedia and Wikivoyage index, and a larger model writes an answer that cites its sources. So far it has run only on a low-end 8 GB phone (Redmi 12 5G): usably with a 4B model, where the first word takes about a minute and a half, and as a proof that it starts with the 12 GB mixture-of-experts model meant for 12 GB phones, which is far too slow on that phone. Nothing has been measured on a 12 GB phone yet.
 
 This README quotes no performance numbers. Measured results, with their raw logs, are in `docs/PERFORMANCE.md` (speed on the phone), `docs/KNOWLEDGE_INDEX.md` (index size and search quality) and `docs/RAG.md` (cited answers on the phone).
 
@@ -18,8 +18,8 @@ This README quotes no performance numbers. Measured results, with their raw logs
 ## Build
 
 ```bash
-git -c core.longpaths=true clone --recurse-submodules --shallow-submodules <this repo>
-cd <this repo>
+git -c core.longpaths=true clone --recurse-submodules --shallow-submodules https://github.com/SharkCube99/offline-research-android.git
+cd offline-research-android
 scripts/build_engine.sh      # only needed for the high profile (12 GB phones)
 ./gradlew assembleDebug
 ```
