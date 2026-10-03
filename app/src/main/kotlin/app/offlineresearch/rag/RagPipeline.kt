@@ -71,7 +71,7 @@ class RagPipeline(
         // useful can be on screen within about a second.
         emit(RagEvent.Stage(RagStage.SEARCHING))
         val firstStart = System.currentTimeMillis()
-        val first = withContext(Dispatchers.IO) { retriever.search(question) }
+        val first = withContext(Dispatchers.IO) { retriever.withLeads(question, retriever.search(question)) }
         var searchMs = System.currentTimeMillis() - firstStart
         preview?.invoke(question, first)?.let { emit(RagEvent.Preview(it)) }
 
@@ -86,7 +86,7 @@ class RagPipeline(
         if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
         val secondStart = System.currentTimeMillis()
         val (retrieved, sources) = withContext(Dispatchers.IO) {
-            val ranked = interleave(listOf(first) + extra.map { retriever.search(it) })
+            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { retriever.search(it) }))
             ranked.size to selector.select(question, ranked)
         }
         searchMs += System.currentTimeMillis() - secondStart

@@ -24,6 +24,15 @@ private val EDITOR_NOTE = Regex(
 // repeats the article's name, so it matches any question about the subject.
 private val REFERENCE_DEBRIS = Regex("""\b(?:ISBN|ISSN|doi:|Retrieved \d|Archived from|Template:|Wikimedia Commons|Wikidata|KML file|pp?\.(?: \d|$))""")
 
+/** How many opening sentences of the article the question names are wanted regardless of their words. */
+private const val LEAD_SENTENCES = 4
+
+/** Weight of a sentence from an article whose title shares no word with the question. */
+private const val OFF_TOPIC_WEIGHT = 0.6
+
+/** A sentence scoring below this share of the best one is not worth its tokens. */
+private const val WEAKEST_KEPT = 0.4
+
 /** A "sentence" longer than this is a list or table that lost its line breaks; it is not worth its tokens. */
 private const val MAX_SENTENCE_CHARS = 400
 
@@ -48,7 +57,15 @@ class SourceCompressor(
     private val estimateTokens: (String) -> Int = ::roughTokens,
 ) : SourceSelector {
 
-    private class Sentence(val passage: Int, val position: Int, val text: String, val score: Double, val hits: Int)
+    private class Sentence(
+        val passage: Int,
+        val position: Int,
+        val text: String,
+        val score: Double,
+        val hits: Int,
+        /** Wanted as part of an article's opening, whatever words it has. */
+        val lead: Boolean,
+    )
 
     override fun select(question: String, ranked: List<Passage>): List<Passage> {
         val candidates = candidates(ranked)
@@ -62,28 +79,41 @@ class SourceCompressor(
             // "Visa policy of Japan" every sentence is about visas and Japan.
             val titleTokens = tokenize(passage.title).toSet()
             val (inTitle, other) = terms.partition { matches(it, titleTokens) }
+            val named = titleIsNamed(passage.title, terms)
             splitSentences(body(passage)).forEachIndexed { position, raw ->
                 val text = raw.replace(EDITOR_NOTE, "")
                 if (text.length > MAX_SENTENCE_CHARS || REFERENCE_DEBRIS.containsMatchIn(text)) return@forEachIndexed
                 val tokens = tokenize(text).toSet()
                 val own = other.count { matches(it, tokens) }
                 val repeated = inTitle.count { matches(it, tokens) }
+                // The opening of the article the question names states what the
+                // subject is and, usually, the answer; its first sentences are
+                // wanted even when they repeat none of the question's words.
+                val lead = when {
+                    passage.seq != 0 -> 0.0
+                    named && position < LEAD_SENTENCES -> 2.0 - 0.4 * position
+                    position == 0 -> 1.0
+                    else -> 0.0
+                }
                 // The question's other words count most. Then come on-topic articles,
-                // an article's opening sentence (which defines the subject), better
-                // ranked passages and shorter sentences.
-                val lead = if (position == 0 && passage.seq == 0) 1.0 else 0.0
-                val score = 2.0 * own + 0.5 * inTitle.size + 0.25 * repeated + lead + 1.0 / (1 + rank) - text.length / 400.0
-                sentences += Sentence(rank, position, text, score, own + repeated)
+                // better ranked passages and shorter sentences.
+                var score = 2.0 * own + 0.5 * inTitle.size + 0.25 * repeated + lead + 1.0 / (1 + rank) - text.length / 400.0
+                // A stray mention in an article about something else is worth less.
+                if (inTitle.isEmpty()) score *= OFF_TOPIC_WEIGHT
+                sentences += Sentence(rank, position, text, score, own + repeated, lead > 0)
             }
         }
 
         // Best sentences first until the budget is used. A sentence with none of
-        // the question's words is taken only as an article's opening sentence.
+        // the question's words is taken only from an article's opening. Sentences
+        // far weaker than the best are left out even if they would fit: a shorter
+        // prompt is read sooner, and filler from side articles misleads.
+        val floor = (sentences.maxOfOrNull { it.score } ?: 0.0) * WEAKEST_KEPT
         val chosen = HashMap<Int, MutableList<Sentence>>()
         var used = 0
         for (sentence in sentences.sortedWith(compareByDescending<Sentence> { it.score }.thenBy { it.passage }.thenBy { it.position })) {
-            val opening = sentence.position == 0 && candidates[sentence.passage].seq == 0
-            if (sentence.hits == 0 && !opening) continue
+            if (sentence.hits == 0 && !sentence.lead) continue
+            if (sentence.score < floor) break
             val titleCost = if (sentence.passage in chosen) 0 else estimateTokens(candidates[sentence.passage].title) + 4
             val cost = estimateTokens(sentence.text) + titleCost
             if (used + cost > budgetTokens) continue
@@ -147,13 +177,6 @@ class SourceCompressor(
 
     /** Whether the word, or another form of it (tide/tides, causes/caused), is among the tokens. */
     private fun matches(term: String, tokens: Set<String>): Boolean = term in tokens || tokens.any { sameWord(term, it) }
-
-    /** One word starts the other, or they differ only in a short ending. Words under four letters must match exactly. */
-    private fun sameWord(a: String, b: String): Boolean {
-        if (a.length < 4 || b.length < 4) return false
-        val common = a.commonPrefixWith(b).length
-        return common == minOf(a.length, b.length) || (common >= 4 && common >= maxOf(a.length, b.length) - 2)
-    }
 
     /** Sentences in reading order; a gap between them is marked, so the reader can see text was left out. */
     private fun join(picked: List<Sentence>): String = buildString {

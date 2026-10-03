@@ -324,7 +324,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     is RagEvent.Token -> {
                         raw.append(event.text)
-                        val visible = stripThinking(raw.toString())
+                        val visible = Citations.dropStrayNotCovered(stripThinking(raw.toString()))
                         updateReply { it.copy(text = visible) }
                     }
                     is RagEvent.Finished -> report = event.report
@@ -334,7 +334,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             failure = e.message
         } finally {
             withContext(NonCancellable) {
-                val text = stripThinking(raw.toString())
+                val text = Citations.dropStrayNotCovered(stripThinking(raw.toString()))
                 updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else text) }
                 val after = SystemStats.snapshot(getApplication())
                 val finished = report

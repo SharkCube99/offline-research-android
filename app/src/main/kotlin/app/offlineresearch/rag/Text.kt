@@ -28,3 +28,21 @@ fun tokenize(text: String): List<String> =
 
 /** The text as it went into the full-text index: content words only. */
 fun indexText(text: String): String = tokenize(text).filter { it !in FUNCTION_WORDS }.joinToString(" ")
+
+/** One word starts the other, or they differ only in a short ending (tide/tides, causes/caused). Words under four letters must match exactly. */
+fun sameWord(a: String, b: String): Boolean {
+    if (a == b) return true
+    if (a.length < 4 || b.length < 4) return false
+    val common = a.commonPrefixWith(b).length
+    return common == minOf(a.length, b.length) || (common >= 4 && common >= maxOf(a.length, b.length) - 2)
+}
+
+/**
+ * True when the question names this article: every content word of the title
+ * is one of the question's words. "Tide" is on topic for "What causes the
+ * tides?"; "Theory of tides" and "Sea kayaking" are not.
+ */
+fun titleIsNamed(title: String, questionTerms: List<String>): Boolean {
+    val words = tokenize(title).filter { it !in FUNCTION_WORDS }
+    return words.isNotEmpty() && words.all { word -> questionTerms.any { sameWord(it, word) } }
+}

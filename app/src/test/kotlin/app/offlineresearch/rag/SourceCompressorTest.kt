@@ -35,13 +35,30 @@ class SourceCompressorTest {
 
     @Test
     fun theSentencesThatBearOnTheQuestionAreKeptAndTheRestDropped() {
-        val sources = SourceCompressor(40).select("What causes the tides?", listOf(tide, moon))
+        val sources = SourceCompressor(60).select("What causes the tides?", listOf(tide, moon))
 
         assertEquals(listOf("Tide", "Moon"), sources.map { it.title })
         assertTrue("Tides are caused by the gravity of the Moon and the Sun." in sources[0].excerpt)
         assertTrue("Its gravity causes the tides in the oceans." in sources[1].excerpt)
         assertFalse("Surfing" in sources[0].excerpt)
-        assertFalse("early astronomers" in sources[0].excerpt)
+        assertFalse("atmosphere" in sources[1].excerpt)
+    }
+
+    @Test
+    fun theOpeningOfTheArticleTheQuestionNamesIsKeptEvenWithoutTheQuestionsWords() {
+        val lead = passage(7, "Burn", "A burn is an injury to skin. Most are caused by heat. Cool the area with running water. Cover it loosely.")
+        val history = passage(8, "Burn", "In 1607 a surgeon wrote on how to treat a minor burn with onions.", seq = 9)
+        val sources = SourceCompressor(60).select("How do I treat a minor burn?", listOf(history, lead))
+        val opening = sources.single { it.seq == 0 }
+        assertTrue("Cool the area with running water." in opening.excerpt)
+    }
+
+    @Test
+    fun weakSentencesFromArticlesAboutSomethingElseAreLeftOutEvenWhenTheyWouldFit() {
+        val club = passage(9, "Guinea Pig Club", "Its members had burns to the face or hands.", seq = 3)
+        val lead = passage(7, "Burn", "A burn is an injury to skin. To treat a minor burn, cool it with running water.")
+        val sources = SourceCompressor(400).select("How do I treat a minor burn?", listOf(lead, club))
+        assertEquals(listOf("Burn"), sources.map { it.title })
     }
 
     @Test
@@ -109,14 +126,14 @@ class SourceCompressorTest {
 
     @Test
     fun aLargeBudgetKeepsWholePassagesWithoutGapMarks() {
-        val source = SourceCompressor(500).select("What causes the tides?", listOf(moon)).single()
-        assertEquals(moon.text, source.excerpt)
+        val source = SourceCompressor(500).select("What causes the tides?", listOf(tide)).single()
+        assertEquals(tide.text, source.excerpt)
     }
 
     @Test
     fun atMostTwoPassagesPerArticleAndSixInAll() {
         val many = (1..5).map { passage(it.toLong(), "Tide", "Tides are caused by gravity, part $it.", seq = it) } +
-            (10..20).map { passage(it.toLong(), "Article $it", "Tides are mentioned here in article $it.", seq = 1) }
+            (10..20).map { passage(it.toLong(), "Tide table $it", "What causes tides is explained in table $it.", seq = 1) }
         val sources = SourceCompressor(2000).select("What causes the tides?", many)
         assertEquals(6, sources.size)
         assertEquals(2, sources.count { it.title == "Tide" })
@@ -175,7 +192,7 @@ class CompressionReportTest {
             val counts = mutableListOf<Int>()
             val report = StringBuilder()
             for (question in queries) {
-                val ranked = retriever.search(question)
+                val ranked = retriever.withLeads(question, retriever.search(question))
                 val sources = compressor.select(question, ranked)
                 val before = whole.select(ranked)
                 compressed += sources.sumOf { roughTokens(it.excerpt) }

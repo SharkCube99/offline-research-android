@@ -86,6 +86,27 @@ class Retriever(
         return results
     }
 
+    /**
+     * Puts the opening passage of the articles the question names at the front
+     * of [ranked], if search did not return it. Search ranks passages by the
+     * question's words, and for "What causes the tides?" that favours the
+     * history section, where "caused" appears in every sentence, over the
+     * opening of "Tide", which states the answer.
+     */
+    fun withLeads(question: String, ranked: List<Passage>, maxArticles: Int = 2): List<Passage> {
+        val terms = QueryBuilder.queryTerms(question)
+        val named = ranked.filter { titleIsNamed(it.title, terms) }.distinctBy { it.sourceKey }.take(maxArticles)
+        val leads = named.mapNotNull { passage ->
+            if (passage.seq == 0) return@mapNotNull passage
+            val first = indexes.getValue(passage.corpus).query(
+                "SELECT a.first_passage_id FROM passages p JOIN articles a ON a.id = p.article_id WHERE p.id = ${passage.id}",
+            ) { it.long(0) }.firstOrNull() ?: return@mapNotNull null
+            ranked.firstOrNull { it.corpus == passage.corpus && it.id == first } ?: load(passage.corpus, first)
+        }
+        val leadIds = leads.map { it.passageId }.toSet()
+        return leads + ranked.filter { it.passageId !in leadIds }
+    }
+
     /** Best first. Optionally only passages [first]..[last]. */
     private fun ranked(db: SqlDatabase, ftsQuery: String, limit: Int, first: Long? = null, last: Long? = null): List<Ranked> {
         // The numbers are our own integers, so they are written into the SQL;

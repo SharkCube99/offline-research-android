@@ -43,6 +43,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.offlineresearch.engine.EngineMetrics
@@ -250,7 +251,8 @@ private fun AnswerBubble(message: ChatMessage, onOpenSources: (selected: Int) ->
     val text = buildAnnotatedString {
         for (part in Citations.parse(message.text, message.sources.size)) {
             when (part) {
-                is AnswerPart.Text -> append(part.text)
+                is AnswerPart.Text ->
+                    if (part.bold) withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(part.text) } else append(part.text)
                 is AnswerPart.Citation ->
                     withLink(LinkAnnotation.Clickable("source-${part.number}", citationStyle) { onOpenSources(part.number) }) {
                         append("[${part.number}]")

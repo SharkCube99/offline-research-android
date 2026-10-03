@@ -14,6 +14,7 @@ object PromptBuilder {
         - Cite only the source numbers given. Never invent a source.
         - A source may be an excerpt; "…" marks where text was left out.
         - If the sources do not contain the information needed to answer, reply with exactly: $NOT_COVERED
+        - Use that sentence only as your whole reply. Never add it to an answer.
         - If the sources answer only part of the question, answer that part with citations and say which part is not covered.
         - Be clear and concise.
     """.trimIndent()

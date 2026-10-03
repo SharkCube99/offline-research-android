@@ -219,3 +219,18 @@ One question each ("What causes the tides?"), app 0.6.0-w1, source budget 450 wi
 - The high run is the first time the BigMoeOnEdge engine ran inside this app. It started from the native library directory, loaded a 12.3 GB model on an 8 GB phone and answered without being killed. At about 1 token per second it is not usable on this phone; that was expected, and the 12 GB phone is still unmeasured.
 - The app's RSS and page-fault figures in the high record describe the app's own process, not the engine's, and should be ignored for that row.
 - Quality, from reading the two answers: both cite only real source numbers. Both lean on the history of tidal theory, because the sentences chosen for the prompt were mostly historical ones containing "caused"; the physical explanation was under-represented. The 35B answer ends with a stray "Not covered by the offline sources." after a full answer, and uses Markdown bullets and bold that the app shows as raw asterisks.
+
+### After the answer-quality fixes (same day, same question)
+
+Changes: the opening passage of the article the question names is always offered to the sentence picker and its first sentences are preferred; weak sentences from side articles are dropped; a "Not covered" line next to a cited answer is removed; list markers and `**bold**` are rendered. Raw records: `docs/measurements/2026-10-03-redmi12-w1-after-fixes.jsonl`. Screens: `2026-10-03-low-after-fixes.png`, `2026-10-03-bmoe-redmi-2.png`.
+
+| | low: Qwen3-4B | high: Qwen3.6-35B-A3B 2-bit, BigMoeOnEdge |
+|---|---|---|
+| Prompt tokens | 556 | 618 |
+| Prompt reading | 136.8 s (4.1 tok/s) | 174.0 s (3.6 tok/s) |
+| Planner + search | 24.8 s + 11.5 s | 27.1 s + 2.8 s |
+| First word after asking | 173.1 s | 206.9 s |
+| Writing | 67 tokens at 2.51 tok/s | 203 tokens at 0.98 tok/s |
+
+- Both answers now open with the physical cause (differential gravity of the Moon and the Sun) and cite the opening of "Tide" for it. Neither has a stray "Not covered" line; the 35B answer's list shows as bullets.
+- The timings are worse than the first runs and should not be read as an effect of the changes: during these runs the phone was compiling another app's update (`dex2oat` at 100% of a core, seen with `top`) and another app was in the foreground. A clean timing of the 450-token budget on the 4B is still owed.

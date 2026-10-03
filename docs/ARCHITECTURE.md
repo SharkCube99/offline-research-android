@@ -116,6 +116,12 @@ Reading the prompt is most of the wait for an answer, so the prompt was made sho
 
 Measured on the PC against the full index (`docs/measurements/2026-10-03-compression-450.md`, 50 evaluation questions, sizes estimated at four characters per token): the median source text falls from 755 to 428 tokens (largest 441), and the median number of passages drawn on rises from 2 to 5.
 
+Later the same day, after the first answers on the phone leaned on the history of a subject instead of explaining it:
+
+- **Opening passages.** `Retriever.withLeads` puts the opening passage of up to two articles the question names (every content word of the title is in the question) in front of the ranked list, and the compressor prefers that passage's first four sentences even when they repeat none of the question's words. `Retriever.search` itself is unchanged and still matches the Python reference.
+- **Less filler.** A sentence from an article whose title shares no word with the question counts 0.6 of its score, and sentences below 0.4 of the best sentence's score are not taken at all, so the prompt can come in under budget.
+- **Answer clean-up** (`Citations`). A "Not covered by the offline sources." line standing on its own next to an answer that cites sources is removed; an answer without citations keeps it. List markers become bullets, and headings and `**bold**` become bold text. The contract also says to use the sentence only as the whole reply.
+
 Not measured: the effect on time to first word and on answer quality on a phone. Known weakness, visible in that file: where retrieval returns an off-topic article (for example "Guinea Pig Club" for a question about treating burns), compression now passes on a few sentences from it, and leftovers of "External links" sections still slip through. Dropping those sections belongs in the data pipeline.
 
 ## Second engine: BigMoeOnEdge for the high profile (2026-10-03)
