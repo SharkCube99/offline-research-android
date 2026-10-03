@@ -234,3 +234,20 @@ Changes: the opening passage of the article the question names is always offered
 
 - Both answers now open with the physical cause (differential gravity of the Moon and the Sun) and cite the opening of "Tide" for it. Neither has a stray "Not covered" line; the 35B answer's list shows as bullets.
 - The timings are worse than the first runs and should not be read as an effect of the changes: during these runs the phone was compiling another app's update (`dex2oat` at 100% of a core, seen with `top`) and another app was in the foreground. A clean timing of the 450-token budget on the 4B is still owed.
+
+### Clean timing of the shorter prompt on the 4B (2026-10-03, phone idle)
+
+`scripts/measure.sh --threads 2 --batch-threads 8 --affinity fastest --label w1-b450`: the same two questions, thread settings and 64-token answer cap as the `t2x8-fastest` run of 2026-10-02, which used whole passages and an 800-token budget. Raw records: `docs/measurements/2026-10-03-23076RN4BI-w1-b450.jsonl` and `.txt`. One run of two questions each; battery temperature 38 to 40 C in both runs; airplane mode off.
+
+| Question | | 800, whole passages (2026-10-02) | 450, chosen sentences (2026-10-03) |
+|---|---|---|---|
+| Symptoms of dehydration | Prompt tokens | 847 | 557 |
+| | Prompt reading | 165.1 s | 89.8 s |
+| | First word after asking | 180.7 s | 101.4 s |
+| | Sources cited | none | [2], [1], [4] |
+| How a refrigerator works | Prompt tokens | 927 | 595 |
+| | Prompt reading | 142.4 s | 76.6 s |
+| | First word after asking | 157.9 s | 94.3 s |
+| | Sources cited | [1] | [1] |
+
+Writing speed is unchanged (2.9 and 3.2 tok/s in both runs). The wait for the first word fell by 44% and 40%. The second question's search took 10.1 s against 7.6 s the day before; search time on this phone varies with what is in the page cache.
