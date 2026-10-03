@@ -28,7 +28,7 @@ scripts/build_engine.sh      # only needed for the high profile (12 GB phones)
 
 Gradle needs to know where the SDK is: set `ANDROID_HOME`, or create `local.properties` with `sdk.dir=...` (Android Studio does this for you). `JAVA_HOME` must point at a JDK 17 or newer; Android Studio's bundled one (`<Android Studio>/jbr`) works.
 
-The first build compiles llama.cpp and takes several minutes.
+The first build compiles llama.cpp and takes several minutes. A clone of this repository into an empty folder, followed by exactly these steps, was timed on a Windows 11 laptop on 2026-10-03: about 9 minutes to clone with submodules, 10 minutes for the engine and 12 minutes for the app and its 109 unit tests (`docs/measurements/2026-10-03-clean-clone.log`).
 
 ## Put it on a phone
 

@@ -1,0 +1,56 @@
+
+=== 15:09:26 clone ===
+Cloning into 'offline-research-android'...
+Submodule 'third_party/BigMoeOnEdge' (https://github.com/Helldez/BigMoeOnEdge) registered for path 'third_party/BigMoeOnEdge'
+Submodule 'third_party/llama.cpp' (https://github.com/ggml-org/llama.cpp.git) registered for path 'third_party/llama.cpp'
+Cloning into 'C:/Users/Public/cc/offline-research-android/third_party/BigMoeOnEdge'...
+Cloning into 'C:/Users/Public/cc/offline-research-android/third_party/llama.cpp'...
+Submodule path 'third_party/BigMoeOnEdge': checked out '374f562c920e2209b093f3349dad8ecbae439956'
+Submodule 'third_party/llama.cpp' (https://github.com/Helldez/llama.cpp.git) registered for path 'third_party/BigMoeOnEdge/third_party/llama.cpp'
+Cloning into 'C:/Users/Public/cc/offline-research-android/third_party/BigMoeOnEdge/third_party/llama.cpp'...
+Submodule path 'third_party/BigMoeOnEdge/third_party/llama.cpp': checked out 'dce9698510b76746db625b644ef2af899517d0ad'
+Submodule path 'third_party/llama.cpp': checked out 'f7b384c1e5c5b2c5b321a4a7cefea04b15b54cb7'
+clone exit 0
+45b4ce0 Dataset page: link to the repository
+ 374f562c920e2209b093f3349dad8ecbae439956 third_party/BigMoeOnEdge (v0.28.0)
+ dce9698510b76746db625b644ef2af899517d0ad third_party/BigMoeOnEdge/third_party/llama.cpp (remotes/origin/bmoe/expert-ready-hook-2609)
+ f7b384c1e5c5b2c5b321a4a7cefea04b15b54cb7 third_party/llama.cpp (b11311)
+
+=== 15:18:17 build engine ===
+engine exit 0
+[161/161] Linking CXX executable cli\bmoe-cli
+engine: /c/Users/Public/cc/offline-research-android/app/src/main/jniLibs/arm64-v8a/libbmoe-cli.so (6840464 bytes)
+
+=== 15:27:57 unit tests and APK ===
+gradle exit 0
+total 34813
+-rw-r--r-- 1 Shashank N 197121 35643981 Oct  3 15:39 app-debug.apk
+-rw-r--r-- 1 Shashank N 197121      406 Oct  3 15:39 output-metadata.json
+testcases 109
+failures 0
+skipped 2
+
+=== 15:40:07 offline check ===
+PASS /c/Users/Public/cc/offline-research-android/app/build/outputs/apk/debug/app-debug.apk (no network permission; 1 uses-permission entries in total)
+verify exit 0
+10096 lib/arm64-v8a/libandroidx.graphics.path.so
+6840464 lib/arm64-v8a/libbmoe-cli.so
+1152664 lib/arm64-v8a/libggml-base.so
+859584 lib/arm64-v8a/libggml-cpu-android_armv8.0_1.so
+883392 lib/arm64-v8a/libggml-cpu-android_armv8.2_1.so
+883168 lib/arm64-v8a/libggml-cpu-android_armv8.2_2.so
+895728 lib/arm64-v8a/libggml-cpu-android_armv8.6_1.so
+910944 lib/arm64-v8a/libggml-cpu-android_armv9.0_1.so
+910944 lib/arm64-v8a/libggml-cpu-android_armv9.2_1.so
+910960 lib/arm64-v8a/libggml-cpu-android_armv9.2_2.so
+124152 lib/arm64-v8a/libggml.so
+3979856 lib/arm64-v8a/libllama.so
+58664 lib/arm64-v8a/libllama_bridge.so
+1836232 lib/arm64-v8a/libsqlite3x.so
+
+=== 15:40:09 pipeline tests ===
+Ran 22 tests in 0.054s
+
+OK
+
+=== 15:40:10 done ===
