@@ -27,6 +27,9 @@ private val REFERENCE_DEBRIS = Regex("""\b(?:ISBN|ISSN|doi:|Retrieved \d|Archive
 /** How many opening sentences of the article the question names are wanted regardless of their words. */
 private const val LEAD_SENTENCES = 4
 
+/** Added to every sentence of an article the question names. */
+private const val NAMED_BONUS = 2.5
+
 /** Weight of a sentence from an article whose title shares no word with the question. */
 private const val OFF_TOPIC_WEIGHT = 0.6
 
@@ -65,6 +68,8 @@ class SourceCompressor(
         val hits: Int,
         /** Wanted as part of an article's opening, whatever words it has. */
         val lead: Boolean,
+        /** The score without the bonus for the named article; what "too weak to keep" is judged on. */
+        val base: Double,
     )
 
     override fun select(question: String, ranked: List<Passage>): List<Passage> {
@@ -98,9 +103,13 @@ class SourceCompressor(
                 // The question's other words count most. Then come on-topic articles,
                 // better ranked passages and shorter sentences.
                 var score = 2.0 * own + 0.5 * inTitle.size + 0.25 * repeated + lead + 1.0 / (1 + rank) - text.length / 400.0
+                // The article the question names is where the answer is expected. In a
+                // list such as "Vegan restaurants in Berlin" no entry repeats more of
+                // the question than a passing remark elsewhere does; without this the
+                // remarks would take the budget from the list.
                 // A stray mention in an article about something else is worth less.
                 if (inTitle.isEmpty() && !named) score *= OFF_TOPIC_WEIGHT
-                sentences += Sentence(rank, position, text, score, own + repeated, lead > 0)
+                sentences += Sentence(rank, position, text, if (named) score + NAMED_BONUS else score, own + repeated, lead > 0, score)
             }
         }
 
@@ -108,12 +117,12 @@ class SourceCompressor(
         // the question's words is taken only from an article's opening. Sentences
         // far weaker than the best are left out even if they would fit: a shorter
         // prompt is read sooner, and filler from side articles misleads.
-        val floor = (sentences.maxOfOrNull { it.score } ?: 0.0) * WEAKEST_KEPT
+        val floor = (sentences.maxOfOrNull { it.base } ?: 0.0) * WEAKEST_KEPT
         val chosen = HashMap<Int, MutableList<Sentence>>()
         var used = 0
         for (sentence in sentences.sortedWith(compareByDescending<Sentence> { it.score }.thenBy { it.passage }.thenBy { it.position })) {
             if (sentence.hits == 0 && !sentence.lead) continue
-            if (sentence.score < floor) break
+            if (sentence.base < floor) continue
             val titleCost = if (sentence.passage in chosen) 0 else estimateTokens(candidates[sentence.passage].title) + 4
             val cost = estimateTokens(sentence.text) + titleCost
             if (used + cost > budgetTokens) continue

@@ -59,6 +59,7 @@ HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 HTML_TAG = re.compile(r"</?[A-Za-z][^>\n]*>")
 IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
 LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
+ANCHOR = re.compile(r"[ \t]*\{#[^}]*\}")  # ethereum.org's heading anchors, "{#how-it-works}"
 HEADING = re.compile(r"^#{1,6}\s*(.+?)\s*#*\s*$", re.M)
 TABLE_RULE = re.compile(r"^\s*\|?[\s:|-]+\|[\s:|-]*$", re.M)
 EIP_LINK_TEXT = re.compile(r"\b(EIP|ERC)[- ]?(\d{1,5})\b")
@@ -81,6 +82,7 @@ def plain(markdown):
     """Markdown to plain prose. Code blocks go: they are reference implementations
     and test vectors, not statements a reader would quote."""
     text = CODE_BLOCK.sub(" ", markdown)
+    text = ANCHOR.sub("", text)
     text = HTML_COMMENT.sub(" ", text)
     text = IMAGE.sub(" ", text)
     text = LINK.sub(r"\1", text)

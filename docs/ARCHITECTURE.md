@@ -139,6 +139,24 @@ The high profile now names `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB) and `"eng
 
 Not run on any phone. Unknown until it is: whether it starts from the native library directory on the test phones, load time, speed, memory, and whether the 2-bit model follows the answer contract.
 
+## Source packs beyond Wikipedia (2026-10-03)
+
+The first benchmark (`docs/BENCHMARK.md`) lost most of its points to questions the index could not answer: restaurants, and individual Ethereum proposals. Two small packs were added. Each is one more index file in the same format, so the app needed no new reading code: it already loads every `*.db` in its index folder.
+
+| Pack | Built by | Contents | Size |
+|---|---|---|---|
+| `ethereum.db` | `data-pipeline/build_ethereum.py` | 557 EIPs, 607 ERCs, 54 consensus-specification documents, 244 English pages of ethereum.org, 4 NIST post-quantum standards (FIPS 203, 204, 205, SP 800-208) | 14.2 MB |
+| `places.db` | `data-pipeline/build_places.py` | 50,382 vegan and vegetarian places to eat from OpenStreetMap, as 6,101 lists by city ("Vegan restaurants in Berlin") | 14.0 MB |
+
+- **Strict matching.** A pack sets `match = strict` in its meta table. The retriever then takes its passages only when one of its articles is named in the question or a passage holds every content word of the question; it does not relax to "all words but one" as it does for Wikipedia. Without this, a question about tides pulls in whichever proposal mentions "causes". The retrieval evaluation is unchanged with both packs present (46/50 and 24/25).
+- **Each proposal opens with its key facts** from the file's header: number, title, status, type, creation date, what it requires, and the network upgrade that included it, read from the final "Hardfork Meta" proposals.
+- **Places are lists per city.** A place belongs to the largest GeoNames city (15,000 people or more) within 15 km, or failing that the nearest within 50 km. Fully vegan places come first, then places that offer vegan dishes; entries with more details come first within a group. Each list opens by saying that the map data has no ratings and that a place may have closed. Opening hours and websites are left out to fit more places into the prompt.
+- **The named article is served first.** The sentence picker now adds a bonus to every sentence of an article the question names, so that a list is not crowded out by passing remarks in other articles that happen to repeat more of the question's words.
+
+Limits: only eating places tagged vegan or vegetarian are included (places that merely offer vegetarian options are left out, as are all other kinds of place); nothing says which place is best; the app does not know where the phone is, so "near me" questions still cannot be answered; the public Overpass servers were overloaded during the build, and two of five tag queries needed retries.
+
+Not measured: answers from these packs on a phone, and their effect on the benchmark.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

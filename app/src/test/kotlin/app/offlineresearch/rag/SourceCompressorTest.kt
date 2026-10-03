@@ -35,13 +35,27 @@ class SourceCompressorTest {
 
     @Test
     fun theSentencesThatBearOnTheQuestionAreKeptAndTheRestDropped() {
-        val sources = SourceCompressor(60).select("What causes the tides?", listOf(tide, moon))
+        val sources = SourceCompressor(70).select("What causes the tides?", listOf(tide, moon))
 
         assertEquals(listOf("Tide", "Moon"), sources.map { it.title })
         assertTrue("Tides are caused by the gravity of the Moon and the Sun." in sources[0].excerpt)
         assertTrue("Its gravity causes the tides in the oceans." in sources[1].excerpt)
         assertFalse("Surfing" in sources[0].excerpt)
         assertFalse("atmosphere" in sources[1].excerpt)
+    }
+
+    @Test
+    fun theArticleTheQuestionNamesIsServedBeforeRemarksElsewhere() {
+        val list = passage(
+            10, "Vegan restaurants in Berlin",
+            "The map lists 3 fully vegan places. Kopps is a fully vegan restaurant; address: Linienstrasse 94. " +
+                "Lucky Leek is a fully vegan restaurant; address: Kollwitzstrasse 54. Vaust is a fully vegan pub; address: Pestalozzistrasse 8.",
+        ).copy(named = true)
+        val remark = passage(11, "Culture in Berlin", "Berlin is one of the cities with the most vegan restaurants in the world.", seq = 4)
+        val sources = SourceCompressor(70).select("Tell me the best vegan restaurants in Berlin", listOf(remark, list))
+        // The whole list fits and is taken first; the remark gets what is left, which is nothing.
+        assertEquals(listOf("Vegan restaurants in Berlin"), sources.map { it.title })
+        assertTrue("Vaust is a fully vegan pub" in sources.single().excerpt)
     }
 
     @Test
