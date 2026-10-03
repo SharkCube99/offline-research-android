@@ -83,6 +83,13 @@ SQLite must be built with FTS5, which the Python distributions from python.org a
 hf download SHARK787/offline-research-index --repo-type dataset --local-dir index
 ```
 
+SHA-256, to check a download:
+
+```
+cca60646f543deef8b62949d40e004d05fb2fbad7b1332736d5df876a1f1ee2a  wikipedia.db
+b4bfa0b61da4588e59cbf9c42726c1d3694c7102cb2d49f75ecabcfb3daadc2b  wikivoyage.db
+```
+
 ## How it was built
 
 From the Wikimedia CirrusSearch index dumps at <https://dumps.wikimedia.org/other/cirrus_search_index/> (dump date 20260927), with a script that uses only the Python standard library:

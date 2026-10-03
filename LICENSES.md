@@ -48,6 +48,8 @@ Corpora are not stored in this repository or in the APK. `data-pipeline/build_in
 | English Wikipedia (article text) | Wikimedia CirrusSearch index dump `enwiki_content`, <https://dumps.wikimedia.org/other/cirrus_search_index/> | CC BY-SA 4.0 (also GFDL) | Wikipedia contributors; each passage keeps its article title and URL |
 | English Wikivoyage (article text) | Wikimedia CirrusSearch index dump `enwikivoyage_content`, same location | CC BY-SA 4.0 | Wikivoyage contributors; each passage keeps its article title and URL |
 
+The built index files are hosted at <https://huggingface.co/datasets/SHARK787/offline-research-index> under CC BY-SA 4.0, with the attribution and the list of changes on the dataset's description page (`data-pipeline/dataset-card/README.md`).
+
 Licences were read from <https://en.wikipedia.org/wiki/Wikipedia:Copyrights> and <https://en.wikivoyage.org/wiki/Wikivoyage:Copyleft> on 2026-10-01.
 
 What CC BY-SA 4.0 requires of this project:

@@ -38,9 +38,10 @@ Three kinds of file go on the phone, all over adb:
 |---|---|---|
 | Answerer model | `Qwen3-4B-Q4_K_M.gguf` (2.5 GB) | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> |
 | Planner model | `Qwen3-1.7B-Q8_0.gguf` (1.83 GB) | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> |
-| Knowledge index | `wikipedia.db`, `wikivoyage.db` | Built by `data-pipeline/build_index.py` (see `data-pipeline/README.md`) |
+| Knowledge index | `wikipedia.db`, `wikivoyage.db` (22.9 GB) | Downloaded by `scripts/fetch_index.sh` from <https://huggingface.co/datasets/SHARK787/offline-research-index>, or built from the Wikipedia dumps by `data-pipeline/build_index.py` (many hours; see `data-pipeline/README.md`) |
 
 ```bash
+scripts/fetch_index.sh       # downloads the index to data-pipeline/work/index and checks it
 scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf \
                  --model /path/to/Qwen3-1.7B-Q8_0.gguf \
                  --index data-pipeline/work/index
@@ -117,7 +118,7 @@ scripts/setup.sh --no-install --model /path/to/other.gguf --profile my-profile.j
 | `app/` | Android app (Kotlin, Jetpack Compose) and the JNI bridge in `app/src/main/cpp/` |
 | `third_party/llama.cpp` | llama.cpp, a git submodule pinned to a release tag |
 | `profiles/` | Model profiles |
-| `scripts/` | `setup.sh` (provision a phone), `measure.sh` (timed runs), `verify_offline.sh` (permission check) |
+| `scripts/` | `fetch_index.sh` (download the prebuilt index), `build_engine.sh` (build the high-profile engine), `setup.sh` (provision a phone), `measure.sh` (timed runs), `verify_offline.sh` (permission check) |
 | `docs/` | Architecture decisions, performance log, benchmark notes |
 | `data-pipeline/` | Builds the offline Wikipedia and Wikivoyage index (see its README) |
 | `bench/` | Placeholder for a later milestone |
