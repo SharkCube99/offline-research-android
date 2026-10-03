@@ -22,6 +22,8 @@ tags:
 
 Two SQLite files that an Android app searches with no network connection. The text of English Wikipedia (the most-viewed 31% of articles) and all of English Wikivoyage is cut into short passages and stored with a full-text (FTS5, BM25) index, so a phone can find the passages that bear on a question in a second or two.
 
+The app and the script that built these files are at <https://github.com/SharkCube99/offline-research-android>.
+
 The files are data for a retrieval-augmented answering app: the app finds passages here, and a language model on the phone writes an answer that cites them.
 
 ## Files
