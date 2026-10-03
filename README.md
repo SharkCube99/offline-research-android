@@ -18,10 +18,13 @@ This README quotes no performance numbers. Measured results, with their raw logs
 ## Build
 
 ```bash
-git clone --recurse-submodules --shallow-submodules <this repo>
+git -c core.longpaths=true clone --recurse-submodules --shallow-submodules <this repo>
 cd <this repo>
+scripts/build_engine.sh      # only needed for the high profile (12 GB phones)
 ./gradlew assembleDebug
 ```
+
+`scripts/build_engine.sh` builds the BigMoeOnEdge engine that the high profile uses and places it where the APK build finds it. Without it the app still builds and runs the low profile. `core.longpaths` matters on Windows, where some file names in the engine's source exceed the default path limit.
 
 Gradle needs to know where the SDK is: set `ANDROID_HOME`, or create `local.properties` with `sdk.dir=...` (Android Studio does this for you). `JAVA_HOME` must point at a JDK 17 or newer; Android Studio's bundled one (`<Android Studio>/jbr`) works.
 
@@ -101,7 +104,7 @@ Results are saved under `docs/measurements/`.
 
 ## Change the model
 
-Models are configuration, not code. A profile is a small JSON file (`profiles/low.json`, `profiles/high.json`) that names the model file and its settings. To try another model, push the GGUF and a profile that names it:
+Models are configuration, not code. A profile is a small JSON file (`profiles/low.json`, `profiles/high.json`) that names the model file and its settings. `"engine"` in the profile picks what runs the model: `"llama"` (llama.cpp, the default) or `"bmoe"` (BigMoeOnEdge, for mixture-of-experts models larger than RAM). To try another model, push the GGUF and a profile that names it:
 
 ```bash
 scripts/setup.sh --no-install --model /path/to/other.gguf --profile my-profile.json

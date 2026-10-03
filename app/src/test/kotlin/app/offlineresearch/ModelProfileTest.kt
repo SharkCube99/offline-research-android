@@ -16,7 +16,7 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesParse() {
-        for (name in listOf("low.json", "high.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json")) {
             val profile = shipped(name)
             assertTrue("$name: model_file must be a GGUF", profile.modelFile.endsWith(".gguf"))
             assertTrue("$name: n_ctx", profile.contextSize > 0)
@@ -27,7 +27,7 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesLeaveRoomInTheContextForTheAnswer() {
-        for (name in listOf("low.json", "high.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json")) {
             val profile = shipped(name)
             // Passages + answer + about 400 tokens for the contract and the question.
             assertTrue(
@@ -39,12 +39,22 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesStreamFromFlashByDefault() {
-        for (name in listOf("low.json", "high.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json")) {
             val profile = shipped(name)
             assertTrue("$name: mmap must be on", profile.useMmap)
             assertFalse("$name: mlock must be off", profile.useMlock)
             assertFalse("$name: repack must be off", profile.repack)
         }
+    }
+
+    @Test
+    fun theHighProfileStreamsExpertsAndTheOthersUseLlamaCpp() {
+        val high = shipped("high.json")
+        assertEquals("bmoe", high.engine)
+        assertTrue("--moe-stream" in high.engineArgs)
+        assertFalse(high.think)
+        assertEquals("llama", shipped("low.json").engine)
+        assertEquals("llama", shipped("high-llama.json").engine)
     }
 
     @Test

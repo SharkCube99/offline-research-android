@@ -118,6 +118,19 @@ Measured on the PC against the full index (`docs/measurements/2026-10-03-compres
 
 Not measured: the effect on time to first word and on answer quality on a phone. Known weakness, visible in that file: where retrieval returns an off-topic article (for example "Guinea Pig Club" for a question about treating burns), compression now passes on a few sentences from it, and leftovers of "External links" sections still slip through. Dropping those sections belongs in the data pipeline.
 
+## Second engine: BigMoeOnEdge for the high profile (2026-10-03)
+
+The high profile now names `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB) and `"engine": "bmoe"`. The earlier plan, the 4-bit Qwen3-30B-A3B memory-mapped by plain llama.cpp, is kept as `profiles/high-llama.json`.
+
+- **Why.** An 18.6 GB file memory-mapped on a 12 GB phone leaves the kernel to page experts in and out on its own. BigMoeOnEdge (Apache-2.0) reads the experts a token needs itself and keeps recent ones in a cache it sizes to the phone. Another entry to the same bounty publishes much higher speeds with it than plain mmap gave us on the Redmi. None of that is measured by us yet.
+- **How it is attached.** The engine is a program, `bmoe-cli --session`, not a library. `BmoeEngine` starts it from the app's native library directory and talks to it over standard input and output (`BmoeProtocol`, from the engine's `docs/telemetry.md`). It implements the same `InferenceEngine` interface as `LlamaEngine`, so retrieval and UI code did not change. The planner still runs on llama.cpp in the app's own process.
+- **One file, statically linked.** `scripts/build_engine.sh` builds it with `BUILD_SHARED_LIBS=OFF` and the static C++ runtime, so it needs only system libraries (checked with `llvm-readelf -d`: libm, libdl, libandroid, libc) and does not clash with the `libllama.so` and `libggml*.so` of the JNI bridge. It is placed at `app/src/main/jniLibs/arm64-v8a/libbmoe-cli.so`, which is not committed. An APK built without it still works with the llama profiles.
+- **Engine flags are configuration.** `engine_args` in the profile is passed through. The shipped flags (`--moe-stream --overlap --io-threads 2` and the sampling settings) are a starting point taken from the engine's documentation, not tuned.
+- **What the engine cannot do that llama.cpp could.** No separate system prompt: the answer contract is put in front of the sources in the one prompt. Sampling is fixed at load. No presence penalty. No tokenize command, so `countTokens` is an estimate of four characters per token. The app's memory figures (RSS, page faults) cover the app's own process and not the engine's; the engine reports its own in `BMOE_DONE`, which is not logged yet.
+- **CPU requirement.** The engine is built for ARMv8.2 with dot-product and half-float instructions, as its own build script does.
+
+Not run on any phone. Unknown until it is: whether it starts from the native library directory on the test phones, load time, speed, memory, and whether the 2-bit model follows the answer contract.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

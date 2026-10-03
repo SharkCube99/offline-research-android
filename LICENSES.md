@@ -11,6 +11,8 @@ The app's own source code is released under the MIT licence (see `LICENSE`).
 | Component | Version | Licence | Why it is here |
 |---|---|---|---|
 | [llama.cpp](https://github.com/ggml-org/llama.cpp) | tag `b11311` (git submodule) | MIT | On-device inference engine |
+| [BigMoeOnEdge](https://github.com/Helldez/BigMoeOnEdge) | commit `374f562` (git submodule) | Apache-2.0 | Engine for the high profile: streams a mixture-of-experts model's experts from flash. Built as a separate program by `scripts/build_engine.sh` |
+| [Helldez/llama.cpp](https://github.com/Helldez/llama.cpp) | commit `dce9698` (submodule of BigMoeOnEdge) | MIT | The llama.cpp fork BigMoeOnEdge is built on; linked statically into that program |
 | Android Gradle Plugin | 8.13.2 | Apache-2.0 | Build |
 | Kotlin and the Compose compiler plugin | 2.2.20 | Apache-2.0 | Language and UI compiler |
 | Jetpack Compose (BOM 2025.10.00: ui, material3) | per BOM | Apache-2.0 | UI toolkit required by CLAUDE.md |
@@ -31,7 +33,8 @@ Models are not stored in this repository or in the APK. They are pushed to the p
 | Model | File | Size | Licence | Source | Used for |
 |---|---|---|---|---|---|
 | Qwen3-4B | `Qwen3-4B-Q4_K_M.gguf` | 2.5 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> | Low tier and development (M1) |
-| Qwen3-30B-A3B | `Qwen3-30B-A3B-Q4_K_M.gguf` | 18.6 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF> | High tier (planned, M4) |
+| Qwen3.6-35B-A3B, 2-bit quantisation by Unsloth | `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` | 12.3 GB | Apache-2.0 | <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF> (base model <https://huggingface.co/Qwen/Qwen3.6-35B-A3B>) | High tier (`profiles/high.json`); licence read from the Hugging Face API on 2026-10-03 |
+| Qwen3-30B-A3B | `Qwen3-30B-A3B-Q4_K_M.gguf` | 18.6 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF> | Earlier high tier, kept as `profiles/high-llama.json` |
 | Qwen3-1.7B | `Qwen3-1.7B-Q8_0.gguf` | 1.83 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> | Planner: writes search queries. Q8_0 is the only file in the official repository |
 
 File names, sizes and licences were read from the Hugging Face repository pages on 2026-10-01.

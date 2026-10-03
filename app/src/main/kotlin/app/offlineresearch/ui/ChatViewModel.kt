@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.offlineresearch.engine.BmoeEngine
 import app.offlineresearch.engine.EngineConfig
 import app.offlineresearch.engine.EngineException
 import app.offlineresearch.engine.EngineMetrics
@@ -97,7 +98,10 @@ data class ChatUiState(
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val nativeLibDir = application.applicationInfo.nativeLibraryDir
-    private val answerer: InferenceEngine = LlamaEngine(nativeLibDir, "llama-answerer")
+    private val llamaAnswerer: InferenceEngine = LlamaEngine(nativeLibDir, "llama-answerer")
+
+    /** Replaced when the profile names a different engine. */
+    private var answerer: InferenceEngine = llamaAnswerer
     private val plannerEngine: InferenceEngine = LlamaEngine(nativeLibDir, "llama-planner")
     private val profiles = ProfileStore(application)
     private val logDir = application.getExternalFilesDir(null)?.let { File(it, "logs") }
@@ -195,6 +199,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Free the old models first: two answerers do not fit in memory at once.
         plannerEngine.unload()
         answerer.unload()
+        answerer = when (active.engine) {
+            // Android only lets an app run programs from its native library
+            // directory, so the engine is packaged there under a library's name.
+            "bmoe" -> BmoeEngine("$nativeLibDir/libbmoe-cli.so", active.engineArgs, active.think)
+            else -> llamaAnswerer
+        }
         answerer.load(model.absolutePath, config(active.contextSize))
         Log.i(MetricsLog.TAG, "system info: ${answerer.systemInfo()}")
 

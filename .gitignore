@@ -7,6 +7,8 @@ local.properties
 .kotlin/
 captures/
 *.gguf
+# Built by scripts/build_engine.sh
+app/src/main/jniLibs/
 *.apk
 *.keystore
 .DS_Store

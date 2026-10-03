@@ -18,6 +18,16 @@ data class ModelProfile(
     val name: String,
     /** The answerer: file name inside the models/ directory on the device. */
     @SerialName("model_file") val modelFile: String,
+    /**
+     * What runs the answerer: "llama" (llama.cpp in this process, the whole model
+     * memory-mapped) or "bmoe" (BigMoeOnEdge, which streams a mixture-of-experts
+     * model's experts from flash).
+     */
+    val engine: String = "llama",
+    /** Extra command-line flags for the "bmoe" engine, including its sampling settings. */
+    @SerialName("engine_args") val engineArgs: List<String> = emptyList(),
+    /** Let a reasoning model think before it answers ("bmoe" engine; "llama" uses prompt_suffix). */
+    val think: Boolean = false,
     @SerialName("n_ctx") val contextSize: Int,
     @SerialName("n_batch") val batchSize: Int,
     /** Threads for generating tokens. 0 = let the engine choose. */
