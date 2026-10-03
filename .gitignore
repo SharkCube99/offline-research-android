@@ -11,6 +11,7 @@ captures/
 app/src/main/jniLibs/
 *.apk
 *.keystore
+keystore.properties
 .DS_Store
 data-pipeline/work/
 __pycache__/

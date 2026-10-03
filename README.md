@@ -6,7 +6,22 @@ An Android app that answers research questions with no network connection, using
 
 This README quotes no performance numbers. Measured results, with their raw logs, are in `docs/PERFORMANCE.md` (speed on the phone), `docs/KNOWLEDGE_INDEX.md` (index size and search quality) and `docs/RAG.md` (cited answers on the phone).
 
-## What you need
+## Quick start without building
+
+A signed APK is attached to each [release](https://github.com/SharkCube99/offline-research-android/releases). You need a computer with `git`, `curl`, bash (Git Bash on Windows) and Android platform-tools (`adb`), and a phone with USB debugging on and about 30 GB free.
+
+```bash
+git clone https://github.com/SharkCube99/offline-research-android.git    # scripts only; no submodules needed
+cd offline-research-android
+scripts/fetch_index.sh                                                    # 22.9 GB knowledge index
+scripts/setup.sh --apk /path/to/offline-research-0.6.0.apk                  --model /path/to/Qwen3-4B-Q4_K_M.gguf                  --model /path/to/Qwen3-1.7B-Q8_0.gguf                  --index data-pipeline/work/index
+```
+
+The model files come from the pages listed under "Put it on a phone". For a 12 GB phone, also push `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB, <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>); the app picks the high profile by itself when the phone reports 10 GB of RAM or more. The time this takes is mostly download and USB copy time.
+
+## Build it yourself
+
+### What you need
 
 - A computer with Android Studio (or the Android SDK plus JDK 17 or newer) and `git`.
 - In Android Studio's SDK Manager, under **SDK Tools** with "Show Package Details" ticked:
@@ -15,7 +30,7 @@ This README quotes no performance numbers. Measured results, with their raw logs
 - An arm64 Android phone running Android 9 or newer, with USB debugging turned on.
 - The model files and the knowledge index listed under "Put it on a phone".
 
-## Build
+### Build
 
 ```bash
 git -c core.longpaths=true clone --recurse-submodules --shallow-submodules https://github.com/SharkCube99/offline-research-android.git
