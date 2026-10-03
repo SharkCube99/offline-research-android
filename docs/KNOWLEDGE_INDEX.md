@@ -123,3 +123,5 @@ Rejected along the way: SQLite FTS5's smaller `detail=column` and `detail=none` 
 Measured with `eval_retrieval.py` on the full index after the change: test set 46/50 in the top 5 (was 45/50), held-out set 24/25 (unchanged). The Kotlin retriever returns the same top 5 as the Python reference on all 50 test questions (`RetrieverParityTest`).
 
 This helps only where such a redirect exists; the index holds about 3,000 redirects that begin with "why", "how" or "what", and most are titles of works. A why-question whose answer sits in a differently named article with no such redirect still depends on the planner model suggesting the right title.
+
+Checked on the Redmi 12 5G the same day (`docs/measurements/2026-10-03-redmi12-sky-question.jsonl`, screen `screens/2026-10-03-sky-answer.png`): for "Why is the sky blue?" the sources were "Diffuse sky radiation", "Sky", "Atmosphere" and "Sky blue", and the 4B model answered that air molecules scatter shorter wavelengths more strongly, citing the first two. One run; other apps were active on the phone, so its timings are not a benchmark.
