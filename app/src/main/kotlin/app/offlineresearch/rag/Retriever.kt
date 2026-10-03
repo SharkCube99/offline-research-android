@@ -13,6 +13,8 @@ data class Passage(
     val text: String,
     /** What the model is given: the whole passage, or the sentences chosen from it. */
     val excerpt: String = text,
+    /** The question contains this article's title or one of its redirects. */
+    val named: Boolean = false,
 ) {
     /** Unique across corpora. */
     val passageId: String get() = "$corpus:$id"
@@ -71,12 +73,13 @@ class Retriever(
             passageList.getOrNull(position)?.let { merged += it }
         }
 
+        val fromNames = nameList.toSet()
         val results = mutableListOf<Passage>()
         val seen = HashSet<Pair<String, Long>>()
         val perSource = HashMap<String, Int>()
         for (entry in merged) {
             if (!seen.add(entry)) continue
-            val passage = load(entry.first, entry.second) ?: continue
+            val passage = load(entry.first, entry.second)?.let { if (entry in fromNames) it.copy(named = true) else it } ?: continue
             val used = perSource[passage.sourceKey] ?: 0
             if (used >= perArticle) continue // one long article must not fill the whole list
             perSource[passage.sourceKey] = used + 1
@@ -87,7 +90,8 @@ class Retriever(
     }
 
     /**
-     * Puts the opening passage of the articles the question names at the front
+     * Puts the opening passage of the articles the question names (by title, or
+     * by a redirect such as "heart attack" for "Myocardial infarction") at the front
      * of [ranked], if search did not return it. Search ranks passages by the
      * question's words, and for "What causes the tides?" that favours the
      * history section, where "caused" appears in every sentence, over the
@@ -95,13 +99,14 @@ class Retriever(
      */
     fun withLeads(question: String, ranked: List<Passage>, maxArticles: Int = 2): List<Passage> {
         val terms = QueryBuilder.queryTerms(question)
-        val named = ranked.filter { titleIsNamed(it.title, terms) }.distinctBy { it.sourceKey }.take(maxArticles)
+        val named = ranked.filter { it.named || titleIsNamed(it.title, terms) }.distinctBy { it.sourceKey }.take(maxArticles)
         val leads = named.mapNotNull { passage ->
             if (passage.seq == 0) return@mapNotNull passage
             val first = indexes.getValue(passage.corpus).query(
                 "SELECT a.first_passage_id FROM passages p JOIN articles a ON a.id = p.article_id WHERE p.id = ${passage.id}",
             ) { it.long(0) }.firstOrNull() ?: return@mapNotNull null
-            ranked.firstOrNull { it.corpus == passage.corpus && it.id == first } ?: load(passage.corpus, first)
+            (ranked.firstOrNull { it.corpus == passage.corpus && it.id == first } ?: load(passage.corpus, first))
+                ?.copy(named = passage.named)
         }
         val leadIds = leads.map { it.passageId }.toSet()
         return leads + ranked.filter { it.passageId !in leadIds }
@@ -163,7 +168,9 @@ class Retriever(
                 if (rows.isNotEmpty()) break
             }
             if (rows.isEmpty()) continue
-            if (gram.length > 1) claimed += positions
+            // A whole-question match does not claim its words: the question may also
+            // be the title of a song or a film, and then the names inside it still count.
+            if (gram.length > 1 && QueryBuilder.isPlainName(gram.key.split(' '))) claimed += positions
             for (article in rows) articles.putIfAbsent(article.id, gram.length to article)
         }
 

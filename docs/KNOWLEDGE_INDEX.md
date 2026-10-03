@@ -115,3 +115,11 @@ Rejected along the way: SQLite FTS5's smaller `detail=column` and `detail=none` 
 - Staging: 8 worker processes, roughly 2.5 hours in total.
 - Merge: 38 minutes, plus about 5 minutes for optimisation.
 - The build PC crashed and rebooted twice during the run (16:47 and 19:22). Completed downloads and staged shards survived; the merge was redone. `build_index.py` now asks Windows to stay awake while it runs.
+
+## Later change: whole-question lookup (2026-10-03)
+
+"Why is the sky blue?" returned the article on the colour sky blue, because the name channel only looked up n-grams that neither start nor end with a function word, which reduced the question to "sky blue". Wikipedia has a redirect "Why is the sky blue" that points at "Diffuse sky radiation", and it was already in the `names` table. The name channel now also looks up the whole question (up to 12 words) when it is not already one of the n-grams. A whole-question match does not stop the names inside the question from being looked up as well, since a question can also be the title of a song or a film.
+
+Measured with `eval_retrieval.py` on the full index after the change: test set 46/50 in the top 5 (was 45/50), held-out set 24/25 (unchanged). The Kotlin retriever returns the same top 5 as the Python reference on all 50 test questions (`RetrieverParityTest`).
+
+This helps only where such a redirect exists; the index holds about 3,000 redirects that begin with "why", "how" or "what", and most are titles of works. A why-question whose answer sits in a differently named article with no such redirect still depends on the planner model suggesting the right title.

@@ -122,6 +122,8 @@ Later the same day, after the first answers on the phone leaned on the history o
 - **Less filler.** A sentence from an article whose title shares no word with the question counts 0.6 of its score, and sentences below 0.4 of the best sentence's score are not taken at all, so the prompt can come in under budget.
 - **Answer clean-up** (`Citations`). A "Not covered by the offline sources." line standing on its own next to an answer that cites sources is removed; an answer without citations keeps it. List markers become bullets, and headings and `**bold**` become bold text. The contract also says to use the sentence only as the whole reply.
 
+- **Articles named by redirect.** Passages that the name channel found carry `named = true`, so the opening of "Myocardial infarction" is offered for a question about a "heart attack", and of "Diffuse sky radiation" for "Why is the sky blue?" (see `docs/KNOWLEDGE_INDEX.md`, whole-question lookup).
+
 Not measured: the effect on time to first word and on answer quality on a phone. Known weakness, visible in that file: where retrieval returns an off-topic article (for example "Guinea Pig Club" for a question about treating burns), compression now passes on a few sentences from it, and leftovers of "External links" sections still slip through. Dropping those sections belongs in the data pipeline.
 
 ## Second engine: BigMoeOnEdge for the high profile (2026-10-03)

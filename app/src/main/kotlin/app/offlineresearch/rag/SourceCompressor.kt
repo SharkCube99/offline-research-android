@@ -79,7 +79,7 @@ class SourceCompressor(
             // "Visa policy of Japan" every sentence is about visas and Japan.
             val titleTokens = tokenize(passage.title).toSet()
             val (inTitle, other) = terms.partition { matches(it, titleTokens) }
-            val named = titleIsNamed(passage.title, terms)
+            val named = passage.named || titleIsNamed(passage.title, terms)
             splitSentences(body(passage)).forEachIndexed { position, raw ->
                 val text = raw.replace(EDITOR_NOTE, "")
                 if (text.length > MAX_SENTENCE_CHARS || REFERENCE_DEBRIS.containsMatchIn(text)) return@forEachIndexed
@@ -99,7 +99,7 @@ class SourceCompressor(
                 // better ranked passages and shorter sentences.
                 var score = 2.0 * own + 0.5 * inTitle.size + 0.25 * repeated + lead + 1.0 / (1 + rank) - text.length / 400.0
                 // A stray mention in an article about something else is worth less.
-                if (inTitle.isEmpty()) score *= OFF_TOPIC_WEIGHT
+                if (inTitle.isEmpty() && !named) score *= OFF_TOPIC_WEIGHT
                 sentences += Sentence(rank, position, text, score, own + repeated, lead > 0)
             }
         }

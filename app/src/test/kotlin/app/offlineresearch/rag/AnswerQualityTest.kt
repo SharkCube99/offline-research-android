@@ -97,6 +97,15 @@ class LeadPassageTest {
                     ),
                 ),
                 FixtureArticle("Sea kayaking", listOf("Currents change with the tides and can cause danger.")),
+                FixtureArticle(
+                    "Diffuse sky radiation",
+                    listOf(
+                        "Diffuse sky radiation is sunlight scattered by molecules in the atmosphere.",
+                        "Blue light is scattered more than red light, so the sky looks blue.",
+                    ),
+                    aliases = listOf("Why is the sky blue", "Skylight"),
+                ),
+                FixtureArticle("Sky blue", listOf("Sky blue is a shade of light blue. The colour sky blue is used in web design.")),
             ),
         )
         retriever = Retriever(mapOf("wikipedia" to index))
@@ -116,6 +125,26 @@ class LeadPassageTest {
         // Nothing is lost and nothing is repeated.
         assertEquals(withLeads.size, withLeads.map { it.passageId }.distinct().size)
         assertTrue(withLeads.map { it.passageId }.containsAll(ranked.map { it.passageId }))
+    }
+
+    @Test
+    fun aQuestionThatIsItselfARedirectFindsTheArticleThatAnswersIt() {
+        val question = "Why is the sky blue?"
+        val ranked = retriever.search(question)
+        assertEquals("Diffuse sky radiation", ranked.first().title)
+        assertTrue(ranked.first().named)
+        // The article named by the words inside the question is still found.
+        assertTrue(ranked.any { it.title == "Sky blue" })
+
+        val sources = SourceCompressor(60).select(question, retriever.withLeads(question, ranked))
+        assertEquals("Diffuse sky radiation", sources.first().title)
+        assertTrue("sunlight scattered by molecules" in sources.first().excerpt)
+    }
+
+    @Test
+    fun theWholeQuestionIsLookedUpOnlyWhenItIsNotAlreadyAPlainName() {
+        assertEquals("why is the sky blue", QueryBuilder.nameGrams("Why is the sky blue?").first().key)
+        assertEquals(listOf("heart attack", "heart", "attack"), QueryBuilder.nameGrams("heart attack").map { it.key })
     }
 
     @Test

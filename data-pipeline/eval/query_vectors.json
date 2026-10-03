@@ -18,6 +18,11 @@
   "and_query": "\"recognise\" AND \"heart\" AND \"attack\"",
   "name_grams": [
    [
+    0,
+    7,
+    "how do i recognise a heart attack"
+   ],
+   [
     3,
     4,
     "recognise a heart attack"
@@ -70,6 +75,11 @@
   ],
   "and_query": "\"virus\" AND \"bacterium\"",
   "name_grams": [
+   [
+    0,
+    10,
+    "what is the difference between a virus and a bacterium"
+   ],
    [
     3,
     4,
@@ -185,6 +195,11 @@
   "and_query": "\"war\" AND \"currents\"",
   "name_grams": [
    [
+    0,
+    5,
+    "the war of the currents"
+   ],
+   [
     1,
     4,
     "war of the currents"
@@ -215,7 +230,13 @@
    "he"
   ],
   "and_query": "\"who\" AND \"was\" AND \"he\"",
-  "name_grams": [],
+  "name_grams": [
+   [
+    0,
+    3,
+    "who was he"
+   ]
+  ],
   "index_text": ""
  },
  {
@@ -271,6 +292,11 @@
   ],
   "and_query": "\"diesel\" AND \"petrol\" AND \"engines\"",
   "name_grams": [
+   [
+    0,
+    8,
+    "diesel versus petrol engines what is the difference"
+   ],
    [
     3,
     5,
@@ -341,6 +367,11 @@
   ],
   "and_query": "\"noise\" AND \"cancelling\" AND \"headphones\"",
   "name_grams": [
+   [
+    0,
+    6,
+    "how do noise cancelling headphones work"
+   ],
    [
     2,
     4,
@@ -576,6 +607,11 @@
   "and_query": "\"near\" AND \"burn\"",
   "name_grams": [
    [
+    0,
+    5,
+    "and near burn burn burn"
+   ],
+   [
     1,
     4,
     "near burn burn burn"
@@ -635,5 +671,43 @@
   "and_query": "",
   "name_grams": [],
   "index_text": ""
+ },
+ {
+  "question": "Why is the sky blue?",
+  "tokens": [
+   "why",
+   "is",
+   "the",
+   "sky",
+   "blue"
+  ],
+  "terms": [
+   "sky",
+   "blue"
+  ],
+  "and_query": "\"sky\" AND \"blue\"",
+  "name_grams": [
+   [
+    0,
+    5,
+    "why is the sky blue"
+   ],
+   [
+    3,
+    2,
+    "sky blue"
+   ],
+   [
+    3,
+    1,
+    "sky"
+   ],
+   [
+    4,
+    1,
+    "blue"
+   ]
+  ],
+  "index_text": "sky blue"
  }
 ]

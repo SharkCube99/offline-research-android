@@ -37,6 +37,8 @@ get difference differences different versus vs explain
 DEFAULT_WEIGHTS = (4.0, 3.0, 1.0)
 # Longest article name looked for in a question, in words.
 MAX_NAME_WORDS = 5
+# Longest question looked up whole, in words ("why is the sky blue" is a redirect).
+MAX_QUESTION_NAME_WORDS = 12
 # How many articles the name channel may contribute, per corpus.
 NAME_ARTICLES = 3
 # How many articles one name may resolve to (titles first, then most viewed).
@@ -68,9 +70,15 @@ def name_grams(question, max_words=MAX_NAME_WORDS):
 
     An n-gram may contain function words ("war of the currents") but not start
     or end with one. Single filler words are not looked up.
+
+    The whole question comes first when it is not already one of those n-grams:
+    Wikipedia has redirects that are questions, such as "Why is the sky blue",
+    and they point at the article that answers them.
     """
     tokens = tokenize(question)
     grams = []
+    if 1 < len(tokens) <= MAX_QUESTION_NAME_WORDS and not is_plain_name(tokens, max_words):
+        grams.append((0, len(tokens), " ".join(tokens)))
     for length in range(max_words, 0, -1):
         for start in range(len(tokens) - length + 1):
             gram = tokens[start:start + length]
@@ -80,6 +88,11 @@ def name_grams(question, max_words=MAX_NAME_WORDS):
                 continue
             grams.append((start, length, " ".join(gram)))
     return grams
+
+
+def is_plain_name(gram, max_words=MAX_NAME_WORDS):
+    """True for the n-grams that name_grams builds from parts of the question."""
+    return len(gram) <= max_words and gram[0] not in FUNCTION_WORDS and gram[-1] not in FUNCTION_WORDS
 
 
 def open_indexes(index_dir):
@@ -139,7 +152,9 @@ def name_channel(con, question, terms, weights, max_articles=NAME_ARTICLES):
                 break
         if not rows:
             continue
-        if length > 1:
+        # A whole-question match does not claim its words: the question may also
+        # be the title of a song or a film, and then the names inside it still count.
+        if length > 1 and is_plain_name(key.split()):
             claimed.update(positions)
         for article_id, first, count in rows:
             articles.setdefault(article_id, (length, first, count))

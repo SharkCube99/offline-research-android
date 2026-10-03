@@ -90,6 +90,11 @@ class NameTest(unittest.TestCase):
         self.assertNotIn("the war", grams)
         self.assertNotIn("war of", grams)
 
+    def test_the_whole_question_is_looked_up_first_unless_it_is_already_a_plain_name(self):
+        self.assertEqual(retrieval.name_grams("Why is the sky blue?")[0], (0, 5, "why is the sky blue"))
+        self.assertEqual([key for _, _, key in retrieval.name_grams("heart attack")],
+                         ["heart attack", "heart", "attack"])
+
     def test_single_filler_words_are_not_names(self):
         single = [key for _, length, key in retrieval.name_grams("best way to work") if length == 1]
         self.assertEqual(single, [])
