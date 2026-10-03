@@ -198,3 +198,24 @@ Source: `docs/measurements/<date>-<device>-stress-high-30b.md`, `.jsonl`, `.txt`
 
 <What this run did not cover: for example a cold start after reboot, a second run, other thread settings.>
 ```
+
+## Week 1 first runs on the Redmi 12 5G (2026-10-03)
+
+One question each ("What causes the tides?"), app 0.6.0-w1, source budget 450 with sentence compression. Raw records: `docs/measurements/2026-10-03-redmi12-w1-first-runs.jsonl`. Screens: `docs/measurements/screens/2026-10-03-preview-card.png`, `2026-10-03-bmoe-redmi-1.png`. One run per configuration, so these are observations, not benchmarks. Airplane mode was off.
+
+| | low: Qwen3-4B, llama.cpp | high: Qwen3.6-35B-A3B 2-bit, BigMoeOnEdge |
+|---|---|---|
+| Model load | 5.1 s | 23.2 s |
+| Prompt tokens | 600 | 606 |
+| Prompt reading | 100.9 s (5.9 tok/s) | 130.3 s (4.7 tok/s) |
+| Planner + search | 14.7 s + 9.8 s | 26.6 s + 2.1 s |
+| First word after asking | 125.5 s | 160.9 s |
+| Writing | 168 tokens at 3.27 tok/s | 261 tokens at 0.97 tok/s |
+| Memory available afterwards | 4.02 GB | 1.23 GB |
+| Thermal state | none | none |
+| Crash or kill | no | no |
+
+- The low run was made while a 12.3 GB file was being copied to the phone over USB, which competes for the flash; its search time in particular (9.8 s) is not representative. The earlier comparable run (800-token budget) had a 925-token prompt read in 123 s.
+- The high run is the first time the BigMoeOnEdge engine ran inside this app. It started from the native library directory, loaded a 12.3 GB model on an 8 GB phone and answered without being killed. At about 1 token per second it is not usable on this phone; that was expected, and the 12 GB phone is still unmeasured.
+- The app's RSS and page-fault figures in the high record describe the app's own process, not the engine's, and should be ignored for that row.
+- Quality, from reading the two answers: both cite only real source numbers. Both lean on the history of tidal theory, because the sentences chosen for the prompt were mostly historical ones containing "caused"; the physical explanation was under-represented. The 35B answer ends with a stray "Not covered by the offline sources." after a full answer, and uses Markdown bullets and bold that the app shows as raw asterisks.
