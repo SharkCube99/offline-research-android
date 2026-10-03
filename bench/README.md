@@ -30,6 +30,17 @@ Every question starts from a cold app start. The answer, its sources and its tim
 - The app has no places database and no location. The 20 restaurant questions can only be answered from Wikipedia and Wikivoyage text, and the three that say "the city I am currently in" or "near me" cannot be answered at all.
 - The knowledge index holds the most-viewed 31% of English Wikipedia. Individual Ethereum improvement proposals are thinly covered there.
 
+## Grading
+
+```bash
+python bench/make_pairs.py bench/vitalik61/questions.jsonl bench/vitalik61/answers_redmi12_low.jsonl     bench/vitalik61/reference_answers.jsonl pairs.json key.json
+python bench/report.py grades.json key.json bench/vitalik61/answers_redmi12_low.jsonl
+```
+
+`make_pairs.py` writes the blind sheet: each question with the app's answer and the reference as A and B in a random order, and a key kept apart from it. The grader sees only the sheet and gives each answer a score from 0 to 10 for how well it serves the person asking, lists its factual errors, and says which answer is better. `report.py` joins grades and key into the table: the app's total score as a share of the reference's, per group and overall, with the app's own timings. A question the app failed to answer stays in the sheet as "(no answer)".
+
+This is the method of AndroidLM's report on the same questions (blind pairs, 0 to 10, share of the reference's total), so the two results can be set side by side.
+
 ## Not done yet
 
-Blind grading against the reference, and the report. No score exists until answers have been graded.
+Grading and the report. No score exists until the answers have been graded.
