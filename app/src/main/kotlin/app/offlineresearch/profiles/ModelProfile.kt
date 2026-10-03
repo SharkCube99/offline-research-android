@@ -41,6 +41,10 @@ data class ModelProfile(
     @SerialName("presence_penalty") val presencePenalty: Float = 0f,
     /** Token budget for retrieved passages in the answerer's prompt. */
     @SerialName("retrieval_budget_tokens") val retrievalBudgetTokens: Int,
+    /** Send the sentences that bear on the question instead of whole passages. */
+    @SerialName("compress_sources") val compressSources: Boolean = true,
+    /** How many passages sentences may be taken from when compressing. */
+    @SerialName("source_passages") val sourcePassages: Int = 6,
     /** The small model that writes search queries. Null = keyword search only. */
     val planner: PlannerProfile? = null,
 ) {

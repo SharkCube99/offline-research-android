@@ -33,6 +33,7 @@ import app.offlineresearch.rag.RagPipeline
 import app.offlineresearch.rag.RagReport
 import app.offlineresearch.rag.RagStage
 import app.offlineresearch.rag.Retriever
+import app.offlineresearch.rag.SourceCompressor
 import app.offlineresearch.rag.SqlDatabase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +56,8 @@ data class ChatMessage(
     val sources: List<Passage> = emptyList(),
     /** What the pipeline is doing; null once the answer is complete. */
     val stage: RagStage? = null,
+    /** The best search hit, shortened; shown while the answer is still being prepared. */
+    val preview: Passage? = null,
 )
 
 sealed interface ModelStatus {
@@ -213,10 +216,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         Log.i(MetricsLog.TAG, "index: ${indexFiles.map { "${it.key} (${it.value.length() / 1_000_000} MB)" }}, planner: $plannerName")
 
         profile = active
+        val compressor = SourceCompressor(active.retrievalBudgetTokens, active.sourcePassages)
         pipeline = RagPipeline(
             planner = planner,
             retriever = Retriever(indexes),
-            budgeter = ContextBudgeter(active.retrievalBudgetTokens, countTokens = answerer::countTokens),
+            selector = if (active.compressSources) {
+                compressor
+            } else {
+                ContextBudgeter(active.retrievalBudgetTokens, countTokens = answerer::countTokens)
+            },
             answerer = answerer,
             settings = AnswerSettings(
                 promptSuffix = active.promptSuffix,
@@ -227,6 +235,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 presencePenalty = active.presencePenalty,
             ),
             seed = Random::nextInt,
+            preview = compressor::preview,
         )
         return ModelStatus.Ready(active.name, loaded.source, active.modelFile, indexFiles.keys.toList(), plannerFile?.name)
     }
@@ -287,7 +296,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val active = profile ?: return
         val rag = pipeline ?: return
         _state.update {
-            it.copy(messages = it.messages + ChatMessage(true, question) + ChatMessage(false, "", stage = RagStage.PLANNING))
+            it.copy(messages = it.messages + ChatMessage(true, question) + ChatMessage(false, "", stage = RagStage.SEARCHING))
         }
         val before = SystemStats.snapshot(getApplication())
         val raw = StringBuilder()
@@ -298,6 +307,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             rag.answer(question).collect { event ->
                 when (event) {
                     is RagEvent.Stage -> updateReply { it.copy(stage = event.stage) }
+                    is RagEvent.Preview -> updateReply { it.copy(preview = event.passage) }
                     is RagEvent.Sources -> {
                         sources = event.sources
                         updateReply { it.copy(sources = event.sources) }
@@ -352,6 +362,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 totalTimeToFirstTokenMs = report.planMs + report.searchMs + (report.answerer?.timeToFirstTokenMs ?: 0.0),
                 retrieved = report.retrieved,
                 sources = sources.map { "${it.passageId} ${it.title}" },
+                sourceChars = sources.sumOf { it.excerpt.length },
+                sourceCharsFull = sources.sumOf { it.text.length },
                 cited = Citations.cited(answer, sources.size),
                 invalidCitations = Citations.invalid(answer, sources.size),
                 notCovered = Citations.isNotCovered(answer),

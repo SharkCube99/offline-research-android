@@ -14,6 +14,12 @@ enum class RagStage { PLANNING, SEARCHING, THINKING, ANSWERING }
 sealed interface RagEvent {
     data class Stage(val stage: RagStage) : RagEvent
 
+    /**
+     * The best match of the first search, shortened. It is shown at once, as
+     * source text and not as the answer, while the model is still working.
+     */
+    data class Preview(val passage: Passage) : RagEvent
+
     /** The numbered sources the answer may cite; `sources[0]` is source 1. */
     data class Sources(val sources: List<Passage>) : RagEvent
 
@@ -46,33 +52,44 @@ data class AnswerSettings(
 )
 
 /**
- * question -> planner -> retriever -> context budgeter -> answerer.
+ * question -> first search (shown at once) -> planner -> more searches ->
+ * source selection -> answerer.
  * Knows nothing about llama.cpp or SQLite; it works through the interfaces.
  */
 class RagPipeline(
     private val planner: QueryPlanner,
     private val retriever: Retriever,
-    private val budgeter: ContextBudgeter,
+    private val selector: SourceSelector,
     private val answerer: InferenceEngine,
     private val settings: AnswerSettings,
     private val seed: () -> Int,
+    /** Makes the excerpt shown as soon as the first search returns; null shows none. */
+    private val preview: ((question: String, ranked: List<Passage>) -> Passage?)? = null,
 ) {
     fun answer(question: String): Flow<RagEvent> = flow {
+        // Search with the question itself first: it needs no model, so something
+        // useful can be on screen within about a second.
+        emit(RagEvent.Stage(RagStage.SEARCHING))
+        val firstStart = System.currentTimeMillis()
+        val first = withContext(Dispatchers.IO) { retriever.search(question) }
+        var searchMs = System.currentTimeMillis() - firstStart
+        preview?.invoke(question, first)?.let { emit(RagEvent.Preview(it)) }
+
         emit(RagEvent.Stage(RagStage.PLANNING))
         val planStart = System.currentTimeMillis()
         val plan = planner.plan(question)
         val planMs = System.currentTimeMillis() - planStart
 
-        // The question itself is always searched; the planner's queries add to it.
+        // The planner's queries add to the question's own search; they cannot replace it.
         val queries = (listOf(question) + plan.queries).distinctBy { it.trim().lowercase() }
-
-        emit(RagEvent.Stage(RagStage.SEARCHING))
-        val searchStart = System.currentTimeMillis()
+        val extra = queries.drop(1)
+        if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
+        val secondStart = System.currentTimeMillis()
         val (retrieved, sources) = withContext(Dispatchers.IO) {
-            val ranked = interleave(queries.map { retriever.search(it) })
-            ranked.size to budgeter.select(ranked)
+            val ranked = interleave(listOf(first) + extra.map { retriever.search(it) })
+            ranked.size to selector.select(question, ranked)
         }
-        val searchMs = System.currentTimeMillis() - searchStart
+        searchMs += System.currentTimeMillis() - secondStart
         emit(RagEvent.Sources(sources))
 
         if (sources.isEmpty()) {

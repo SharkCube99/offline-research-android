@@ -60,6 +60,9 @@ data class RagRecord(
     @SerialName("total_ttft_ms") val totalTimeToFirstTokenMs: Double,
     val retrieved: Int,
     val sources: List<String>,
+    /** Characters of source text put in the prompt, and in the same passages before compression. */
+    @SerialName("source_chars") val sourceChars: Int = 0,
+    @SerialName("source_chars_full") val sourceCharsFull: Int = 0,
     val cited: List<Int>,
     @SerialName("invalid_citations") val invalidCitations: List<Int>,
     @SerialName("not_covered") val notCovered: Boolean,

@@ -264,6 +264,22 @@ private fun AnswerBubble(message: ChatMessage, onOpenSources: (selected: Int) ->
             .background(colors.surfaceVariant, RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
+        // Until the model's own words arrive, show what search found: it is useful
+        // at once, and it is labelled as source text so it is not mistaken for the answer.
+        if (text.isEmpty() && message.preview != null) {
+            Text(
+                "Found in ${message.preview.corpus.replaceFirstChar { it.uppercase() }} · ${message.preview.title}",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.onSurfaceVariant,
+            )
+            Text(
+                message.preview.excerpt.removePrefix("${message.preview.title}: "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
+        }
         if (text.isNotEmpty()) Text(text = text, color = colors.onSurfaceVariant)
         stageLabel(message.stage, message.sources.size)?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
@@ -311,7 +327,14 @@ private fun SourcesPanel(open: OpenSources, onDismiss: () -> Unit) {
                         style = MaterialTheme.typography.labelSmall,
                     )
                     SelectionContainer {
-                        Text(source.text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                        Column {
+                            // What the model was given, then the passage it was taken from.
+                            Text(source.excerpt, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                            if (source.excerpt != source.text) {
+                                Text("Full passage", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+                                Text(source.text, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                 }
             }

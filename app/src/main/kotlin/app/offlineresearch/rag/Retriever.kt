@@ -11,6 +11,8 @@ data class Passage(
     val seq: Int,
     /** "Title: passage text", exactly as stored in the index. */
     val text: String,
+    /** What the model is given: the whole passage, or the sentences chosen from it. */
+    val excerpt: String = text,
 ) {
     /** Unique across corpora. */
     val passageId: String get() = "$corpus:$id"

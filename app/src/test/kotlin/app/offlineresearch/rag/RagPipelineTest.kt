@@ -65,7 +65,7 @@ class RagPipelineTest {
 
     private fun pipeline(answerer: FakeEngine, planner: QueryPlanner = KeywordPlanner, budget: Int = 200) = RagPipeline(
         planner, Retriever(mapOf("wikipedia" to index)), ContextBudgeter(budget, countTokens = answerer::countTokens),
-        answerer, settings, seed = { 7 },
+        answerer, settings, seed = { 7 }, preview = SourceCompressor(200)::preview,
     )
 
     private fun run(pipeline: RagPipeline, question: String) = runBlocking { pipeline.answer(question).toList() }
@@ -76,7 +76,7 @@ class RagPipelineTest {
         val events = run(pipeline(answerer), "What causes the tides?")
 
         assertEquals(
-            listOf(RagStage.PLANNING, RagStage.SEARCHING, RagStage.THINKING, RagStage.ANSWERING),
+            listOf(RagStage.SEARCHING, RagStage.PLANNING, RagStage.THINKING, RagStage.ANSWERING),
             events.filterIsInstance<RagEvent.Stage>().map { it.stage },
         )
         val sources = events.filterIsInstance<RagEvent.Sources>().single().sources
@@ -85,6 +85,28 @@ class RagPipelineTest {
         assertTrue(events.indexOfFirst { it is RagEvent.Sources } < events.indexOf(RagEvent.Stage(RagStage.THINKING)))
         assertEquals("Tides come from the Moon [1].", events.filterIsInstance<RagEvent.Token>().joinToString("") { it.text })
         assertTrue(events.last() is RagEvent.Finished)
+    }
+
+    @Test
+    fun aPreviewOfTheBestMatchArrivesBeforeThePlannerRuns() {
+        val events = run(pipeline(FakeEngine(listOf("ok"))), "What causes the tides?")
+        val preview = events.filterIsInstance<RagEvent.Preview>().single().passage
+        assertEquals("Tide", preview.title)
+        assertTrue(preview.excerpt.startsWith("Tide: Tides are caused"))
+        assertTrue(events.indexOfFirst { it is RagEvent.Preview } < events.indexOf(RagEvent.Stage(RagStage.PLANNING)))
+    }
+
+    @Test
+    fun plannerQueriesAddASecondSearchStage() {
+        val planner = object : QueryPlanner {
+            override suspend fun plan(question: String) = Plan(listOf("north star"), usedFallback = false)
+        }
+        val stages = run(pipeline(FakeEngine(listOf("ok")), planner), "Which star shows where north is?")
+            .filterIsInstance<RagEvent.Stage>().map { it.stage }
+        assertEquals(
+            listOf(RagStage.SEARCHING, RagStage.PLANNING, RagStage.SEARCHING, RagStage.THINKING, RagStage.ANSWERING),
+            stages,
+        )
     }
 
     @Test

@@ -104,6 +104,20 @@ Measurements are in `docs/PERFORMANCE.md`. The decisions:
 | Prefix caching | The bridge remembers the tokens in the context and reprocesses only what differs from the previous prompt | The system prompt is identical for every question. Saves most of the planner's prompt and 18% of the answerer's |
 | Device-specific values | Only `low.json` uses pinning, with values measured on the Redmi | Core layouts differ between phones; `high.json` waits for measurements on a 12 GB device |
 
+## Shorter sources and an instant preview (2026-10-03)
+
+Reading the prompt is most of the wait for an answer, so the prompt was made shorter and the wait was given something to show.
+
+- **Sentence-level compression** (`rag/SourceCompressor.kt`). Instead of two or three whole passages, the answerer gets the sentences that bear on the question, taken from up to six passages (two per article), within `retrieval_budget_tokens` (now 450 in both profiles; it was 800 and 1000). Sentences are copied, never rewritten, so a citation still points at text that is in the source; gaps are marked with "…". The sources panel shows the excerpt and then the full passage.
+- **How a sentence is scored.** Question words the article's title already covers pick the article; the other words pick the sentence. An article's opening sentence, better-ranked passages and shorter sentences are preferred. Leftover budget goes to the sentence after a chosen one. Wikipedia editing notes (`[citation needed]`), run-on lists over 400 characters and reference-list fragments are skipped.
+- **Token budget by estimate.** Sentences are sized at four characters per token, not with the tokenizer, so compression does not depend on the inference engine. The true prompt size is still logged per answer (`prompt_tokens`), together with `source_chars` and `source_chars_full`.
+- **Instant preview.** The pipeline now searches with the question itself before the planner runs and emits `RagEvent.Preview`: a short excerpt of the best hit, labelled "Found in …", shown in the answer bubble until the model's first word arrives. Stage order is now search, plan, search again if the planner added queries, think, answer.
+- `compress_sources: false` in a profile restores whole passages.
+
+Measured on the PC against the full index (`docs/measurements/2026-10-03-compression-450.md`, 50 evaluation questions, sizes estimated at four characters per token): the median source text falls from 755 to 428 tokens (largest 441), and the median number of passages drawn on rises from 2 to 5.
+
+Not measured: the effect on time to first word and on answer quality on a phone. Known weakness, visible in that file: where retrieval returns an off-topic article (for example "Guinea Pig Club" for a question about treating burns), compression now passes on a few sentences from it, and leftovers of "External links" sections still slip through. Dropping those sections belongs in the data pipeline.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

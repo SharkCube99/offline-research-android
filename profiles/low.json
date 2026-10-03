@@ -16,7 +16,9 @@
   "top_k": 20,
   "top_p": 0.8,
   "presence_penalty": 1.5,
-  "retrieval_budget_tokens": 800,
+  "retrieval_budget_tokens": 450,
+  "compress_sources": true,
+  "source_passages": 6,
   "planner": {
     "model_file": "Qwen3-1.7B-Q8_0.gguf",
     "context_size": 1024
