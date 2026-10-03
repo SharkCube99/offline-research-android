@@ -26,6 +26,13 @@ The app's own source code is released under the MIT licence (see `LICENSE`).
 
 llama.cpp bundles a few third-party sources of its own under `third_party/llama.cpp/vendor/`. Only the core library (`llama`, `ggml`) is built into this app; `LLAMA_BUILD_COMMON` is off. The vendored components that actually end up in the APK will be audited before release (M6).
 
+## Benchmark material
+
+| Item | Licence | Source |
+|---|---|---|
+| `bench/vitalik61/questions.jsonl` | MIT (`bench/vitalik61/LICENSE-boar-questions.txt`) | Evaluation set v2 of <https://github.com/rferrari/boar-app>, as copied in <https://github.com/Phineas1500/AndroidLM> (`eval/questions_vitalik.jsonl`, commit `0edb11f`) |
+| `bench/vitalik61/reference_answers.jsonl` | Apache-2.0 | <https://github.com/Phineas1500/AndroidLM> (`eval/answers_web_vitalik.jsonl`, commit `0edb11f`) |
+
 ## Models
 
 Models are not stored in this repository or in the APK. They are pushed to the phone with `scripts/setup.sh`.
