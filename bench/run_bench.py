@@ -62,9 +62,15 @@ class Phone:
     def shell(self, command, timeout=120):
         return self.adb("shell", command, timeout=timeout)
 
+    def connected(self):
+        return "device" in self.adb("get-state")
+
     def log_lines(self):
-        text = self.shell(f"wc -l < {LOG} 2>/dev/null").strip()
-        return int(text) if text.isdigit() else 0
+        """Lines in the app's metrics log, or None if the phone did not answer."""
+        text = self.shell(f"wc -l < {LOG} 2>/dev/null; echo ok").split()
+        if not text or text[-1] != "ok":
+            return None
+        return int(text[0]) if text[0].isdigit() else 0
 
     def last_record(self):
         return json.loads(self.shell(f"tail -n 1 {LOG}"))
@@ -86,6 +92,13 @@ class Phone:
         self.shell(f'am start -n {ACTIVITY} --es profile {profile} --es ask "$(cat {REMOTE_QUESTION})"')
 
 
+def keep_awake():
+    """Asks Windows not to sleep while the run lasts; a sleeping computer stalls it."""
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001 | 0x00000040)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--questions", type=Path, required=True)
@@ -102,28 +115,41 @@ def main():
         done = {json.loads(line)["id"] for line in args.out.read_text(encoding="utf-8").splitlines() if line.strip()}
     todo = [q for q in questions if q["id"] not in done][: args.limit]
     phone = Phone(args.serial)
-    if "device" not in phone.adb("get-state"):
+    if not phone.connected():
         sys.exit("no phone connected")
+    keep_awake()
     print(f"{len(done)} answered already, {len(todo)} to ask, profile {args.profile}", flush=True)
 
     for number, question in enumerate(todo, 1):
         before = phone.log_lines()
+        while before is None:  # the phone is not answering; wait for it instead of guessing
+            time.sleep(10)
+            before = phone.log_lines()
         started = time.time()
         phone.ask(question["q"], args.profile)
         status, record = "timeout", None
         seen_running = False
         while time.time() - started < args.timeout:
             time.sleep(5)
-            if phone.log_lines() > before:
+            lines = phone.log_lines()
+            if lines is None:
+                continue
+            if lines > before:
                 record = phone.last_record()
                 # Guard against a line from some other question.
                 status = "ok" if record.get("rag", {}).get("question", "").strip() == question["q"].strip() else "mismatch"
                 break
             alive = phone.running()
             seen_running = seen_running or alive
-            if seen_running and not alive:
-                status = "died"
-                break
+            # "Not running" counts only while the phone is answering, and the log is
+            # read once more first: the app may have finished and been stopped since.
+            if seen_running and not alive and phone.connected():
+                lines = phone.log_lines()
+                if lines is not None and lines > before:
+                    continue
+                if lines is not None and not phone.running():
+                    status = "died"
+                    break
         rag = (record or {}).get("rag", {})
         row = {
             "id": question["id"],

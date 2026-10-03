@@ -1,0 +1,2 @@
+airplane mode seen on at 17:11:44 after 9 answers
+PC slept 17:58-18:39 (Kernel-Power 506/507); cry-008 and cry-009 rows dropped and re-asked; a partly asked cry-010 was interrupted by the restart at 18:40:45
