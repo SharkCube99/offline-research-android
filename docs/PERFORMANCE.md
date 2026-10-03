@@ -251,3 +251,14 @@ Changes: the opening passage of the article the question names is always offered
 | | Sources cited | [1] | [1] |
 
 Writing speed is unchanged (2.9 and 3.2 tok/s in both runs). The wait for the first word fell by 44% and 40%. The second question's search took 10.1 s against 7.6 s the day before; search time on this phone varies with what is in the page cache.
+
+## Signed release APK on the Android emulator (2026-10-03)
+
+The released `offline-research-0.6.0.apk` (v0.6.0, SHA-256 `a81ff0e0…e91d`) was installed on a Pixel 8 emulator image (Android 17 preview, API 37, x86_64 with ARM translation, 16 KB memory pages, 4 GB RAM) as a check that the signed build installs, starts and answers. Record: `docs/measurements/2026-10-03-release-apk-emulator.jsonl`; screen: `screens/2026-10-03-release-emulator-2.png`.
+
+- Installed without error, started, and chose the low profile by itself ("auto, 4.1 GB RAM").
+- With a test profile (Qwen3-1.7B as the answerer, keyword search, Wikivoyage index only, 96-token cap) it loaded the model through the JNI bridge, searched, and wrote an answer from three Wikivoyage sources.
+- The answer has no citation markers. That is the 1.7B model standing in as answerer, cut off at 96 tokens; it is not a configuration the app ships.
+- The timings (first word 104 s, 4.3 tok/s) are of ARM code translated on a PC and say nothing about phones.
+
+Not covered by this check: the BigMoeOnEdge engine (a separate program, and its model does not fit the emulator), and a real phone.
