@@ -91,7 +91,7 @@ If `adb push` into `Android/data` is refused on your phone, use the fallback, wh
 scripts/setup.sh --model /path/to/Qwen3-4B-Q4_K_M.gguf --index data-pipeline/work/index --internal
 ```
 
-Xiaomi, Redmi and POCO phones usually also need **Install via USB** turned on in Developer options before `adb install` works.
+Xiaomi, Redmi and POCO phones usually also need **Install via USB** turned on in Developer options before `adb install` works. The phone then shows a prompt for each new install that has to be accepted within about ten seconds; if nobody taps it, the install fails with `INSTALL_FAILED_USER_RESTRICTED`.
 
 ## Check that it is offline
 

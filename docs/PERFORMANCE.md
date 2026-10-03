@@ -262,3 +262,11 @@ The released `offline-research-0.6.0.apk` (v0.6.0, SHA-256 `a81ff0e0…e91d`) wa
 - The timings (first word 104 s, 4.3 tok/s) are of ARM code translated on a PC and say nothing about phones.
 
 Not covered by this check: the BigMoeOnEdge engine (a separate program, and its model does not fit the emulator), and a real phone.
+
+## Signed release APK on the Redmi 12 5G (2026-10-03)
+
+The released `offline-research-0.6.0.apk` replaced the debug build on the phone (the debug build had to be uninstalled first; models and index were moved aside on the phone and back). Record: `docs/measurements/2026-10-03-redmi12-release-apk.jsonl`; screen: `screens/2026-10-03-release-redmi-1.png`.
+
+- Low profile, "What causes the tides?": model loaded in 3.9 s, 547 prompt tokens read in 96.5 s, first word 113 s after asking, 47 tokens at 3.3 tok/s, one correct citation. In line with the debug build.
+- High profile: the BigMoeOnEdge engine started from the signed build and loaded the 12.3 GB model in about 26 s (log line "system info: BigMoeOnEdge, qwen35moe"). No question was asked in this check.
+- The phone asked for a tap to allow the install over USB; without it `adb install` fails with `INSTALL_FAILED_USER_RESTRICTED`.
