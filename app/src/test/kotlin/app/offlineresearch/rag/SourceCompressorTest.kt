@@ -6,6 +6,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 
 class SourceCompressorTest {
@@ -191,9 +195,15 @@ class CompressionReportTest {
         val out = System.getenv("OFFLINE_COMPRESSION_REPORT")
         assumeTrue("OFFLINE_INDEX_DIR and OFFLINE_COMPRESSION_REPORT not set", indexDir != null && out != null)
         val budget = System.getenv("OFFLINE_BUDGET")?.toInt() ?: 450
+        // One JSON object per line: "question", and optionally "queries", the
+        // searches a planner added, to replay what the app does on the phone.
         val queries = File(System.getenv("OFFLINE_QUERIES") ?: "../data-pipeline/eval/queries.jsonl").readLines()
             .filter { it.isNotBlank() }
-            .map { Regex("\"question\":\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").find(it)!!.groupValues[1].replace("\\\"", "\"") }
+            .map { line ->
+                val item = Json.parseToJsonElement(line).jsonObject
+                item.getValue("question").jsonPrimitive.content to
+                    (item["queries"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList())
+            }
 
         val files = File(indexDir!!).listFiles { f -> f.name.endsWith(".db") }!!.sortedBy { it.name }
         val indexes = files.associateTo(LinkedHashMap()) { it.name.removeSuffix(".db") to JdbcSqlDatabase(it) as SqlDatabase }
@@ -205,14 +215,16 @@ class CompressionReportTest {
             val full = mutableListOf<Int>()
             val counts = mutableListOf<Int>()
             val report = StringBuilder()
-            for (question in queries) {
-                val ranked = retriever.withLeads(question, retriever.search(question))
-                val sources = compressor.select(question, ranked)
+            for ((question, planned) in queries) {
+                val first = retriever.withLeads(question, retriever.search(question))
+                val ranked = retriever.withLeads(question, interleave(listOf(first) + planned.map { retriever.search(it, context = question) }))
+                val sources = compressor.select((listOf(question) + planned).joinToString(" "), ranked)
                 val before = whole.select(ranked)
                 compressed += sources.sumOf { roughTokens(it.excerpt) }
                 full += before.sumOf { roughTokens(it.text) }
                 counts += sources.size
                 report.append("## ").append(question).append('\n')
+                if (planned.isNotEmpty()) report.append("planner: ").append(planned.joinToString("; ")).append('\n')
                 report.append("whole passages (800 budget): ${before.size} passages from ${before.map { it.title }.distinct().size} articles, ~${full.last()} tokens; ")
                 report.append("compressed ($budget budget): ${sources.size} passages from ${sources.map { it.title }.distinct().size} articles, ~${compressed.last()} tokens\n\n")
                 sources.forEachIndexed { i, s -> report.append("[${i + 1}] ").append(s.excerpt).append("\n\n") }

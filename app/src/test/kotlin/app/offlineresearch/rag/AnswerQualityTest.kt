@@ -206,3 +206,59 @@ class StrictPackTest {
         assertTrue(places.first().named)
     }
 }
+
+class PlannerSearchTest {
+
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private lateinit var index: SqlDatabase
+    private lateinit var retriever: Retriever
+    private val question = "My hiking partner is shivering, confused and slurring words in the cold. What should I do?"
+
+    @Before
+    fun buildIndex() {
+        index = IndexFixture.build(
+            folder.newFile("wikipedia.db"),
+            listOf(
+                FixtureArticle(
+                    "Hypothermia",
+                    listOf(
+                        "Hypothermia is a body core temperature below 35 degrees.",
+                        "In mild hypothermia there is shivering and mental confusion. Move the person to shelter and warm them slowly.",
+                    ),
+                ),
+                FixtureArticle("Hiking", listOf("Hiking is a long walk in the countryside. A partner makes hiking safer.")),
+                FixtureArticle("Doppler ultrasonography", listOf("Doppler ultrasonography images the movement of blood.")),
+            ),
+        )
+        retriever = Retriever(mapOf("wikipedia" to index))
+    }
+
+    @After
+    fun closeIndex() = index.close()
+
+    @Test
+    fun aSingleWordOfALongQuestionDoesNotMakeItsArticleTheSubject() {
+        val terms = QueryBuilder.queryTerms(question)
+        assertFalse(titleIsNamed("Hiking", terms))
+        assertTrue(titleIsNamed("Tide", QueryBuilder.queryTerms("What causes the tides?")))
+        assertFalse(retriever.search(question).first { it.title == "Hiking" }.named)
+    }
+
+    @Test
+    fun anArticleThePlannerNamesIsShownByItsPassagesThatMatchTheQuestion() {
+        val found = retriever.search("Hypothermia", context = question)
+        assertEquals("Hypothermia", found.first().title)
+        assertTrue(found.first().named)
+        // The passage about shivering and confusion, not the definition that the query alone would rank first.
+        assertTrue("shivering" in found.first().text)
+    }
+
+    @Test
+    fun anArticleThePlannerMadeUpThatSharesNothingWithTheQuestionIsLeftOut() {
+        assertTrue(retriever.search("Doppler ultrasonography", context = question).none { it.named })
+        // Searched on its own, with no question behind it, the same title is found.
+        assertEquals("Doppler ultrasonography", retriever.search("Doppler ultrasonography").first().title)
+    }
+}

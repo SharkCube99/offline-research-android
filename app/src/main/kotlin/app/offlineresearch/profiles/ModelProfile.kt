@@ -70,6 +70,13 @@ data class ModelProfile(
 data class PlannerProfile(
     @SerialName("model_file") val modelFile: String,
     @SerialName("context_size") val contextSize: Int = 1024,
+    /**
+     * Switches appended to the planner's instructions. It is the planner's own:
+     * the answerer's prompt_suffix says nothing about a different model. The
+     * default turns off the Qwen3 planner's thinking, without which it spends
+     * its few tokens on thoughts and returns no searches.
+     */
+    @SerialName("prompt_suffix") val promptSuffix: String = "/no_think",
 )
 
 /** The active profile and a short note on why it was picked, for the status line. */

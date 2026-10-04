@@ -39,10 +39,16 @@ fun sameWord(a: String, b: String): Boolean {
 
 /**
  * True when the question names this article: every content word of the title
- * is one of the question's words. "Tide" is on topic for "What causes the
- * tides?"; "Theory of tides" and "Sea kayaking" are not.
+ * is one of the question's words, and the title covers a fair share of the
+ * question. "Tide" is on topic for "What causes the tides?"; "Theory of tides"
+ * and "Sea kayaking" are not, and neither is "Hiking" for a long question
+ * about a snakebite that happens to mention a hike.
  */
 fun titleIsNamed(title: String, questionTerms: List<String>): Boolean {
     val words = tokenize(title).filter { it !in FUNCTION_WORDS }
-    return words.isNotEmpty() && words.all { word -> questionTerms.any { sameWord(it, word) } }
+    return words.isNotEmpty() && coversEnough(words.size, questionTerms.size) &&
+        words.all { word -> questionTerms.any { sameWord(it, word) } }
 }
+
+/** A name is what a question is about only if it accounts for at least a third of the question's content words. */
+fun coversEnough(nameWords: Int, questionTerms: Int): Boolean = nameWords * 3 >= questionTerms

@@ -86,8 +86,11 @@ class RagPipeline(
         if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
         val secondStart = System.currentTimeMillis()
         val (retrieved, sources) = withContext(Dispatchers.IO) {
-            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { retriever.search(it) }))
-            ranked.size to selector.select(question, ranked)
+            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { retriever.search(it, context = question) }))
+            // Sentences are chosen by the question's words and the planner's: a
+            // question about a child and boiling water never says "burn", but the
+            // planner's "Burn treatment" does, and that is the word the answer uses.
+            ranked.size to selector.select(queries.joinToString(" "), ranked)
         }
         searchMs += System.currentTimeMillis() - secondStart
         emit(RagEvent.Sources(sources))

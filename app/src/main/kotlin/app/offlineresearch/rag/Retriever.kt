@@ -57,15 +57,30 @@ class Retriever(
 
     private data class Named(val nameLength: Int, val score: Double, val corpus: String, val ids: List<Long>)
 
-    /** Top [k] passages for [question], at most [perArticle] from one article. */
-    fun search(question: String, k: Int = DEFAULT_K, perArticle: Int = 2, candidates: Int = 20): List<Passage> {
+    /**
+     * Top [k] passages for [question], at most [perArticle] from one article.
+     *
+     * [context] is the user's question when [question] is a search the planner
+     * wrote. An article the planner names is then represented by its passages
+     * that match the user's words, and is left out if none does: "Hypothermia"
+     * for someone shivering and confused stays, a title the planner made up
+     * that has nothing to do with the question goes.
+     */
+    fun search(
+        question: String,
+        k: Int = DEFAULT_K,
+        perArticle: Int = 2,
+        candidates: Int = 20,
+        context: String? = null,
+    ): List<Passage> {
         val terms = QueryBuilder.queryTerms(question)
         if (terms.isEmpty()) return emptyList()
+        val contextTerms = context?.let { QueryBuilder.queryTerms(it) }?.ifEmpty { null } ?: terms
 
         val named = mutableListOf<Named>()
         val byCorpus = LinkedHashMap<String, List<Long>>()
         for ((corpus, db) in indexes) {
-            named += nameChannel(corpus, db, question, terms)
+            named += nameChannel(corpus, db, question, terms, contextTerms)
             byCorpus[corpus] = passageChannel(db, terms, candidates, relax = corpus !in strict)
         }
         named.sortWith(compareBy<Named> { -it.nameLength }.thenBy { it.score })
@@ -87,7 +102,11 @@ class Retriever(
             passageList.getOrNull(position)?.let { merged += it }
         }
 
-        val fromNames = nameList.toSet()
+        // An article counts as named by the query only if its name is a fair share of
+        // the query: the whole of a planner's "Hypothermia", not the "hiking" in a
+        // long question about something else.
+        val fromNames = named.filter { coversEnough(it.nameLength, terms.size) }
+            .flatMap { name -> name.ids.map { name.corpus to it } }.toSet()
         val results = mutableListOf<Passage>()
         val seen = HashSet<Pair<String, Long>>()
         val perSource = HashMap<String, Int>()
@@ -111,7 +130,7 @@ class Retriever(
      * history section, where "caused" appears in every sentence, over the
      * opening of "Tide", which states the answer.
      */
-    fun withLeads(question: String, ranked: List<Passage>, maxArticles: Int = 2): List<Passage> {
+    fun withLeads(question: String, ranked: List<Passage>, maxArticles: Int = 3): List<Passage> {
         val terms = QueryBuilder.queryTerms(question)
         val named = ranked.filter { it.named || titleIsNamed(it.title, terms) }.distinctBy { it.sourceKey }.take(maxArticles)
         val leads = named.mapNotNull { passage ->
@@ -123,7 +142,9 @@ class Retriever(
                 ?.copy(named = passage.named)
         }
         val leadIds = leads.map { it.passageId }.toSet()
-        return leads + ranked.filter { it.passageId !in leadIds }
+        // The named articles' openings, then their other passages, then the rest.
+        val rest = ranked.filter { it.passageId !in leadIds }
+        return leads + rest.filter { it.named } + rest.filter { !it.named }
     }
 
     /** Best first. Optionally only passages [first]..[last]. */
@@ -163,7 +184,13 @@ class Retriever(
 
     private data class Article(val id: Long, val first: Long, val count: Long)
 
-    private fun nameChannel(corpus: String, db: SqlDatabase, question: String, terms: List<String>): List<Named> {
+    private fun nameChannel(
+        corpus: String,
+        db: SqlDatabase,
+        question: String,
+        terms: List<String>,
+        contextTerms: List<String> = terms,
+    ): List<Named> {
         val claimed = HashSet<Int>() // word positions already matched by a longer name
         val articles = LinkedHashMap<Long, Pair<Int, Article>>()
         for (gram in QueryBuilder.nameGrams(question)) {
@@ -188,7 +215,7 @@ class Retriever(
             for (article in rows) articles.putIfAbsent(article.id, gram.length to article)
         }
 
-        val anyTerm = QueryBuilder.match(terms, "OR")
+        val anyTerm = QueryBuilder.match(contextTerms, "OR")
         val scored = articles.values.mapNotNull { (length, article) ->
             // The article's passages that best match the whole question.
             val best = ranked(db, anyTerm, 2, article.first, article.first + article.count - 1)

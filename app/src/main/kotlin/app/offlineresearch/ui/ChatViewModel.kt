@@ -214,7 +214,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
         val planner: QueryPlanner = if (active.planner != null && plannerFile != null) {
             plannerEngine.load(plannerFile.absolutePath, config(active.planner.contextSize))
-            LlmPlanner(plannerEngine, active.promptSuffix)
+            LlmPlanner(plannerEngine, active.planner.promptSuffix)
         } else {
             if (active.planner != null) Log.w(MetricsLog.TAG, "planner model ${active.planner.modelFile} not found; using keywords")
             KeywordPlanner

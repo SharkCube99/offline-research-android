@@ -157,6 +157,20 @@ Limits: only eating places tagged vegan or vegetarian are included (places that 
 
 Not measured: answers from these packs on a phone, and their effect on the benchmark.
 
+## Search fixes after the 35B benchmark (2026-10-04, version 0.7.3)
+
+The 35B model declined questions the 4B model had half-answered from memory, which showed how poor the sources for them were.
+
+- **The planner had been silent on the high profile.** It took the answerer's `prompt_suffix`, which is empty there, so the Qwen3 planner was not told `/no_think` and returned no searches. The planner now has its own `prompt_suffix` (default `/no_think`). A unit test checks the shipped profiles.
+- **A word of the question is not its subject.** "Hiking", "Snake" and "Boiling" were treated as the articles the question names, because each title's words all occur in the question, and their openings took the place of "Snakebite" or "Burn". A title, or a name found in the question, now counts only if it accounts for at least a third of the question's content words.
+- **Planner-named articles are shown by what matches the question.** When the planner proposes "Hypothermia", the passages taken from that article are those that best match the user's words (shivering, confused), and an article with no passage matching any of them is dropped, which removes titles the planner made up.
+- **The planner's words help choose sentences.** Sentence selection uses the question's words and the planner's searches together: a question about a child and boiling water never says "burn".
+- **Order of sources:** openings of up to three named articles, then their other passages, then the rest.
+
+Checked on the PC by replaying the 61 benchmark questions with the searches the planner produced in the 4B run (`CompressionReportTest` with `OFFLINE_QUERIES`): the sources for the five emergency questions are now led by "Snakebite", "Hypothermia", "Burn" and "First aid", "Earthquake safety" and "Earthquake preparedness", and "Water purification". Retrieval evaluation unchanged (46/50, 24/25); the Kotlin search still matches the Python reference on all 50.
+
+Not measured: the effect on answers and on the benchmark score.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

@@ -58,6 +58,16 @@ class ModelProfileTest {
     }
 
     @Test
+    fun thePlannerKeepsItsOwnPromptSwitchWhateverTheAnswererUses() {
+        // The high profile's answerer takes no suffix; the Qwen3 planner still needs its thinking turned off.
+        val high = shipped("high.json")
+        assertEquals("", high.promptSuffix)
+        for (name in listOf("low.json", "high.json", "high-llama.json")) {
+            assertEquals(name, "/no_think", shipped(name).planner!!.promptSuffix)
+        }
+    }
+
+    @Test
     fun optionalFieldsHaveDefaultsAndUnknownKeysAreIgnored() {
         val profile = ModelProfile.parse(
             """{"name":"t","model_file":"m.gguf","n_ctx":2048,"n_batch":256,"max_tokens":128,
