@@ -2,6 +2,37 @@
 
 How the app's answers compare with a frontier model that has internet search. Method, files and commands: `bench/README.md`. Every number here comes from the files under `bench/vitalik61/`.
 
+## Summary
+
+| Run | Build | Model | Sources | App as share of reference |
+|---|---|---|---|---|
+| 2026-10-03 | 0.6.0 | Qwen3-4B | Wikipedia, Wikivoyage | 26% |
+| 2026-10-04 | 0.7.0 | Qwen3-4B | plus the Ethereum and places packs | 34% |
+
+The bounty's bar is more than 50%. Neither run meets it. The configuration meant for a 12 GB phone, the 35B model, has not been benchmarked.
+
+The two runs were graded on different days by different grader instances. Shares from different graders can differ by 10 points or more, so the 8-point difference overall is suggestive, not proof; the larger changes in the two groups the packs target (restaurants 14% to 31%, crypto 27% to 40%) go with a fall in flat refusals from 17 to 7.
+
+## Low profile with the Ethereum and places packs, 2026-10-04
+
+| Group | n | App (mean /10) | Reference | App as share of reference | Preferred app / reference / tie | Errors app / reference | Not answered | First word (median) | Done (median) |
+|---|---|---|---|---|---|---|---|---|---|
+| Restaurants | 20 | 2.70 | 8.75 | **31%** | 0 / 20 / 0 | 6 / 5 | 0 | 139 s | 184 s |
+| Crypto | 20 | 4.00 | 9.97 | **40%** | 0 / 20 / 0 | 4 / 0 | 0 | 127 s | 177 s |
+| Travel | 10 | 2.50 | 9.40 | **27%** | 0 / 10 / 0 | 3 / 1 | 0 | 133 s | 171 s |
+| Emergencies | 5 | 3.40 | 9.50 | **36%** | 0 / 5 / 0 | 1 / 0 | 0 | 132 s | 174 s |
+| Arithmetic | 6 | 3.75 | 10.00 | **38%** | 0 / 6 / 0 | 9 / 0 | 0 | 159 s | 214 s |
+| All | 61 | 3.25 | 9.44 | **34%** | 0 / 61 / 0 | 23 / 6 | 0 | 136 s | 179 s |
+
+- Same questions, reference, phone, model and grading method as the first run below; build 0.7.0 with `ethereum.db` and `places.db` on the phone; airplane mode on throughout; all 61 answered. Files: `bench/vitalik61/answers_redmi12_low_v070.jsonl` and `bench/vitalik61/grading_redmi12_low_v070/`.
+- **Refusals fell from 17 to 7:** the three "city I am currently in" questions (the app has no location), two crypto questions (ML-DSA against SLH-DSA; finality in proof of stake) and two travel questions (Thailand's emergency numbers, which the first run answered poorly; Lisbon airport transport).
+- **Per question against the first run:** the app scored higher on 28, lower on 9 and about the same on 24.
+- **Restaurants (31%).** Real places with addresses are now named for 17 of 20 questions. They still lose heavily: the 4B model names three to seven places and says little about them, where the reference describes ten. Six verified errors come from the map data and how the list is built: a Starbucks tagged as fully vegan in Buenos Aires; vegetarian or ordinary restaurants presented as vegan (Singapore, Istanbul); two closed places in Bangkok.
+- **Crypto (40%).** Answers on individual proposals now draw on the proposal texts. One answer got worse and is wrong: it says Ethereum's consensus layer does not use BLS signatures (0.5 points).
+- **Travel (27%), emergencies (36%), arithmetic (38%)** did not improve; the packs do not touch them. Arithmetic is still wrong in three of six (nine verified errors), and the Thai "thank you" answer is wrong in three ways.
+- **Errors:** 23 verified for the app against 6 for the reference (19 against 6 in the first run). Fewer refusals mean more statements, and a 4B model makes mistakes in them.
+- The reference was preferred on all 61 questions again.
+
 ## Low profile (Qwen3-4B) on the Redmi 12 5G, 2026-10-03
 
 **The app reaches 26% of the reference. The bounty's bar is more than 50%. This configuration does not meet it.**

@@ -1,0 +1,246 @@
+{
+ "cry-001": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-002": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-003": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-004": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-005": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-006": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-007": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-008": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-009": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-010": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-011": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-012": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-013": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-014": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-015": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-016": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-017": {
+  "A": "reference",
+  "B": "app"
+ },
+ "cry-018": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-019": {
+  "A": "app",
+  "B": "reference"
+ },
+ "cry-020": {
+  "A": "app",
+  "B": "reference"
+ },
+ "dng-001": {
+  "A": "app",
+  "B": "reference"
+ },
+ "dng-002": {
+  "A": "app",
+  "B": "reference"
+ },
+ "dng-003": {
+  "A": "reference",
+  "B": "app"
+ },
+ "dng-004": {
+  "A": "reference",
+  "B": "app"
+ },
+ "dng-005": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-001": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-002": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-003": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-004": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-005": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-006": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-007": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-008": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-009": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-010": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-011": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-012": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-013": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-014": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-015": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-016": {
+  "A": "app",
+  "B": "reference"
+ },
+ "food-017": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-018": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-019": {
+  "A": "reference",
+  "B": "app"
+ },
+ "food-020": {
+  "A": "reference",
+  "B": "app"
+ },
+ "mth-001": {
+  "A": "app",
+  "B": "reference"
+ },
+ "mth-002": {
+  "A": "reference",
+  "B": "app"
+ },
+ "mth-003": {
+  "A": "reference",
+  "B": "app"
+ },
+ "mth-004": {
+  "A": "reference",
+  "B": "app"
+ },
+ "mth-005": {
+  "A": "reference",
+  "B": "app"
+ },
+ "mth-006": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-001": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-002": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-003": {
+  "A": "app",
+  "B": "reference"
+ },
+ "trv-004": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-005": {
+  "A": "app",
+  "B": "reference"
+ },
+ "trv-006": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-007": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-008": {
+  "A": "reference",
+  "B": "app"
+ },
+ "trv-009": {
+  "A": "app",
+  "B": "reference"
+ },
+ "trv-010": {
+  "A": "app",
+  "B": "reference"
+ }
+}

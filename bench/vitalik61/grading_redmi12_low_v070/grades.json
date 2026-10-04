@@ -1,0 +1,843 @@
+[
+ {
+  "id": "food-001",
+  "A": {
+   "score": 3,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives three bare names with no area or address (only 1990 Vegan Living could be confirmed), while B gives ten places with addresses and the first four checked out as real, open and vegan."
+ },
+ {
+  "id": "food-002",
+  "A": {
+   "score": 3.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A lists seven names without addresses or descriptions (Jardim das Cerejas and Vegana Burgers have conflicting closure reports), while B gives verified places with addresses and what to order."
+ },
+ {
+  "id": "food-003",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 5,
+   "errors": [
+    "Starbucks is listed as a fully vegan restaurant; it is an ordinary coffee chain, not vegan"
+   ]
+  },
+  "preferred": "A",
+  "note": "A's places and addresses checked out and come with useful descriptions; B gives real places with correct addresses (La Reverde, Let it V, Gordo Vegano, Veganius) but wrongly includes Starbucks and has no descriptions."
+ },
+ {
+  "id": "food-004",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 3,
+   "errors": [
+    "Komala Vilas and Original Sin are vegetarian, and Sandwich Saigon is a general Vietnamese restaurant; they are presented among 'vegan restaurants'"
+   ]
+  },
+  "preferred": "A",
+  "note": "A's Whole Earth, Herbivore, Yi Xin, The Kind Bowl and Genesis all verified with correct addresses; B gives names only, mixes vegan and non-vegan places, and ends by saying it is not covered."
+ },
+ {
+  "id": "food-005",
+  "A": {
+   "score": 3.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A names eight real vegan places but with no location or detail, while B gives the same core places plus addresses and descriptions that verified."
+ },
+ {
+  "id": "food-006",
+  "A": {
+   "score": 3,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A lists names only (Falafel Brothers and Vegan Bistro Jangara confirmed, others not checkable), while B's T's Tantan, Saido, Vegan Gyoza Yu and Masaka all verified with correct locations."
+ },
+ {
+  "id": "food-007",
+  "A": {
+   "score": 3,
+   "errors": [
+    "Goodsouls Kitchen's Bangkok branch is listed as closed on HappyCow",
+    "The Vegan Table in Bangkok was reported closed in July 2024"
+   ]
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives bare names, two of which are closed, though it does warn about closures; B's Vegan Mahanakhon, Vegan Pranakhon, Kem-Kon and May Veggie Home verified with addresses."
+ },
+ {
+  "id": "food-008",
+  "A": {
+   "score": 3,
+   "errors": [
+    "Byzantion Bistro & Restaurant is an ordinary restaurant with vegan options, not a vegan restaurant",
+    "Cantinery is an ordinary restaurant with vegetarian options, not a vegan restaurant"
+   ]
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives names only and includes two non-vegan restaurants, while B's first four places verified with correct addresses and useful descriptions."
+ },
+ {
+  "id": "food-009",
+  "A": {
+   "score": 3,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A offers four names with no addresses, while B's Por Siempre Vegana, Gatorta, VEGuerrero, Malportaco and Gracias Madre verified with addresses and it openly flags an address uncertainty."
+ },
+ {
+  "id": "food-010",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 2.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A's Yang Shin, Laixin and Mukuchi verified with correct addresses and good detail; B names only Loving Hut and Uncle Q (both real) with no location."
+ },
+ {
+  "id": "food-011",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 3,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A's first four Korean vegan places verified with areas and what to order; B lists eight names, several in Korean script only, with no areas or detail."
+ },
+ {
+  "id": "food-012",
+  "A": {
+   "score": 1,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A names no restaurant at all, while B's Shromáždiště, Palo Verde, Linh and Dosa Dosa verified with correct addresses."
+ },
+ {
+  "id": "food-013",
+  "A": {
+   "score": 4,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A names seven real places but mostly in Georgian script with one address and little detail; B gives verified places with addresses plus dishes to order anywhere (its Daner Pizza address differs from one other source)."
+ },
+ {
+  "id": "food-014",
+  "A": {
+   "score": 8.5,
+   "errors": []
+  },
+  "B": {
+   "score": 3.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A's shojin and casual places verified with locations and a useful dashi warning, while B gives eight plausible names with no locations or descriptions."
+ },
+ {
+  "id": "food-015",
+  "A": {
+   "score": 8,
+   "errors": [
+    "Verdeo is listed as closed on HappyCow (reported closed June 2021), but the answer presents it as a long-running open restaurant"
+   ]
+  },
+  "B": {
+   "score": 3,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A's Helecho, Coraje, Paloma and Real Vegetal verified, with one closed place included; B gives five names with only partial street references."
+ },
+ {
+  "id": "food-016",
+  "A": {
+   "score": 3,
+   "errors": []
+  },
+  "B": {
+   "score": 8,
+   "errors": [
+    "Grumpy & Runt ceased trading (last day 2 March 2025) but is described as currently operating"
+   ]
+  },
+  "preferred": "B",
+  "note": "A names one fully vegan place and several ordinary restaurants with vegan options and no addresses; B's Plant Cafe, The Conscious Kitchen, Romeo and Vero and Sunshine Food verified, with one closed place."
+ },
+ {
+  "id": "food-017",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A answers in Portuguese with verified places and addresses (Banana Verde, Camélia Òdòdó, Sushimar, Pop Vegan Food, Salad Days), while B names nothing."
+ },
+ {
+  "id": "food-018",
+  "A": {
+   "score": 8.5,
+   "errors": [
+    "Rasoterra closed permanently in early May 2026 but is presented as open"
+   ]
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A identifies the city and gives nearby vegan places with addresses and walking times, one of which has closed; B only says it is not covered."
+ },
+ {
+  "id": "food-019",
+  "A": {
+   "score": 9,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A identifies Central Hong Kong and its Root Vegan, Veggie4Love, Treehouse and Yuan all verified at the stated locations; B only says it is not covered."
+ },
+ {
+  "id": "food-020",
+  "A": {
+   "score": 7,
+   "errors": [
+    "Bang Up to the Elephant closed permanently (last service 5 August 2026)",
+    "Wellness Sushi on E Colfax has closed permanently"
+   ]
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A locates the asker in downtown Denver and gives verified staples (City O' City, WaterCourse, Somebody People) but two of its ten places are closed; B only says it is not covered."
+ },
+ {
+  "id": "cry-001",
+  "A": {
+   "score": 1,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A names only ECDSA and says the question is not covered; B lists the standardized post-quantum schemes, the candidates and the non-resistant schemes, and its dated claims checked out."
+ },
+ {
+  "id": "cry-002",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives the lattice versus hash basis, exact sizes, speed and use cases correctly; B only says it is not covered."
+ },
+ {
+  "id": "cry-003",
+  "A": {
+   "score": 4,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly explains the RSA half through Shor but admits it cannot explain why SHA-256 survives; B explains both halves (Shor versus Grover) with verified resource estimates."
+ },
+ {
+  "id": "cry-004",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 4,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A fully explains blobs, KZG, the blob gas market, pruning and later capacity changes; B correctly identifies the EIP and blobs but gives almost no detail on what they are for."
+ },
+ {
+  "id": "cry-005",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A explains Gasper, justification and finalization, timing, slashing and the inactivity leak correctly; B only says it is not covered."
+ },
+ {
+  "id": "cry-006",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives fraud proofs versus validity proofs, the 7-day window, trust assumptions and examples; B gets the core distinction right but is thin and loosely worded on data posting."
+ },
+ {
+  "id": "cry-007",
+  "A": {
+   "score": 4,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives a vague but correct description without naming UserOperations, bundlers, EntryPoint or paymasters; B covers all components plus EIP-7702 and the native account abstraction plans."
+ },
+ {
+  "id": "cry-008",
+  "A": {
+   "score": 0.5,
+   "errors": [
+    "Says Ethereum's consensus layer does not use BLS signatures; it does (validator attestations and blocks are signed with BLS12-381)",
+    "Calls the proof-of-stake mechanism 'The Merge'; the Merge was the transition event, not the consensus mechanism"
+   ]
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A's one-line definition is right but it then wrongly denies the premise of the question, which misleads; B explains the scheme, aggregation and the consensus uses correctly."
+ },
+ {
+  "id": "cry-009",
+  "A": {
+   "score": 4.5,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly gives the trusted-setup difference and STARK scaling but omits proof size and quantum security; B covers setup, cryptography, sizes, verification cost and hybrid practice."
+ },
+ {
+  "id": "cry-010",
+  "A": {
+   "score": 4.5,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives short, roughly correct definitions of both terms with no sources of MEV or how PBS runs today; B covers MEV types, MEV-Boost, and the verified current ePBS status."
+ },
+ {
+  "id": "cry-011",
+  "A": {
+   "score": 6,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly says the base fee is burned and adjusts around the gas target but omits the tip and the 12.5% bound; B gives the full mechanism with the formula."
+ },
+ {
+  "id": "cry-012",
+  "A": {
+   "score": 6,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly names cross-chain replay and the chain ID in the signed hash but is repetitive and lacks the v formula; B gives the history, the nine-field hash, the v encoding and limits."
+ },
+ {
+  "id": "cry-013",
+  "A": {
+   "score": 3.5,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A states only that a new transaction type sets code on the account, without saying what that enables; B explains the 0x04 type, authorization tuples, the delegation indicator, uses and caveats."
+ },
+ {
+  "id": "cry-014",
+  "A": {
+   "score": 2,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A says the maximum is raised and the minimum stays 32 ETH but cannot give the number asked for; B gives 2,048 ETH with correct context."
+ },
+ {
+  "id": "cry-015",
+  "A": {
+   "score": 5,
+   "errors": [
+    "Refers to 'withdrawal transactions'; under EIP-4895 withdrawals are operations in the execution payload, explicitly not transactions"
+   ]
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gets the push-as-operation idea right but then contradicts itself by calling them transactions and omits no-gas and cannot-fail; B describes the sweep, the payload list and the balance credit accurately."
+ },
+ {
+  "id": "cry-016",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 6,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives the fungible versus unique-tokenId distinction with interfaces, uses and a comparison table; B states the core distinction correctly but nothing more."
+ },
+ {
+  "id": "cry-017",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 6,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A clearly explains tokenized vaults, shares, the interface, uses and pitfalls; B identifies the tokenized yield-bearing vault standard correctly but is wordy and never explains shares."
+ },
+ {
+  "id": "cry-018",
+  "A": {
+   "score": 6.5,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly answers no and that it is a key-encapsulation mechanism for establishing a shared secret, but omits FIPS 203, Kyber and the actual signature standards; B covers all of that plus deployment."
+ },
+ {
+  "id": "cry-019",
+  "A": {
+   "score": 4.5,
+   "errors": []
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A correctly says state tracks used one-time keys that must not be reused but does not say what happens on reuse or how the schemes work; B explains the Merkle construction, the forgery risk, operational pitfalls and SP 800-208."
+ },
+ {
+  "id": "cry-020",
+  "A": {
+   "score": 5,
+   "errors": [
+    "States as fact that the beacon-chain part of client software went offline before the terminal total difficulty was reached and stayed offline; this is a hypothetical scenario discussed in EIP-3675, not something that happened at the Merge"
+   ]
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gets the proof-of-work to proof-of-stake switch and date right but is vague and includes a garbled claim about clients going offline; B gives the TTD, header changes, reward removal and what did not change."
+ },
+ {
+  "id": "dng-001",
+  "A": {
+   "score": 3.5,
+   "errors": [
+    "Presents pressure bandaging as general snakebite first aid; it is recommended for Australian and some other neurotoxic elapid bites but advised against for viper/pit-viper bites, where it worsens local tissue damage"
+   ]
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "B gives the full, correct do/don't list with the regional pressure-bandage caveat and an evacuation plan; A is brief, gives one technique without the caveat and omits every 'do not'."
+ },
+ {
+  "id": "dng-002",
+  "A": {
+   "score": 5.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A names hypothermia and gives the basic shelter/dry clothes/warm drink steps but misses core-first warming, gentle handling, the swallow caveat and calling for help now; B covers all of it correctly."
+ },
+ {
+  "id": "dng-003",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 5.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A matches recognised burn guidance (20 minutes cool running water, cling film, no ice or creams, always get a child checked); B is safe but short, gives a shorter cooling time and does not say a child's scald should be seen."
+ },
+ {
+  "id": "dng-004",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives correct Drop-Cover-Hold-On guidance plus aftershock, evacuation and tsunami steps; B only says the question is not covered."
+ },
+ {
+  "id": "dng-005",
+  "A": {
+   "score": 1.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "B gives correct boiling times and bleach doses with the chemical-contamination limit; A says purification exists but gives no method the asker could use."
+ },
+ {
+  "id": "mth-001",
+  "A": {
+   "score": 0.5,
+   "errors": [
+    "States 7.5 L/100 km is about 1764 mpg (multiplied by 235.2 instead of dividing); the correct value is 31.36 mpg US",
+    "States 1 L/100 km is a fixed conversion factor to multiply by, which is the wrong relationship (mpg = 235.21 / L per 100 km)"
+   ]
+  },
+  "B": {
+   "score": 10,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "B computes 31.36 mpg correctly with working; A gives an absurd 1764 mpg and then says it is not covered."
+ },
+ {
+  "id": "mth-002",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": [
+    "States Naismith's rule adds half an hour per 100 m of ascent; the rule is 1 hour per 600 m (half an hour per 300 m)",
+    "Computes 18 km / 5 km/h as 3 hours; it is 3.6 hours",
+    "Gives a total of 9 hours; the correct Naismith estimate is about 5.6 hours"
+   ]
+  },
+  "preferred": "A",
+  "note": "A applies the rule correctly (3.6 h + 2 h = 5.6 h) with sensible caveats; B misstates the rule and the arithmetic and lands on 9 hours."
+ },
+ {
+  "id": "mth-003",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 2.5,
+   "errors": [
+    "Adds 1 US dollar to the bill (67.12 + 1 = 68.12), misreading the exchange rate as an extra charge",
+    "Gives the total with tip as 74.93 USD; the correct total is 73.84 USD"
+   ]
+  },
+  "preferred": "A",
+  "note": "A gets 67.12 and 73.84 USD exactly; B converts the bill correctly but then adds a spurious dollar and gives a wrong total."
+ },
+ {
+  "id": "mth-004",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 8.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "Both give 18 L and 18 kg correctly; A adds useful practical notes while B is correct but cluttered with confusing remarks about its sources."
+ },
+ {
+  "id": "mth-005",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 5,
+   "errors": [
+    "Gives the airline limit as about 10,000 mAh; the actual limit is 100 Wh (roughly 27,000 mAh at 3.7 V) without approval, and it omits that power banks are carry-on only"
+   ]
+  },
+  "preferred": "A",
+  "note": "Both compute 19.25 Wh; A states the correct 100 Wh / carry-on-only rules, while B is vague, cites a wrong threshold and never says cabin baggage only."
+ },
+ {
+  "id": "mth-006",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 5,
+   "errors": [
+    "Calls 40 C 'the threshold for heat stroke' as if air temperature; that figure is the core body temperature criterion for heat stroke, not an outdoor-temperature threshold"
+   ]
+  },
+  "preferred": "A",
+  "note": "Both give 40 C and say it is risky; A explains the risk correctly with practical precautions, B is terse, confuses body and air temperature and contradicts itself about its sources."
+ },
+ {
+  "id": "trv-001",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A lists 191, 1669, 199 and 1155 correctly with useful tips; B only says it is not covered."
+ },
+ {
+  "id": "trv-002",
+  "A": {
+   "score": 8.5,
+   "errors": [
+    "Lists Salvador among the mostly 220 V cities; Salvador (Bahia) is 127 V"
+   ]
+  },
+  "B": {
+   "score": 1.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives Type N/C, 127/220 V by location and 60 Hz with good device advice but puts Salvador in the wrong voltage group; B only notes that voltage varies and gives no plug type."
+ },
+ {
+  "id": "trv-003",
+  "A": {
+   "score": 1.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "B answers plainly (no, use bottled or garrafon water) with correct practical detail; A does not answer the question."
+ },
+ {
+  "id": "trv-004",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A's metro details (red line, 1.90 EUR single, 0.50 EUR card, 1.72 EUR zapping), the discontinued Aerobus and the P2 ride-hailing pickup all check out; B only says it is not covered."
+ },
+ {
+  "id": "trv-005",
+  "A": {
+   "score": 4.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A gives the currency correctly but cannot answer the card question; B answers both parts correctly and says when to carry cash."
+ },
+ {
+  "id": "trv-006",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 4.5,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "Both say left; A explains the IDP, motorcycle-category and insurance points, while B gives no document requirements and contradicts itself on whether the second part is covered."
+ },
+ {
+  "id": "trv-007",
+  "A": {
+   "score": 10,
+   "errors": []
+  },
+  "B": {
+   "score": 1.5,
+   "errors": [
+    "Romanises the Thai for thank you as 'khrap khaen'; it is 'khop khun'",
+    "Says the particles khrap/kha are not used when saying thank you; they are normally added (khop khun khrap / khop khun kha)",
+    "Says the phrase does not change with the speaker's gender; the polite particle differs for male and female speakers"
+   ]
+  },
+  "preferred": "A",
+  "note": "A gives the correct phrase and the speaker-gender particles; B gets the pronunciation and the gender answer wrong, which would mislead the asker."
+ },
+ {
+  "id": "trv-008",
+  "A": {
+   "score": 9.5,
+   "errors": []
+  },
+  "B": {
+   "score": 1,
+   "errors": []
+  },
+  "preferred": "A",
+  "note": "A gives the correct cool season, burning season and rainy season with practical advice; B only says it is not covered."
+ },
+ {
+  "id": "trv-009",
+  "A": {
+   "score": 4,
+   "errors": []
+  },
+  "B": {
+   "score": 9.5,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A reaches roughly the right conclusion (not expected) only by inference from bars and then says restaurants are not covered; B gives the correct norm with usable amounts."
+ },
+ {
+  "id": "trv-010",
+  "A": {
+   "score": 4.5,
+   "errors": []
+  },
+  "B": {
+   "score": 9,
+   "errors": []
+  },
+  "preferred": "B",
+  "note": "A describes ride-hailing in general terms (upfront fares, surge pricing) without naming any Bangkok app; B names Grab and Bolt, the airport pickup point, the 50-baht taxi surcharge and timing advice, which checked out."
+ }
+]
