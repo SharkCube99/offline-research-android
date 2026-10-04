@@ -245,7 +245,9 @@ def main():
                 if some:
                     counts += f" and {len(some)} that offer {diet} dishes"
                 intro = (f"OpenStreetMap lists {counts} in {name}, {country}, as of {snapshot}. "
-                         f"The map data has no ratings, so this list cannot say which is best, and a place may have closed since.")
+                         # Worded as a note on the list, not as "cannot say which is best":
+                         # a literal-minded model took that as a reason to name no place at all.
+                         f"The list is not ranked, because the map data has no ratings, and a place may have closed since.")
                 sentences = [describe(t, diet, True) for t in full] + [describe(t, diet, False) for t in some]
                 passages = []
                 for start in range(0, len(sentences), PLACES_PER_PASSAGE):
