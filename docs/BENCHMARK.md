@@ -8,10 +8,35 @@ How the app's answers compare with a frontier model that has internet search. Me
 |---|---|---|---|---|
 | 2026-10-03 | 0.6.0 | Qwen3-4B | Wikipedia, Wikivoyage | 26% |
 | 2026-10-04 | 0.7.0 | Qwen3-4B | plus the Ethereum and places packs | 34% |
+| 2026-10-04 | 0.7.2 | Qwen3.6-35B-A3B (2-bit) | the same packs; answer rules reworded | 45% |
 
-The bounty's bar is more than 50%. Neither run meets it. The configuration meant for a 12 GB phone, the 35B model, has not been benchmarked.
+The bounty's bar is more than 50%. No run meets it yet. The 35B run is the configuration meant for a 12 GB phone; its answers were produced on the 8 GB Redmi, so its quality figures stand and its timings do not carry over.
 
 The two runs were graded on different days by different grader instances. Shares from different graders can differ by 10 points or more, so the 8-point difference overall is suggestive, not proof; the larger changes in the two groups the packs target (restaurants 14% to 31%, crypto 27% to 40%) go with a fall in flat refusals from 17 to 7.
+
+## High profile (Qwen3.6-35B-A3B, BigMoeOnEdge), 2026-10-04
+
+**The app reaches 45% of the reference: closer, and still under the bar.**
+
+| Group | n | App (mean /10) | Reference | App as share of reference | Preferred app / reference / tie | Errors app / reference | Not answered | First word (median) | Done (median) |
+|---|---|---|---|---|---|---|---|---|---|
+| Restaurants | 20 | 3.85 | 8.80 | **44%** | 0 / 20 / 0 | 20 / 8 | 0 | 209 s | 571 s |
+| Crypto | 20 | 4.85 | 9.93 | **49%** | 0 / 20 / 0 | 3 / 0 | 0 | 209 s | 419 s |
+| Travel | 10 | 4.00 | 9.55 | **42%** | 0 / 10 / 0 | 2 / 0 | 0 | 197 s | 357 s |
+| Emergencies | 5 | 1.20 | 9.50 | **13%** | 0 / 5 / 0 | 0 / 0 | 0 | 211 s | 327 s |
+| Arithmetic | 6 | 7.08 | 10.00 | **71%** | 0 / 5 / 1 | 0 / 0 | 0 | 256 s | 444 s |
+| All | 61 | 4.30 | 9.47 | **45%** | 0 / 60 / 1 | 25 / 8 | 0 | 209 s | 443 s |
+
+- Same questions, reference, phone and grading method. Build 0.7.2, high profile, both packs, airplane mode on; all 61 answered with no crash or kill on an 8 GB phone. The run was paused twice by the user and resumed; each question still started from a cold app start. Files: `bench/vitalik61/answers_redmi12_high_v072.jsonl` and `bench/vitalik61/grading_redmi12_high_v072/`.
+- **Build 0.7.2 differs from 0.7.0 in the answer rules as well as the model.** Under the old rules the 35B model answered "best vegan restaurants in Berlin" with a refusal, because the list has no ratings. The rules now lead with giving the most helpful answer the sources allow and say what to do with an unranked list.
+- **Against the 4B run of the same day:** higher on 30 questions, lower on 9, about the same on 22. Answers are about twice as long (median 874 characters against 457).
+- **Arithmetic (71%)** is where the larger model helps most: no verified errors, against nine for the 4B model, and the only tie with the reference.
+- **Crypto (49%)** and **travel (42%)** improved. Three crypto errors remain, all misreadings of the proposal texts.
+- **Restaurants (44%).** Seventeen questions get six or so named places with addresses. Twenty verified errors, nearly all of one kind: places that have closed and are still on the map (Lisbon, Tokyo, Bangkok, Istanbul, Taipei, Seoul, Prague, Kyoto, Medellín, São Paulo), plus the Starbucks tagged as vegan in Buenos Aires. The grader of this run checked far more places than the earlier ones (121 tool calls against 38), so the error count is not comparable with the 4B run's six.
+- **Emergencies (13%) got worse, and the cause is search, not the model.** For the snakebite question the sources were the articles "Snake" and "Hiking"; for the scald, "Boiling" and a criminal case; for hypothermia, "Shivering". None holds first-aid advice. The 35B model says so and declines. The 4B model, given equally poor sources, answered from its own memory and scored 3 to 5 points for it. The same pattern explains the low travel answers (Thailand's emergency numbers, Lisbon airport) and three crypto answers: the right article was not retrieved, and the model would not guess.
+- **Refusals:** four in the fixed wording (the three location questions and the earthquake question) and about ten more written out in sentences ("the provided sources do not contain…"). Answers that were attempted reach 48% of the reference.
+- The reference was preferred on 60 questions; one arithmetic answer tied.
+- **Timings on the Redmi:** first word after a median of 209 s, finished after 443 s. A 12 GB phone has not been measured.
 
 ## Low profile with the Ethereum and places packs, 2026-10-04
 
