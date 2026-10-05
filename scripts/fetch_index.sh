@@ -85,7 +85,8 @@ for name in "${FILES[@]}"; do
         mv "$target.part" "$target"
     fi
     echo "$name: checking SHA-256"
-    actual="$($SHA "$target" | cut -c1-64)"
+    # Read through stdin: given a path with backslashes, sha256sum puts a "\" before the sum.
+    actual="$($SHA < "$target" | cut -c1-64)"
     [ "$actual" = "$sha" ] || die "$name: checksum mismatch ($actual). Delete the file and run the script again."
 done
 
