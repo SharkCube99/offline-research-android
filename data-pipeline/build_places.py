@@ -16,9 +16,12 @@ What the result is and is not:
     restaurants in Berlin". A place belongs to the largest city within 15 km,
     or failing that to the nearest city within 50 km.
   - Fully vegan (or vegetarian) places come first, then places that only offer
-    such dishes. Within a group, entries with more details come first. There
+    such dishes. Within a group, the places someone confirmed or edited most
+    recently come first, since a place nobody has touched for years is the one
+    most likely to have closed; among equals, entries with more details. There
     are no ratings in the data, so nothing here says which place is best.
-  - It is a snapshot. Places close and the map is not always told.
+  - It is a snapshot. Places close and the map is not always told. Places
+    marked as closed, disused or ended are left out.
   - Places that merely offer vegetarian options (diet:vegetarian=yes) are left
     out: there are several hundred thousand of them.
 """
@@ -55,7 +58,8 @@ AMENITIES = "restaurant|cafe|fast_food|ice_cream|food_court|pub|bar|biergarten"
 TAGS = [("diet:vegan", "only"), ("diet:vegan", "yes"), ("diet:vegetarian", "only"),
         ("cuisine", "vegan"), ("cuisine", "vegetarian")]
 # A modest time limit and the default memory limit: servers hold back requests that reserve a lot.
-QUERY = '[out:json][timeout:240];nwr["{key}"="{value}"]["name"];out center tags;'
+# "meta" adds the date of each place's last edit, which says how fresh the entry is.
+QUERY = '[out:json][timeout:240];nwr["{key}"="{value}"]["name"];out center meta;'
 PLACES_PER_PASSAGE = 8
 KIND = {"restaurant": "restaurant", "cafe": "café", "fast_food": "fast-food place", "ice_cream": "ice-cream shop",
         "food_court": "food court", "pub": "pub", "bar": "bar", "biergarten": "beer garden"}
@@ -79,7 +83,7 @@ def fetch_places():
     wanted = set(AMENITIES.split("|"))
     elements, seen, snapshot = [], set(), ""
     for key, value in TAGS:
-        dest = SOURCES / "overpass" / f"{key.replace(':', '_')}_{value}.json"
+        dest = SOURCES / "overpass" / f"{key.replace(':', '_')}_{value}_meta.json"
         if not dest.exists():
             body = urllib.parse.urlencode({"data": QUERY.format(key=key, value=value)}).encode()
             for attempt in range(12):
@@ -105,6 +109,8 @@ def fetch_places():
             identity = (element["type"], element["id"])
             if identity not in seen and element.get("tags", {}).get("amenity") in wanted:
                 seen.add(identity)
+                # The date of the last edit travels with the tags from here on.
+                element["tags"]["@edited"] = element.get("timestamp", "")[:10]
                 elements.append(element)
     return elements, snapshot or datetime.date.today().isoformat()
 
@@ -185,6 +191,40 @@ def describe(tags, diet, full):
     return "; ".join(parts) + "."
 
 
+DATE = re.compile(r"^(\d{4})-(\d{2})(?:-(\d{2}))?")
+# Tags by which a mapper records having checked a place on the ground.
+CHECKED = ("check_date", "survey:date", "lastcheck", "last_checked", "check_date:opening_hours",
+           "check_date:diet:vegan", "check_date:diet:vegetarian")
+
+
+def last_seen(tags):
+    """'YYYY-MM' of the latest sign of life: a check on the ground or an edit. '' if unknown."""
+    months = []
+    for key in CHECKED + ("@edited",):
+        match = DATE.match(tags.get(key, ""))
+        if match:
+            months.append(f"{match.group(1)}-{match.group(2)}")
+    return max(months, default="")
+
+
+def is_closed(tags):
+    """True when the map itself says the place no longer operates."""
+    if tags.get("disused") == "yes" or tags.get("abandoned") == "yes" or tags.get("closed") == "yes":
+        return True
+    if any(key in tags for key in ("disused:amenity", "abandoned:amenity", "was:amenity", "end_date", "closed:amenity")):
+        return True
+    return tags.get("opening_hours", "").strip().lower() in ("closed", "off")
+
+
+def freshest_first(places):
+    """Most recently seen first; among those seen in the same half-year, the better-kept entry."""
+    def half_year(tags):
+        month = last_seen(tags)
+        return (int(month[:4]), int(month[5:7]) > 6) if month else (0, False)
+    by_name = sorted(places, key=lambda t: t["name"])
+    return sorted(by_name, key=lambda t: (half_year(t), detail(t)), reverse=True)
+
+
 def detail(tags):
     """More details mean a better-kept entry; such entries are listed first."""
     return sum(1 for key in ("addr:street", "opening_hours", "website", "contact:website", "phone", "contact:phone", "cuisine") if tags.get(key))
@@ -200,13 +240,16 @@ def main():
     finder = CityFinder(cities)
 
     by_city = defaultdict(list)
-    skipped = 0
+    skipped = closed = 0
     for element in elements:
         tags = element.get("tags", {})
         lat = element.get("lat", element.get("center", {}).get("lat"))
         lon = element.get("lon", element.get("center", {}).get("lon"))
-        if lat is None or not tags.get("name") or tags.get("disused") == "yes" or "disused:amenity" in tags:
+        if lat is None or not tags.get("name"):
             skipped += 1
+            continue
+        if is_closed(tags):
+            closed += 1
             continue
         city = finder.find(lat, lon)
         if city is None:
@@ -225,6 +268,9 @@ def main():
         if name not in largest or cities[index][5] > cities[largest[name]][5]:
             largest[name] = index
 
+    # "Recent" in the lists' opening line: the two calendar years before the snapshot, and its own.
+    recent_since = f"{int(snapshot[:4]) - 2}-01"
+
     def documents():
         for index, places in sorted(by_city.items(), key=lambda item: -cities[item[0]][5]):
             _, _, name, ascii_name, country_code, population = cities[index]
@@ -239,15 +285,17 @@ def main():
                     some = []
                 if not full and not some:
                     continue
-                full.sort(key=lambda t: (-detail(t), t["name"]))
-                some.sort(key=lambda t: (-detail(t), t["name"]))
+                full = freshest_first(full)
+                some = freshest_first(some)
+                recent = sum(1 for t in full + some if last_seen(t) >= recent_since)
                 counts = f"{len(full)} fully {diet} place{'s' if len(full) != 1 else ''} to eat"
                 if some:
                     counts += f" and {len(some)} that offer {diet} dishes"
                 intro = (f"OpenStreetMap lists {counts} in {name}, {country}, as of {snapshot}. "
                          # Worded as a note on the list, not as "cannot say which is best":
                          # a literal-minded model took that as a reason to name no place at all.
-                         f"The list is not ranked, because the map data has no ratings, and a place may have closed since.")
+                         f"The list is not ranked by quality, because the map data has no ratings. "
+                         f"Places confirmed or edited most recently come first ({recent} since {recent_since[:4]}); a place may still have closed.")
                 sentences = [describe(t, diet, True) for t in full] + [describe(t, diet, False) for t in some]
                 passages = []
                 for start in range(0, len(sentences), PLACES_PER_PASSAGE):
@@ -283,7 +331,11 @@ def main():
     }
     articles, passages = write_index(args.out, documents(), meta)
     print(f"{args.out}: {articles} city lists, {passages} passages, {args.out.stat().st_size / 1e6:.1f} MB")
-    print(f"places read: {len(elements)}, without a name, position or city within 50 km: {skipped}, cities: {len(by_city)}")
+    print(f"places read: {len(elements)}, marked closed: {closed}, "
+          f"without a name, position or city within 50 km: {skipped}, cities: {len(by_city)}")
+    seen = [last_seen(e["tags"]) for e in elements]
+    print(f"last seen since {recent_since}: {sum(1 for m in seen if m >= recent_since)}; "
+          f"before 2020: {sum(1 for m in seen if m and m < '2020-01')}; unknown: {sum(1 for m in seen if not m)}")
 
 
 if __name__ == "__main__":

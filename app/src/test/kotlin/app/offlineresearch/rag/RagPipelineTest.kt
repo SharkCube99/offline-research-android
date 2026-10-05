@@ -115,6 +115,29 @@ class RagPipelineTest {
     }
 
     @Test
+    fun aQuestionAboutHereIsAnsweredForTheReadersCity() {
+        val answerer = FakeEngine(listOf("ok"))
+        val located = RagPipeline(
+            KeywordPlanner, Retriever(mapOf("wikipedia" to index)), ContextBudgeter(200, countTokens = answerer::countTokens),
+            answerer, settings, seed = { 7 }, locate = { Place("Denver", "United States", 0.4) },
+        )
+        val events = run(located, "What causes the tides near me?")
+
+        assertEquals(RagStage.LOCATING, events.filterIsInstance<RagEvent.Stage>().first().stage)
+        val prompt = answerer.requests.single().userPrompt
+        assertTrue(prompt, "The reader's location, from the phone's GPS: Denver, United States" in prompt)
+        assertTrue(prompt, prompt.trimEnd().endsWith("Question: What causes the tides in Denver?"))
+        assertEquals("Denver, United States", (events.last() as RagEvent.Finished).report.location)
+
+        // A question that is not about "here" never asks for the position.
+        val never = RagPipeline(
+            KeywordPlanner, Retriever(mapOf("wikipedia" to index)), ContextBudgeter(200, countTokens = answerer::countTokens),
+            answerer, settings, seed = { 7 }, locate = { error("must not be asked") },
+        )
+        assertNull((run(never, "What causes the tides?").last() as RagEvent.Finished).report.location)
+    }
+
+    @Test
     fun theAnswererSeesNumberedSourcesTheQuestionAndTheContract() {
         val answerer = FakeEngine(listOf("ok"))
         run(pipeline(answerer), "What causes the tides?")

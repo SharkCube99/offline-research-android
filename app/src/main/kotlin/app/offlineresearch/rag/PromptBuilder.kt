@@ -37,7 +37,7 @@ object PromptBuilder {
         - If the sources do not answer the question, or answer only part of it, answer the rest from your own general knowledge. Start that part with a line that reads exactly: $UNSOURCED
         - Below that line cite no source numbers. Keep to what is widely known and does not change quickly, and say so when you are unsure.
         - Do not describe what the sources lack or apologise for them. Just answer.
-        - Reply with exactly "$NOT_COVERED" only when neither the sources nor general knowledge can answer, for example when the answer depends on where the reader is right now, or on today's prices, weather or opening hours.
+        - Reply with exactly "$NOT_COVERED" only when neither the sources nor general knowledge can answer, for example when the answer depends on where the reader is right now and no location is given, or on today's prices, weather or opening hours.
         - Use that sentence only as your whole reply. Never add it to an answer.
     """.trimIndent()
 
@@ -53,12 +53,14 @@ object PromptBuilder {
         return if (suffix.isBlank()) contract else "$contract\n\n${suffix.trim()}"
     }
 
-    fun user(question: String, sources: List<Passage>): String = buildString {
+    /** [location] is the reader's city from the phone's GPS, when the question depends on it. */
+    fun user(question: String, sources: List<Passage>, location: String? = null): String = buildString {
         append("Sources:\n")
         if (sources.isEmpty()) append("\n(the search found none)\n")
         sources.forEachIndexed { index, passage ->
             append("\n[").append(index + 1).append("] ").append(passage.excerpt).append('\n')
         }
+        if (location != null) append("\nThe reader's location, from the phone's GPS: ").append(location).append('\n')
         append("\nQuestion: ").append(question.trim())
     }
 }

@@ -70,6 +70,8 @@ data class RagRecord(
     val unsourced: Boolean = false,
     /** Results the calculator found wrong and corrected in the answer. */
     @SerialName("calculator_fixes") val calculatorFixes: Int = 0,
+    /** The reader's city, when the question asked about "here"; the coordinates are not logged. */
+    val location: String? = null,
 )
 
 /** Marks an answer as question [index] of [total] in stress run [run]. */

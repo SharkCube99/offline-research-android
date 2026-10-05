@@ -22,7 +22,11 @@ import app.offlineresearch.profiles.ModelProfile
 import app.offlineresearch.profiles.ProfileChoice
 import app.offlineresearch.profiles.ProfileStore
 import app.offlineresearch.rag.AnswerSettings
+import app.offlineresearch.location.GpsLocator
 import app.offlineresearch.rag.Calculator
+import app.offlineresearch.rag.Gazetteer
+import app.offlineresearch.rag.Place
+import app.offlineresearch.rag.Position
 import app.offlineresearch.rag.Citations
 import app.offlineresearch.rag.ContextBudgeter
 import app.offlineresearch.rag.IndexFiles
@@ -105,6 +109,33 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var answerer: InferenceEngine = llamaAnswerer
     private val plannerEngine: InferenceEngine = LlamaEngine(nativeLibDir, "llama-planner")
     private val profiles = ProfileStore(application)
+    private val gps = GpsLocator(application)
+
+    // About 30,000 cities; read on first use, off the main thread.
+    private val gazetteer: Gazetteer by lazy {
+        getApplication<Application>().assets.open(CITIES_ASSET).bufferedReader().use(Gazetteer::read)
+    }
+
+    /** A position given by a script (--es gps "lat,lon") instead of the receiver; used by the benchmark. */
+    @Volatile
+    private var scriptedPosition: Position? = null
+
+    fun setScriptedPosition(position: Position?) {
+        scriptedPosition = position
+    }
+
+    /** True when a question about "here" can be answered only after the user allows location. */
+    fun needsLocationPermission(question: String): Boolean =
+        scriptedPosition == null && !gps.hasPermission() && app.offlineresearch.rag.Here.asksAbout(question)
+
+    private suspend fun locate(): Place? {
+        val position = scriptedPosition ?: gps.current()
+        if (position == null) {
+            Log.w(MetricsLog.TAG, "no position: permission missing, location off, or no fix in time")
+            return null
+        }
+        return withContext(Dispatchers.Default) { gazetteer.nearest(position) }
+    }
     private val logDir = application.getExternalFilesDir(null)?.let { File(it, "logs") }
     private val metricsLog = MetricsLog(logDir)
     private val appVersion: String =
@@ -248,6 +279,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             ),
             seed = Random::nextInt,
             preview = compressor::preview,
+            locate = ::locate,
         )
         return ModelStatus.Ready(active.name, loaded.source, active.modelFile, indexFiles.keys.toList(), plannerFile?.name)
     }
@@ -381,6 +413,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 notCovered = Citations.isNotCovered(answer),
                 unsourced = Citations.hasUnsourced(answer),
                 calculatorFixes = Regex.fromLiteral("(calculator: ").findAll(answer).count(),
+                location = report.location,
             ),
             stress,
         )
@@ -405,6 +438,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val DEFAULT_STRESS_COUNT = 20
         private const val STRESS_ASSET = "stress_questions.txt"
+        private const val CITIES_ASSET = "cities.tsv"
         private const val KEYWORDS = "keywords"
     }
 }

@@ -4,6 +4,12 @@
     <!-- Offline by construction: no INTERNET or other network permission, in any
          build type. scripts/verify_offline.sh fails if one appears in a built APK. -->
 
+    <!-- For questions about "near me". The satellite receiver only listens, so
+         this works in airplane mode, and with no network permission the position
+         cannot leave the phone. Asked for only when such a question comes up. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="false"
         android:extractNativeLibs="true"

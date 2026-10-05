@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -67,6 +70,13 @@ fun ChatScreen(viewModel: ChatViewModel) {
     var showSettings by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val ready = state.status is ModelStatus.Ready
+    // A question about "near me" needs the position. Android's own dialog asks
+    // the first time; whatever the reply, the question is then sent.
+    var awaitingPermission by remember { mutableStateOf<String?>(null) }
+    val askForLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        awaitingPermission?.let(viewModel::send)
+        awaitingPermission = null
+    }
 
     // An answer takes minutes. If the screen times out, Android moves the app to
     // the background, where it gets less CPU and is the first to be killed.
@@ -117,7 +127,14 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 } else {
                     Button(
                         onClick = {
-                            viewModel.send(draft)
+                            if (viewModel.needsLocationPermission(draft)) {
+                                awaitingPermission = draft
+                                askForLocation.launch(
+                                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                                )
+                            } else {
+                                viewModel.send(draft)
+                            }
                             draft = ""
                         },
                         enabled = ready && draft.isNotBlank(),
@@ -302,6 +319,7 @@ private fun AnswerBubble(message: ChatMessage, onOpenSources: (selected: Int) ->
 
 /** What to show while the answer is not streaming yet. */
 private fun stageLabel(stage: RagStage?, sources: Int): String? = when (stage) {
+    RagStage.LOCATING -> "Finding where you are (GPS, no network)…"
     RagStage.PLANNING -> "Planning searches…"
     RagStage.SEARCHING -> "Searching offline sources…"
     RagStage.THINKING -> "Thinking deeper… reading $sources ${if (sources == 1) "source" else "sources"}"

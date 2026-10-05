@@ -78,7 +78,7 @@ class Phone:
     def running(self):
         return bool(self.shell(f"pidof {PKG}").strip())
 
-    def ask(self, question, profile):
+    def ask(self, question, profile, gps=None):
         # The question travels as a file, so quotes, accents and symbols in it
         # never pass through a command line.
         with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as handle:
@@ -89,7 +89,10 @@ class Phone:
             os.unlink(handle.name)
         self.shell(f"am force-stop {PKG}")
         time.sleep(1)
-        self.shell(f'am start -n {ACTIVITY} --es profile {profile} --es ask "$(cat {REMOTE_QUESTION})"')
+        # A question that says where the device is ("gps": [lat, lon]) has that
+        # position handed to the app in place of its satellite receiver.
+        position = f'--es gps "{gps[0]},{gps[1]}" ' if gps else ""
+        self.shell(f'am start -n {ACTIVITY} --es profile {profile} {position}--es ask "$(cat {REMOTE_QUESTION})"')
 
 
 def keep_awake():
@@ -126,7 +129,7 @@ def main():
             time.sleep(10)
             before = phone.log_lines()
         started = time.time()
-        phone.ask(question["q"], args.profile)
+        phone.ask(question["q"], args.profile, question.get("gps"))
         status, record = "timeout", None
         seen_running = False
         while time.time() - started < args.timeout:

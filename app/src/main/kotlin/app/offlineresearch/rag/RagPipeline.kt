@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 
 /** What the pipeline is doing right now; shown to the user. */
-enum class RagStage { PLANNING, SEARCHING, THINKING, ANSWERING }
+enum class RagStage { LOCATING, PLANNING, SEARCHING, THINKING, ANSWERING }
 
 sealed interface RagEvent {
     data class Stage(val stage: RagStage) : RagEvent
@@ -39,6 +39,8 @@ data class RagReport(
     val sources: Int,
     /** Null when no model ran because nothing was retrieved. */
     val answerer: EngineMetrics?,
+    /** The reader's city, when the question asked about "here" and the phone could tell. */
+    val location: String? = null,
 )
 
 /** How the answerer samples; comes from the model profile. */
@@ -70,8 +72,21 @@ class RagPipeline(
     private val seed: () -> Int,
     /** Makes the excerpt shown as soon as the first search returns; null shows none. */
     private val preview: ((question: String, ranked: List<Passage>) -> Passage?)? = null,
+    /** Where the reader is, for questions about "near me"; null when the app cannot tell. */
+    private val locate: (suspend () -> Place?)? = null,
 ) {
-    fun answer(question: String): Flow<RagEvent> = flow {
+    fun answer(asked: String): Flow<RagEvent> = flow {
+        // "Near me" becomes "in <city>" before anything else, so that search, the
+        // planner and the model all see a question that names its place.
+        val place = if (locate != null && Here.asksAbout(asked)) {
+            emit(RagEvent.Stage(RagStage.LOCATING))
+            locate.invoke()
+        } else {
+            null
+        }
+        val question = if (place != null) Here.inPlace(asked, place) else asked
+        val location = place?.let(Here::describe)
+
         // Search with the question itself first: it needs no model, so something
         // useful can be on screen within about a second.
         emit(RagEvent.Stage(RagStage.SEARCHING))
@@ -107,7 +122,7 @@ class RagPipeline(
         if (sources.isEmpty() && !settings.ownKnowledge) {
             // Nothing to ground an answer on: say so without asking the model.
             emit(RagEvent.Token(PromptBuilder.NOT_COVERED))
-            emit(RagEvent.Finished(RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, 0, null)))
+            emit(RagEvent.Finished(RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, 0, null, location)))
             return@flow
         }
 
@@ -116,7 +131,7 @@ class RagPipeline(
         answerer.generate(
             GenerationRequest(
                 systemPrompt = PromptBuilder.system(settings.promptSuffix, settings.ownKnowledge),
-                userPrompt = PromptBuilder.user(question, sources),
+                userPrompt = PromptBuilder.user(question, sources, location),
                 maxTokens = settings.maxTokens,
                 temperature = settings.temperature,
                 topK = settings.topK,
@@ -133,7 +148,7 @@ class RagPipeline(
         }
         emit(
             RagEvent.Finished(
-                RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, sources.size, answerer.metrics()),
+                RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, sources.size, answerer.metrics(), location),
             ),
         )
     }

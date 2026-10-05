@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import app.offlineresearch.profiles.ProfileChoice
+import app.offlineresearch.rag.Position
 import app.offlineresearch.ui.ChatScreen
 import app.offlineresearch.ui.ChatViewModel
 
@@ -36,9 +37,12 @@ class MainActivity : ComponentActivity() {
     //   adb shell am start -n app.offlineresearch/.MainActivity --es ask "..."
     //   adb shell am start -n app.offlineresearch/.MainActivity --es profile high
     //   adb shell am start -n app.offlineresearch/.MainActivity --ei stress 20
+    //   adb shell am start -n app.offlineresearch/.MainActivity --es gps "39.7392,-104.9903" --es ask "..."
     private fun askFromIntent(intent: Intent?) {
         if (intent == null) return
         intent.getStringExtra(EXTRA_PROFILE)?.let { chatViewModel.setProfileChoice(ProfileChoice.parse(it)) }
+        // A script's stand-in for the satellite receiver; absent, the last one is forgotten.
+        chatViewModel.setScriptedPosition(intent.getStringExtra(EXTRA_GPS)?.let(Position::parse))
         val stress = intent.getIntExtra(EXTRA_STRESS, 0)
         if (stress > 0) {
             chatViewModel.runStress(stress)
@@ -51,5 +55,6 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_ASK = "ask"
         const val EXTRA_PROFILE = "profile"
         const val EXTRA_STRESS = "stress"
+        const val EXTRA_GPS = "gps"
     }
 }
