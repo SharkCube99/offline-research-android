@@ -229,7 +229,7 @@ def main():
         "licence": "CDLA-Permissive-2.0 (Overture Maps places); city names from GeoNames, CC BY 4.0",
         "attribution": "Overture Maps Foundation and its data contributors (Meta, Microsoft, Foursquare and others); GeoNames",
         # The app uses this pack only where it matches a question well (see Retriever).
-        "match": "strict",
+        "match": "names",
     }
     articles, passages = write_index(args.out, documents(), meta)
     print(f"{args.out}: {articles:,} lists, {passages:,} passages, {args.out.stat().st_size / 1e6:.0f} MB")

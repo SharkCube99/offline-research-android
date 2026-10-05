@@ -211,13 +211,15 @@ class StrictPackTest {
                     aliases = listOf("pharmacy nairobi", "pharmacies in nairobi"),
                 ),
             ),
-            meta = mapOf("match" to "strict"),
+            meta = mapOf("match" to "names"),
         )
         try {
-            val found = Retriever(linkedMapOf("cityplaces" to places, "wikipedia" to general))
-                .search("Is there a pharmacy open late in central Nairobi?")
+            val both = Retriever(linkedMapOf("cityplaces" to places, "wikipedia" to general))
+            val found = both.search("Is there a pharmacy open late in central Nairobi?")
             assertEquals("Pharmacies in Nairobi", found.first().title)
             assertTrue(found.first().named)
+            // A pack of names is never searched by the words of its lists.
+            assertTrue(both.search("Goodlife Moi Avenue").none { it.corpus == "cityplaces" })
         } finally {
             places.close()
         }

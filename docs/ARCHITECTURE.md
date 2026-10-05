@@ -197,6 +197,24 @@ Not measured: any of this on a phone or on the benchmark.
 
 A held-out set of 40 questions (`bench/heldout40/`) was written by a separate agent that saw nothing of this repository, with reference answers by another. It is for measuring only: nothing is to be tuned on it. The questions were not read while the packs above were built.
 
+### Everyday places by city (build 0.7.4)
+
+The benchmark's place questions were all about vegan and vegetarian food, and `places.db` holds nothing else. A traveller also asks for a pharmacy, a hospital, a hostel, a bank. `cityplaces.db` covers those.
+
+| Pack | Built by | Contents | Size |
+|---|---|---|---|
+| `cityplaces.db` | `data-pipeline/fetch_overture_places.py`, then `data-pipeline/build_places_overture.py` | 13,990,257 open places from Overture Maps (release 2026-09-23.1, confidence 0.6 or more) in 24,812 cities, as 519,248 lists ("Pharmacies in Nairobi", "Hostels in Cusco", "Vegan restaurants in Berlin"); up to 40 places per list, those Overture is most sure of first, with address, and phone number for health, lodging, police and embassy lists | 1,614 MB |
+
+- **Two-part names.** "Is there a pharmacy open late in central Nairobi?" never says "pharmacy in Nairobi". For strict packs the search also looks up names made of two phrases of the question with words between them ("pharmacy nairobi"); each list carries such a name.
+- **Names only.** The pack marks itself `match = names` in its meta table: it is strict, and its passages are never searched by their words. With millions of shop names some list holds the words of almost any question; before this, "Why is the sky blue?" received a hospital list. It answers only when one of its lists is named.
+- **Beside `places.db`.** For vegan and vegetarian questions both the OpenStreetMap list and the Overture list are found and share the source budget. In the replay of the 61 benchmark questions the Berlin question receives four places from one and three from the other.
+
+Checked on the PC: 120 unit tests pass; the Kotlin search matches the Python reference on all 50 evaluation questions with all seven index files present; retrieval evaluation 46/50 and 24/25, unchanged; in the replay of the 61 benchmark questions the pack is a source only for the 16 place questions.
+
+Known limits: 410,598 places have no city of 15,000 people or more within 50 km and are left out; a city with the same name as an ordinary word ("Central") can be found beside the right one; Overture has no opening hours, so "open late" cannot be answered; a small town may lack a kind altogether (no ATM list for Luang Prabang).
+
+Not measured: any of this on a phone or on the benchmark.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

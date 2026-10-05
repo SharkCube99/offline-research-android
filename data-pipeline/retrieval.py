@@ -154,7 +154,19 @@ def is_strict(con):
         row = con.execute("SELECT value FROM meta WHERE key = 'match'").fetchone()
     except sqlite3.Error:
         return False
-    return bool(row) and row[0] == "strict"
+    return bool(row) and row[0] in ("strict", "names")
+
+
+def is_names_only(con):
+    """True for a pack of lists of proper names (places by city), marked "names"
+    in its meta table. It is strict, and its passages are never searched by
+    their words: with millions of shop names, some list holds the words of
+    almost any question. It answers only when one of its lists is named."""
+    try:
+        row = con.execute("SELECT value FROM meta WHERE key = 'match'").fetchone()
+    except sqlite3.Error:
+        return False
+    return bool(row) and row[0] == "names"
 
 
 def passage_channel(con, terms, weights, limit, relax=True):
@@ -237,7 +249,8 @@ def search(indexes, question, k=5, weights=DEFAULT_WEIGHTS, per_article=2, candi
     for corpus, con in indexes.items():
         for length, score, ids in name_channel(con, question, terms, weights, strict=is_strict(con)):
             named.append((-length, score, corpus, ids))
-        by_corpus[corpus] = passage_channel(con, terms, weights, candidates, relax=not is_strict(con))
+        by_corpus[corpus] = [] if is_names_only(con) else passage_channel(
+            con, terms, weights, candidates, relax=not is_strict(con))
     named.sort()
 
     # Name channel order: the best passage of each named article, then the second best.

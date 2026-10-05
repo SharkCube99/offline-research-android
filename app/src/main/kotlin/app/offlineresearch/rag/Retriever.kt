@@ -47,13 +47,22 @@ class Retriever(
      * in the question or a passage holds every content word of it; otherwise a
      * question about tides would pull in whatever proposal mentions "causes".
      */
-    private val strict: Set<String> = indexes.filter { (_, db) ->
+    private val strict: Set<String> = indexes.filter { (_, db) -> matchMode(db) in setOf("strict", "names") }.keys
+
+    /**
+     * A pack of lists of proper names (places by city) marks itself "names". It
+     * is strict, and its passages are never searched by their words: with
+     * millions of shop names, some list holds the words of almost any question.
+     * It answers only when one of its lists is named.
+     */
+    private val namesOnly: Set<String> = indexes.filter { (_, db) -> matchMode(db) == "names" }.keys
+
+    private fun matchMode(db: SqlDatabase): String? =
         try {
-            db.query("SELECT value FROM meta WHERE key = 'match'") { it.string(0) }.firstOrNull() == "strict"
+            db.query("SELECT value FROM meta WHERE key = 'match'") { it.string(0) }.firstOrNull()
         } catch (e: Exception) {
-            false // an index without that row, or without a meta table, is a general one
+            null // an index without that row, or without a meta table, is a general one
         }
-    }.keys
 
     private data class Ranked(val passageId: Long, val score: Double)
 
@@ -87,7 +96,8 @@ class Retriever(
         val byCorpus = LinkedHashMap<String, List<Long>>()
         for ((corpus, db) in indexes) {
             named += nameChannel(corpus, db, question, terms, contextTerms, implied)
-            byCorpus[corpus] = passageChannel(db, terms, candidates, relax = corpus !in strict)
+            byCorpus[corpus] =
+                if (corpus in namesOnly) emptyList() else passageChannel(db, terms, candidates, relax = corpus !in strict)
         }
         named.sortWith(compareBy<Named> { -it.nameLength }.thenBy { it.score })
 
