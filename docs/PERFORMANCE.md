@@ -263,6 +263,18 @@ The released `offline-research-0.6.0.apk` (v0.6.0, SHA-256 `a81ff0e0…e91d`) wa
 
 Not covered by this check: the BigMoeOnEdge engine (a separate program, and its model does not fit the emulator), and a real phone.
 
+## Signed release APK 0.7.5 on the Android emulator (2026-10-05)
+
+The signed 0.7.5 build was installed on the same Pixel 8 emulator image as above before release, because nothing since 0.7.2 had run on a device. Record: `docs/measurements/2026-10-05-release-apk-emulator.jsonl`.
+
+- **It caught a crash.** The first attempt died on every answer: Android's regular-expression engine rejects a pattern with an unescaped `}` that the desktop JVM, where the unit tests run, accepts. Fixed before release. Unit tests on the PC cannot see this kind of fault, so each release is started on the emulator first.
+- After the fix, with the same test profile as above (Qwen3-1.7B as the answerer, keyword search, 200-token cap) and `wikivoyage.db` plus the four small packs:
+  - "It's 104°F outside. What is that in Celsius, and is it dangerous for a long walk?" The answer cites the calculator source for 40 °C and puts the rest under the "From general knowledge" line; the log records `unsourced: true`. The advice under that line is poor (it calls 40 °C "not extremely dangerous"): the 1.7B model is a stand-in here, and this is the risk of unsourced answers shown plainly.
+  - "What is the emergency number in Thailand, and what should I do while waiting if someone has fainted?" The answer gives 1669 from the travel-facts pack with a citation, then first-aid advice with neither a citation nor the label. So a small model does not always use the label.
+- The timings (first word 78 s and 102 s) are of ARM code translated on a PC and say nothing about phones.
+
+Not covered by this check: the 4B and 35B models, the BigMoeOnEdge engine, `cityplaces.db`, and a real phone.
+
 ## Signed release APK on the Redmi 12 5G (2026-10-03)
 
 The released `offline-research-0.6.0.apk` replaced the debug build on the phone (the debug build had to be uninstalled first; models and index were moved aside on the phone and back). Record: `docs/measurements/2026-10-03-redmi12-release-apk.jsonl`; screen: `screens/2026-10-03-release-redmi-1.png`.

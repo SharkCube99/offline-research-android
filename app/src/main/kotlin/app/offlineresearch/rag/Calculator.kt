@@ -29,7 +29,8 @@ object Calculator {
     )
 
     // What LaTeX a model writes around its sums: $...$, \times, \text{ km}, \approx.
-    private val LATEX_TEXT = Regex("""[ \t]*\\(?:text|mathrm)\{[ \t]*([^}]*)}""")
+    // Every brace is escaped: Android's regex engine rejects a bare "}" that the desktop JVM accepts.
+    private val LATEX_TEXT = Regex("""[ \t]*\\(?:text|mathrm)\{[ \t]*([^\}]*)\}""")
     private val LATEX_WORDS = listOf("\\times" to "×", "\\cdot" to "·", "\\div" to "÷", "\\approx" to "≈", "\\," to " ", "\\ " to " ")
 
     // Stated and computed results that differ by one of these are a change of unit, not a mistake.
@@ -46,7 +47,7 @@ object Calculator {
         var text = LATEX_TEXT.replace(answer) { " " + it.groupValues[1] }
         for ((latex, sign) in LATEX_WORDS) text = text.replace(latex, sign)
         // Dollar signs that fence a formula go; a price ("$67.12") keeps its sign.
-        return Regex("""\$(?=[^\n$]*[=×÷≈][^\n$]*\$)([^\n$]+)\$""").replace(text) { it.groupValues[1] }
+        return Regex("""\$(?=[^\n\$]*[=×÷≈][^\n\$]*\$)([^\n\$]+)\$""").replace(text) { it.groupValues[1] }
     }
 
     /** The equations in [text] whose stated result is wrong. */

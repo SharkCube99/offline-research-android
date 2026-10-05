@@ -1,8 +1,10 @@
 ---
-license: cc-by-sa-4.0
+license: other
+license_name: per-file-see-card
+license_link: https://huggingface.co/datasets/SHARK787/offline-research-index#licence-and-attribution
 language:
 - en
-pretty_name: Offline research index (English Wikipedia and Wikivoyage, SQLite FTS5)
+pretty_name: Offline research index (English Wikipedia, Wikivoyage and five smaller packs, SQLite FTS5)
 size_categories:
 - 10M<n<100M
 task_categories:
@@ -11,6 +13,9 @@ task_categories:
 tags:
 - wikipedia
 - wikivoyage
+- openstreetmap
+- overture-maps
+- wikidata
 - sqlite
 - fts5
 - bm25
@@ -18,9 +23,9 @@ tags:
 - offline
 ---
 
-# Offline research index: English Wikipedia and Wikivoyage
+# Offline research index: English Wikipedia, Wikivoyage and five smaller packs
 
-Two SQLite files that an Android app searches with no network connection. The text of English Wikipedia (the most-viewed 31% of articles) and all of English Wikivoyage is cut into short passages and stored with a full-text (FTS5, BM25) index, so a phone can find the passages that bear on a question in a second or two.
+SQLite files that an Android app searches with no network connection. Two hold the core, Wikipedia and Wikivoyage; five smaller packs, added later, cover what those two answer badly (see "The smaller packs" below). The text of English Wikipedia (the most-viewed 31% of articles) and all of English Wikivoyage is cut into short passages and stored with a full-text (FTS5, BM25) index, so a phone can find the passages that bear on a question in a second or two.
 
 The app and the script that built these files are at <https://github.com/SharkCube99/offline-research-android>.
 
@@ -32,9 +37,28 @@ The files are data for a retrieval-augmented answering app: the app finds passag
 |---|---|---|---|---|
 | `wikipedia.db` | 22,570,754,048 | 2,056,411 | 12,741,441 | `enwiki_content`, 2026-09-27 |
 | `wikivoyage.db` | 355,127,296 | 32,072 | 188,396 | `enwikivoyage_content`, 2026-09-27 |
-| `manifest.json` | 1,571 | | | counts, sizes and chunking settings of this build |
+| `cityplaces.db` | 1,613,914,112 | 519,248 lists | 888,169 | Overture Maps places, release 2026-09-23.1 |
+| `ethereum.db` | 14,196,736 | | | Ethereum repositories and NIST publications, fetched 2026-10-03 |
+| `places.db` | 13,869,056 | 6,101 lists | | OpenStreetMap, fetched 2026-10-03 |
+| `travelfacts.db` | 1,204,224 | 197 countries | | Wikidata, fetched 2026-10-05 |
+| `firstaid.db` | 331,776 | 52 chapters | | Wikibooks "First Aid", fetched 2026-10-05 |
+| `manifest.json` | 1,571 | | | counts, sizes and chunking settings of the Wikipedia and Wikivoyage build |
 
-Total: 22,925,881,344 bytes (22.9 GB).
+Total: 24,569,397,248 bytes (24.6 GB) for the seven database files. The licence differs by file; see "Licence and attribution".
+
+## The smaller packs
+
+All five use the format described below. Each marks itself in its `meta` table so that the app uses it only when a question names one of its entries (`match = strict`; `cityplaces.db` uses `match = names` and is never searched by the words inside its lists).
+
+| File | What it holds | Built by |
+|---|---|---|
+| `cityplaces.db` | 13,990,257 open places from Overture Maps in 24,812 cities, as lists by city and kind ("Pharmacies in Nairobi", "Hostels in Cusco"): places to eat and sleep, pharmacies, hospitals, banks, shops for daily needs, stations, police, embassies, museums. Up to 40 places per list, those Overture is most sure of first, with address | `data-pipeline/fetch_overture_places.py`, `data-pipeline/build_places_overture.py` |
+| `ethereum.db` | Ethereum Improvement Proposals, ERCs, consensus specifications, the English pages of ethereum.org, and NIST FIPS 203, 204, 205 and SP 800-208 | `data-pipeline/build_ethereum.py` |
+| `places.db` | 50,382 places to eat that OpenStreetMap tags as vegan or vegetarian, as lists by city ("Vegan restaurants in Berlin") | `data-pipeline/build_places.py` |
+| `travelfacts.db` | One entry per country: emergency numbers and what each is for, mains voltage and plug types, driving side, currency, dialling code, capital, official languages, time zones | `data-pipeline/build_travel_facts.py` |
+| `firstaid.db` | The Wikibooks "First Aid" book, one entry per chapter, with everyday names as aliases ("choking" for "Obstructed Airway") | `data-pipeline/build_firstaid.py` |
+
+Limits worth knowing: map data goes stale, so a listed place may have closed; the lists are not ranked by quality and carry no opening hours; places with no city of 15,000 people or more within 50 km are left out; the first-aid text is a volunteer-written book, not medical advice.
 
 ## What is in it, and what is not
 
@@ -90,11 +114,18 @@ SHA-256, to check a download:
 ```
 cca60646f543deef8b62949d40e004d05fb2fbad7b1332736d5df876a1f1ee2a  wikipedia.db
 b4bfa0b61da4588e59cbf9c42726c1d3694c7102cb2d49f75ecabcfb3daadc2b  wikivoyage.db
+d3e7229037c8e857dd0d8b62bae847dc43e187fdb23c60898a614670e78fac38  cityplaces.db
+c3870a3690b3e1ddc432136feb39a3b74d5caf6ae1c2b00d9ff03d589dc5ec85  ethereum.db
+f6aebc2d25923a6558d57128342e547a9e52a794d3ce89d2f43ffc107e616137  places.db
+126bbb4a4bfc000d7a2fd1dd2a9522cc1302132fe3f6d9100896872a3b242a8d  travelfacts.db
+ae775ced55e0cc9f9e7dcef65f06f771a26268a102abc2e71bd149ec7ebd6eb4  firstaid.db
 ```
+
+The app's repository has a script that downloads the files, continues an interrupted download and checks these sums: `scripts/fetch_index.sh`.
 
 ## How it was built
 
-From the Wikimedia CirrusSearch index dumps at <https://dumps.wikimedia.org/other/cirrus_search_index/> (dump date 20260927), with a script that uses only the Python standard library:
+Wikipedia and Wikivoyage: from the Wikimedia CirrusSearch index dumps at <https://dumps.wikimedia.org/other/cirrus_search_index/> (dump date 20260927), with a script that uses only the Python standard library:
 
 ```bash
 python data-pipeline/build_index.py --budget-gb 24 --workers 8
@@ -115,7 +146,22 @@ The questions are about well-known topics. The figures say little about obscure 
 
 ## Licence and attribution
 
-The text comes from **English Wikipedia** and **English Wikivoyage** and was written by their contributors. It is available under the [Creative Commons Attribution-ShareAlike 4.0 International licence](https://creativecommons.org/licenses/by-sa/4.0/) (Wikipedia text is also available under the GFDL). These index files are an adaptation of that text and are released under the same licence, CC BY-SA 4.0.
+The licence differs by file.
+
+| File | Licence | Credit |
+|---|---|---|
+| `wikipedia.db`, `wikivoyage.db` | CC BY-SA 4.0 | Contributors to English Wikipedia and English Wikivoyage |
+| `firstaid.db` | CC BY-SA 4.0 | Contributors to the Wikibooks "First Aid" book |
+| `places.db` | Open Database Licence (ODbL) 1.0 | (c) OpenStreetMap contributors, <https://www.openstreetmap.org/copyright>; city names from GeoNames (CC BY 4.0) |
+| `cityplaces.db` | CDLA-Permissive-2.0 | Overture Maps Foundation and its data contributors, <https://overturemaps.org>; city names from GeoNames (CC BY 4.0) |
+| `travelfacts.db` | CC0 1.0 | Wikidata contributors |
+| `ethereum.db` | CC0 1.0 (proposals and specifications), MIT (ethereum.org pages), US public domain (NIST publications) | Ethereum contributors; ethereum.org contributors; National Institute of Standards and Technology |
+
+`places.db` is a database derived from OpenStreetMap and is offered under the ODbL: if you change it and distribute the result, that result must be under the ODbL too.
+
+### Wikipedia, Wikivoyage and Wikibooks text
+
+The text of `wikipedia.db` and `wikivoyage.db` comes from **English Wikipedia** and **English Wikivoyage** and was written by their contributors. It is available under the [Creative Commons Attribution-ShareAlike 4.0 International licence](https://creativecommons.org/licenses/by-sa/4.0/) (Wikipedia text is also available under the GFDL). These index files are an adaptation of that text and are released under the same licence, CC BY-SA 4.0.
 
 - **Attribution.** Every passage is stored with the title and URL of the article it came from; the URL leads to the article and its edit history, which lists its authors. Anything built on these files should show that title and link wherever it shows or uses a passage.
 - **Changes made.** Whitespace normalised; articles split into passages; article title placed in front of each passage; function words left out of the search index (the stored text is complete).

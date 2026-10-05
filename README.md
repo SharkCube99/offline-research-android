@@ -8,13 +8,13 @@ This README quotes no performance numbers. Measured results, with their raw logs
 
 ## Quick start without building
 
-A signed APK is attached to each [release](https://github.com/SharkCube99/offline-research-android/releases). You need a computer with `git`, `curl`, bash (Git Bash on Windows) and Android platform-tools (`adb`), and a phone with USB debugging on and about 30 GB free.
+A signed APK is attached to each [release](https://github.com/SharkCube99/offline-research-android/releases). You need a computer with `git`, `curl`, bash (Git Bash on Windows) and Android platform-tools (`adb`), and a phone with USB debugging on and about 32 GB free.
 
 ```bash
 git clone https://github.com/SharkCube99/offline-research-android.git    # scripts only; no submodules needed
 cd offline-research-android
-scripts/fetch_index.sh                                                    # 22.9 GB knowledge index
-scripts/setup.sh --apk /path/to/offline-research-0.6.0.apk                  --model /path/to/Qwen3-4B-Q4_K_M.gguf                  --model /path/to/Qwen3-1.7B-Q8_0.gguf                  --index data-pipeline/work/index
+scripts/fetch_index.sh                                                    # 24.6 GB knowledge index (seven files)
+scripts/setup.sh --apk /path/to/offline-research-0.7.5.apk                  --model /path/to/Qwen3-4B-Q4_K_M.gguf                  --model /path/to/Qwen3-1.7B-Q8_0.gguf                  --index data-pipeline/work/index
 ```
 
 The model files come from the pages listed under "Put it on a phone". For a 12 GB phone, also push `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB, <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>); the app picks the high profile by itself when the phone reports 10 GB of RAM or more. The time this takes is mostly download and USB copy time.
@@ -54,6 +54,7 @@ Three kinds of file go on the phone, all over adb:
 | Answerer model | `Qwen3-4B-Q4_K_M.gguf` (2.5 GB) | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> |
 | Planner model | `Qwen3-1.7B-Q8_0.gguf` (1.83 GB) | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> |
 | Knowledge index | `wikipedia.db`, `wikivoyage.db` (22.9 GB) | Downloaded by `scripts/fetch_index.sh` from <https://huggingface.co/datasets/SHARK787/offline-research-index>, or built from the Wikipedia dumps by `data-pipeline/build_index.py` (many hours; see `data-pipeline/README.md`) |
+| Smaller packs | `cityplaces.db` (1.6 GB: pharmacies, hospitals, places to eat and sleep and more, by city), `ethereum.db`, `places.db`, `travelfacts.db`, `firstaid.db` (30 MB together) | Downloaded by the same script, or built by the `data-pipeline/build_*.py` scripts named in `LICENSES.md`. The app works without them; each adds answers to one kind of question |
 
 ```bash
 scripts/fetch_index.sh       # downloads the index to data-pipeline/work/index and checks it
