@@ -31,6 +31,7 @@ llama.cpp bundles a few third-party sources of its own under `third_party/llama.
 | Item | Licence | Source |
 |---|---|---|
 | `bench/vitalik61/questions.jsonl` | MIT (`bench/vitalik61/LICENSE-boar-questions.txt`) | Evaluation set v2 of <https://github.com/rferrari/boar-app>, as copied in <https://github.com/Phineas1500/AndroidLM> (`eval/questions_vitalik.jsonl`, commit `0edb11f`) |
+| `bench/heldout40/questions.jsonl`, `bench/heldout40/reference_answers.jsonl` | MIT, as this repository | Written for this project on 2026-10-05 by two separate Claude agents (questions; reference answers with web search) |
 | `bench/vitalik61/reference_answers.jsonl` | Apache-2.0 | <https://github.com/Phineas1500/AndroidLM> (`eval/answers_web_vitalik.jsonl`, commit `0edb11f`) |
 
 ## Models
@@ -64,6 +65,9 @@ Two smaller source packs are built by their own scripts into the same index form
 | | NIST FIPS 203, 204, 205 and SP 800-208 (PDF from nvlpubs.nist.gov) | US Government works, public domain in the United States | National Institute of Standards and Technology |
 | `places.db` (`data-pipeline/build_places.py`) | OpenStreetMap, eating places tagged vegan or vegetarian, through the Overpass API | Open Database Licence (ODbL) 1.0; the built file is a derived database under the same licence | (c) OpenStreetMap contributors |
 | | GeoNames `cities15000` and `countryInfo`, used to assign places to cities | CC BY 4.0 | GeoNames |
+
+| `firstaid.db` (`data-pipeline/build_firstaid.py`) | Wikibooks, "First Aid", <https://en.wikibooks.org/wiki/First_Aid>, through the MediaWiki API | CC BY-SA 4.0; the built file is an adaptation under the same licence | Wikibooks contributors; each chapter keeps its title and URL |
+| `travelfacts.db` (`data-pipeline/build_travel_facts.py`) | Wikidata query service: emergency numbers, plugs, voltage, driving side, currency, dialling code, capital, languages and time zones of sovereign states | CC0 1.0 | Wikidata contributors |
 
 `build_ethereum.py` reads the NIST PDFs with [pypdf](https://github.com/py-pdf/pypdf) (BSD-3-Clause), which is needed on the build computer only and is not shipped; without it the NIST texts are left out.
 

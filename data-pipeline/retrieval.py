@@ -56,8 +56,17 @@ def query_terms(question):
     return list(dict.fromkeys(terms))
 
 
+# American and British spellings of the same word. The index holds whichever
+# the article used, so a question with "center" must also find "centre".
+_SPELLINGS = [("center", "centre"), ("meter", "metre"), ("kilometer", "kilometre"), ("liter", "litre"), ("theater", "theatre"), ("harbor", "harbour"), ("color", "colour"), ("neighborhood", "neighbourhood"), ("labor", "labour"), ("traveler", "traveller"), ("jewelry", "jewellery"), ("airplane", "aeroplane"), ("program", "programme"), ("gray", "grey"), ("tire", "tyre"), ("license", "licence"), ("defense", "defence"), ("aluminum", "aluminium"), ("fiber", "fibre")]
+SPELLING = {a: b for a, b in _SPELLINGS} | {b: a for a, b in _SPELLINGS}
+
+
 def _match(terms, operator):
-    return f" {operator} ".join(f'"{term}"' for term in terms)
+    def one(term):
+        other = SPELLING.get(term)
+        return f'("{term}" OR "{other}")' if other else f'"{term}"'
+    return f" {operator} ".join(one(term) for term in terms)
 
 
 def to_fts_query(question):

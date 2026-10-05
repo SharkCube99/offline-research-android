@@ -19,13 +19,55 @@ object QueryBuilder {
         return terms.ifEmpty { tokens }.distinct()
     }
 
+    private val GETTING_THERE = Regex(
+        """\b(?:get|getting|go|going|travel|travelling|traveling)\s+(?:from|to|into|around)\b|\bway (?:from|to|into)\b""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /**
+     * Words a question implies without saying. "How do I get from the airport to
+     * the city center?" is about transport, and the passage that answers it speaks
+     * of the metro, buses and taxis. They are used to pick passages and sentences
+     * inside articles already found, never to search for articles.
+     */
+    fun impliedTerms(question: String): List<String> =
+        if (GETTING_THERE.containsMatchIn(question)) listOf("transport", "metro", "bus", "taxi", "train", "shuttle") else emptyList()
+
     /** True for the n-grams that [nameGrams] builds from parts of the question. */
     fun isPlainName(gram: List<String>, maxWords: Int = MAX_NAME_WORDS): Boolean =
         gram.size <= maxWords && gram.first() !in FUNCTION_WORDS && gram.last() !in FUNCTION_WORDS
 
-    /** Terms joined with AND or OR, each quoted so no FTS5 syntax can leak in. */
+    // American and British spellings of the same word. The index holds whichever
+    // the article used, so a question with "center" must also find "centre".
+    private val SPELLINGS = listOf(
+        "center" to "centre",
+        "meter" to "metre",
+        "kilometer" to "kilometre",
+        "liter" to "litre",
+        "theater" to "theatre",
+        "harbor" to "harbour",
+        "color" to "colour",
+        "neighborhood" to "neighbourhood",
+        "labor" to "labour",
+        "traveler" to "traveller",
+        "jewelry" to "jewellery",
+        "airplane" to "aeroplane",
+        "program" to "programme",
+        "gray" to "grey",
+        "tire" to "tyre",
+        "license" to "licence",
+        "defense" to "defence",
+        "aluminum" to "aluminium",
+        "fiber" to "fibre",
+    )
+    private val SPELLING: Map<String, String> = SPELLINGS.toMap() + SPELLINGS.associate { it.second to it.first }
+
+    /** Terms joined with AND or OR, each quoted so no FTS5 syntax can leak in; a word with two spellings matches either. */
     fun match(terms: List<String>, operator: String): String =
-        terms.joinToString(" $operator ") { "\"$it\"" }
+        terms.joinToString(" $operator ") { term ->
+            val other = SPELLING[term]
+            if (other != null) "(\"$term\" OR \"$other\")" else "\"$term\""
+        }
 
     /**
      * Word n-grams that could be an article name, longest first. An n-gram may

@@ -10,7 +10,7 @@ class ContextBudgeter(
     private val countTokens: (String) -> Int,
 ) : SourceSelector {
     /** Whole passages, best first, as many as fit. The question is not used. */
-    override fun select(question: String, ranked: List<Passage>): List<Passage> = select(ranked)
+    override fun select(question: String, ranked: List<Passage>, hints: List<String>): List<Passage> = select(ranked)
 
     /** [ranked] is best first. The result keeps that order. */
     fun select(ranked: List<Passage>): List<Passage> {

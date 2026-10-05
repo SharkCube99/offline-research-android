@@ -136,7 +136,8 @@ class LeadPassageTest {
         // The article named by the words inside the question is still found.
         assertTrue(ranked.any { it.title == "Sky blue" })
 
-        val sources = SourceCompressor(60).select(question, retriever.withLeads(question, ranked))
+        // Both named articles are offered; the one the whole question points at comes first.
+        val sources = SourceCompressor(120).select(question, retriever.withLeads(question, ranked))
         assertEquals("Diffuse sky radiation", sources.first().title)
         assertTrue("sunlight scattered by molecules" in sources.first().excerpt)
     }
@@ -247,6 +248,16 @@ class PlannerSearchTest {
     }
 
     @Test
+    fun formsOfAWordAreRecognisedAndDifferentWordsAreNot() {
+        for ((a, b) in listOf("emergency" to "emergencies", "confused" to "confusion", "tide" to "tides", "causes" to "caused", "burn" to "burns")) {
+            assertTrue("$a / $b", sameWord(a, b))
+        }
+        for ((a, b) in listOf("plug" to "plum", "state" to "station", "hotel" to "hot", "cold" to "colder".take(3))) {
+            assertFalse("$a / $b", sameWord(a, b))
+        }
+    }
+
+    @Test
     fun anArticleThePlannerNamesIsShownByItsPassagesThatMatchTheQuestion() {
         val found = retriever.search("Hypothermia", context = question)
         assertEquals("Hypothermia", found.first().title)
@@ -260,5 +271,21 @@ class PlannerSearchTest {
         assertTrue(retriever.search("Doppler ultrasonography", context = question).none { it.named })
         // Searched on its own, with no question behind it, the same title is found.
         assertEquals("Doppler ultrasonography", retriever.search("Doppler ultrasonography").first().title)
+    }
+}
+
+class ImpliedTermsTest {
+    @Test
+    fun aQuestionAboutGettingSomewhereImpliesTransport() {
+        assertTrue("metro" in QueryBuilder.impliedTerms("How do I get from Lisbon airport to the city center?"))
+        assertTrue("taxi" in QueryBuilder.impliedTerms("What is the best way to get to the old town?"))
+        assertTrue(QueryBuilder.impliedTerms("What causes the tides?").isEmpty())
+        assertTrue(QueryBuilder.impliedTerms("How do I get a visa for Japan?").isEmpty())
+    }
+
+    @Test
+    fun bothSpellingsOfAWordAreSearched() {
+        assertEquals("\"airport\" AND (\"center\" OR \"centre\")", QueryBuilder.match(listOf("airport", "center"), "AND"))
+        assertEquals("(\"colour\" OR \"color\") OR \"sky\"", QueryBuilder.match(listOf("colour", "sky"), "OR"))
     }
 }

@@ -171,6 +171,32 @@ Checked on the PC by replaying the 61 benchmark questions with the searches the 
 
 Not measured: the effect on answers and on the benchmark score.
 
+## Second round of search fixes, and two general packs (2026-10-05, version 0.7.3)
+
+Three travel questions still missed although the answer was in the index (Thailand's emergency numbers, Brazil's plugs, getting from Lisbon airport to the centre). The causes, found by listing the ranked candidates for each:
+
+- **A planner's suggestion is not the question naming something.** Passages found through a planner's search are marked `suggested`, not `named`. Suggested articles get a smaller bonus (1.0 against 2.5), so a guess such as "Brazilian plug" no longer crowds out passages that match the question, while "Hypothermia" still gets its opening shown.
+- **Passages that cover the whole question come first.** A passage holding every content word of the question adds up to 2 points to its sentences; one holding half of them or fewer adds nothing. "Telephone numbers in Thailand" (emergency, numbers, Thailand) now beats the education section of "Thailand".
+- **Word forms.** `sameWord` strips plural, past and -ing endings before comparing: emergency/emergencies, confused/confusion.
+- **Two spellings.** Search terms with an American and a British spelling match either (`center` finds `centre`); 19 pairs, the same list in the Python reference.
+- **Implied words.** "How do I get from… to…" adds transport, metro, bus, taxi, train and shuttle. They are used only to choose passages and sentences inside articles already found, never to find articles.
+- **A wider pool.** Sentences are drawn from up to ten passages (was six); an article's opening no longer uses one of its two places; a planner-named article needs two of the question's words in its best passage to be kept.
+
+Two more packs in the index format, both general and both strict:
+
+| Pack | Built by | Contents | Size |
+|---|---|---|---|
+| `firstaid.db` | `data-pipeline/build_firstaid.py` | The Wikibooks "First Aid" book, 52 chapters, with everyday names as aliases ("choking" for "Obstructed Airway") | 0.33 MB |
+| `travelfacts.db` | `data-pipeline/build_travel_facts.py` | 197 countries from Wikidata: emergency numbers and what each is for, mains voltage and plug types, driving side, currency, dialling code, capital, official languages, time zones | 1.2 MB |
+
+Checked on the PC: 119 unit tests pass; the Kotlin search matches the Python reference on all 50 evaluation questions with all six index files present; retrieval evaluation 46/50 and 24/25, unchanged; in the replay of the 61 benchmark questions the three travel questions now receive the passages with the answer.
+
+Known leftovers: the planner's "Brazilian plug" still brings in an article on a fruit tree beside the right passages; a first-aid chapter that merely contains all of a question's words (for example "Electrocution" for a question about treating a burn) can appear as a source.
+
+Not measured: any of this on a phone or on the benchmark.
+
+A held-out set of 40 questions (`bench/heldout40/`) was written by a separate agent that saw nothing of this repository, with reference answers by another. It is for measuring only: nothing is to be tuned on it. The questions were not read while the packs above were built.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

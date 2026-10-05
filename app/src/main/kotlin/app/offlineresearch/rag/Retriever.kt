@@ -15,6 +15,8 @@ data class Passage(
     val excerpt: String = text,
     /** The question contains this article's title or one of its redirects. */
     val named: Boolean = false,
+    /** A search the planner wrote named this article: a suggestion, weaker than the question naming it. */
+    val suggested: Boolean = false,
 ) {
     /** Unique across corpora. */
     val passageId: String get() = "$corpus:$id"
@@ -65,6 +67,9 @@ class Retriever(
      * that match the user's words, and is left out if none does: "Hypothermia"
      * for someone shivering and confused stays, a title the planner made up
      * that has nothing to do with the question goes.
+     *
+     * With neither [context] nor [implied] this is the search of the Python
+     * reference, passage for passage.
      */
     fun search(
         question: String,
@@ -72,6 +77,7 @@ class Retriever(
         perArticle: Int = 2,
         candidates: Int = 20,
         context: String? = null,
+        implied: List<String> = emptyList(),
     ): List<Passage> {
         val terms = QueryBuilder.queryTerms(question)
         if (terms.isEmpty()) return emptyList()
@@ -80,7 +86,7 @@ class Retriever(
         val named = mutableListOf<Named>()
         val byCorpus = LinkedHashMap<String, List<Long>>()
         for ((corpus, db) in indexes) {
-            named += nameChannel(corpus, db, question, terms, contextTerms)
+            named += nameChannel(corpus, db, question, terms, contextTerms, implied)
             byCorpus[corpus] = passageChannel(db, terms, candidates, relax = corpus !in strict)
         }
         named.sortWith(compareBy<Named> { -it.nameLength }.thenBy { it.score })
@@ -132,19 +138,21 @@ class Retriever(
      */
     fun withLeads(question: String, ranked: List<Passage>, maxArticles: Int = 3): List<Passage> {
         val terms = QueryBuilder.queryTerms(question)
-        val named = ranked.filter { it.named || titleIsNamed(it.title, terms) }.distinctBy { it.sourceKey }.take(maxArticles)
+        val named = ranked.filter { it.named || it.suggested || titleIsNamed(it.title, terms) }
+            .distinctBy { it.sourceKey }.take(maxArticles)
         val leads = named.mapNotNull { passage ->
             if (passage.seq == 0) return@mapNotNull passage
             val first = indexes.getValue(passage.corpus).query(
                 "SELECT a.first_passage_id FROM passages p JOIN articles a ON a.id = p.article_id WHERE p.id = ${passage.id}",
             ) { it.long(0) }.firstOrNull() ?: return@mapNotNull null
             (ranked.firstOrNull { it.corpus == passage.corpus && it.id == first } ?: load(passage.corpus, first))
-                ?.copy(named = passage.named)
+                ?.copy(named = passage.named, suggested = passage.suggested)
         }
         val leadIds = leads.map { it.passageId }.toSet()
-        // The named articles' openings, then their other passages, then the rest.
-        val rest = ranked.filter { it.passageId !in leadIds }
-        return leads + rest.filter { it.named } + rest.filter { !it.named }
+        // The openings first, then everything in its searched order. Named passages
+        // are not moved up: a planner's guess must not push out a passage that
+        // matched the question's own words.
+        return leads + ranked.filter { it.passageId !in leadIds }
     }
 
     /** Best first. Optionally only passages [first]..[last]. */
@@ -190,6 +198,8 @@ class Retriever(
         question: String,
         terms: List<String>,
         contextTerms: List<String> = terms,
+        /** Words the question implies (see QueryBuilder.impliedTerms); they help choose which passages of a named article to take. */
+        implied: List<String> = emptyList(),
     ): List<Named> {
         val claimed = HashSet<Int>() // word positions already matched by a longer name
         val articles = LinkedHashMap<Long, Pair<Int, Article>>()
@@ -215,13 +225,27 @@ class Retriever(
             for (article in rows) articles.putIfAbsent(article.id, gram.length to article)
         }
 
-        val anyTerm = QueryBuilder.match(contextTerms, "OR")
+        val anyTerm = QueryBuilder.match((contextTerms + implied).distinct(), "OR")
+        val planned = contextTerms !== terms
         val scored = articles.values.mapNotNull { (length, article) ->
             // The article's passages that best match the whole question.
             val best = ranked(db, anyTerm, 2, article.first, article.first + article.count - 1)
-            if (best.isEmpty()) null else Named(length, best[0].score, corpus, best.map { it.passageId })
+            when {
+                best.isEmpty() -> null
+                // A title the planner proposed has to earn its place: its best passage
+                // must hold two of the question's words, not one. "Plug" (a comic
+                // character) matches a question about Brazil's plugs in a single word.
+                planned && contextTerms.size >= 3 && hits(corpus, best[0].passageId, contextTerms) < 2 -> null
+                else -> Named(length, best[0].score, corpus, best.map { it.passageId })
+            }
         }
         return scored.sortedWith(compareBy<Named> { -it.nameLength }.thenBy { it.score }).take(NAME_ARTICLES)
+    }
+
+    /** How many of [terms] the passage contains, in any form of the word. */
+    private fun hits(corpus: String, passageId: Long, terms: List<String>): Int {
+        val tokens = tokenize(load(corpus, passageId)?.text ?: return 0).toSet()
+        return terms.count { term -> term in tokens || tokens.any { sameWord(term, it) } }
     }
 
     private fun load(corpus: String, passageId: Long): Passage? =

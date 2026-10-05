@@ -1,9 +1,12 @@
 package app.offlineresearch.rag
 
 /** Chooses, and possibly shortens, the retrieved passages that go into the prompt. */
-fun interface SourceSelector {
-    /** [ranked] is best first. The result keeps that order; `excerpt` is what the model will read. */
-    fun select(question: String, ranked: List<Passage>): List<Passage>
+interface SourceSelector {
+    /**
+     * [ranked] is best first. The result keeps that order; `excerpt` is what the model will read.
+     * [hints] are the searches a planner wrote for the question, if any.
+     */
+    fun select(question: String, ranked: List<Passage>, hints: List<String> = emptyList()): List<Passage>
 }
 
 // A sentence ends at . ! or ? (plus any closing quotes or brackets) followed by
@@ -30,6 +33,12 @@ private const val LEAD_SENTENCES = 4
 /** Added to every sentence of an article the question names. */
 private const val NAMED_BONUS = 2.5
 
+/** A passage holding every word of the question adds half of this to its sentences; one holding half of them or fewer adds nothing. */
+private const val COVERAGE_WEIGHT = 4.0
+
+/** Added when only a search named the article: a planner's suggestion is a guess, and guesses must not crowd out matching passages. */
+private const val GUESSED_BONUS = 1.0
+
 /** Weight of a sentence from an article whose title shares no word with the question. */
 private const val OFF_TOPIC_WEIGHT = 0.6
 
@@ -55,7 +64,7 @@ fun roughTokens(text: String): Int = (text.length + 3) / 4
  */
 class SourceCompressor(
     private val budgetTokens: Int,
-    private val maxPassages: Int = 6,
+    private val maxPassages: Int = 10,
     private val maxPerSource: Int = 2,
     private val estimateTokens: (String) -> Int = ::roughTokens,
 ) : SourceSelector {
@@ -72,10 +81,14 @@ class SourceCompressor(
         val base: Double,
     )
 
-    override fun select(question: String, ranked: List<Passage>): List<Passage> {
+    override fun select(question: String, ranked: List<Passage>, hints: List<String>): List<Passage> {
         val candidates = candidates(ranked)
         if (candidates.isEmpty()) return emptyList()
         val terms = QueryBuilder.queryTerms(question)
+        // The planner's words, where they add to the question's: a question about a
+        // child and boiling water never says "burn", the planner's "Burn treatment"
+        // does. They are a guess, so they count for half.
+        val hintTerms = hints.flatMap { QueryBuilder.queryTerms(it) }.distinct().filter { hint -> terms.none { sameWord(it, hint) } }
 
         val sentences = mutableListOf<Sentence>()
         candidates.forEachIndexed { rank, passage ->
@@ -84,13 +97,23 @@ class SourceCompressor(
             // "Visa policy of Japan" every sentence is about visas and Japan.
             val titleTokens = tokenize(passage.title).toSet()
             val (inTitle, other) = terms.partition { matches(it, titleTokens) }
-            val named = passage.named || titleIsNamed(passage.title, terms)
+            // The question's own words name the article ("Tide", "Vegan restaurants
+            // in Berlin"), or only a search did, which may be the planner's guess.
+            val namedByQuestion = passage.named || titleIsNamed(passage.title, terms)
+            val named = namedByQuestion || passage.suggested
+            // How much of the question the passage as a whole covers. A passage that
+            // holds every word of "emergency numbers in Thailand" is where the answer
+            // is; an article that shares one word with the question is not.
+            val passageTokens = tokenize(passage.text).toSet()
+            val coverage = if (terms.isEmpty()) 0.0 else terms.count { matches(it, passageTokens) }.toDouble() / terms.size
+            val covered = COVERAGE_WEIGHT * (coverage - 0.5).coerceAtLeast(0.0)
             splitSentences(body(passage)).forEachIndexed { position, raw ->
                 val text = raw.replace(EDITOR_NOTE, "")
                 if (text.length > MAX_SENTENCE_CHARS || REFERENCE_DEBRIS.containsMatchIn(text)) return@forEachIndexed
                 val tokens = tokenize(text).toSet()
                 val own = other.count { matches(it, tokens) }
                 val repeated = inTitle.count { matches(it, tokens) }
+                val hinted = hintTerms.count { matches(it, tokens) }
                 // The opening of the article the question names states what the
                 // subject is and, usually, the answer; its first sentences are
                 // wanted even when they repeat none of the question's words.
@@ -102,14 +125,16 @@ class SourceCompressor(
                 }
                 // The question's other words count most. Then come on-topic articles,
                 // better ranked passages and shorter sentences.
-                var score = 2.0 * own + 0.5 * inTitle.size + 0.25 * repeated + lead + 1.0 / (1 + rank) - text.length / 400.0
+                var score = 2.0 * own + 1.0 * hinted + 0.5 * inTitle.size + 0.25 * repeated + lead + covered +
+                    1.0 / (1 + rank) - text.length / 400.0
                 // The article the question names is where the answer is expected. In a
                 // list such as "Vegan restaurants in Berlin" no entry repeats more of
                 // the question than a passing remark elsewhere does; without this the
                 // remarks would take the budget from the list.
                 // A stray mention in an article about something else is worth less.
                 if (inTitle.isEmpty() && !named) score *= OFF_TOPIC_WEIGHT
-                sentences += Sentence(rank, position, text, if (named) score + NAMED_BONUS else score, own + repeated, lead > 0, score)
+                val bonus = if (namedByQuestion) NAMED_BONUS else if (named) GUESSED_BONUS else 0.0
+                sentences += Sentence(rank, position, text, score + bonus, own + repeated + hinted, lead > 0, score)
             }
         }
 
@@ -172,9 +197,13 @@ class SourceCompressor(
         val out = mutableListOf<Passage>()
         for (passage in ranked) {
             if (!seen.add(passage.passageId)) continue
-            val used = perSource[passage.sourceKey] ?: 0
-            if (used >= maxPerSource) continue
-            perSource[passage.sourceKey] = used + 1
+            // An article's opening does not use up one of its places: it says what the
+            // subject is, and the places are for the passages that answer the question.
+            if (passage.seq != 0) {
+                val used = perSource[passage.sourceKey] ?: 0
+                if (used >= maxPerSource) continue
+                perSource[passage.sourceKey] = used + 1
+            }
             out += passage
             if (out.size == maxPassages) break
         }

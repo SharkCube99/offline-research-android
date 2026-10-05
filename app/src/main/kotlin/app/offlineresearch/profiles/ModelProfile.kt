@@ -54,7 +54,7 @@ data class ModelProfile(
     /** Send the sentences that bear on the question instead of whole passages. */
     @SerialName("compress_sources") val compressSources: Boolean = true,
     /** How many passages sentences may be taken from when compressing. */
-    @SerialName("source_passages") val sourcePassages: Int = 6,
+    @SerialName("source_passages") val sourcePassages: Int = 10,
     /** The small model that writes search queries. Null = keyword search only. */
     val planner: PlannerProfile? = null,
 ) {

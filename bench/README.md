@@ -14,6 +14,17 @@ The questions another entry to the same bounty, [AndroidLM](https://github.com/P
 
 Neither file was edited.
 
+## The held-out set (`heldout40/`)
+
+The 61 questions above have been used to find and fix faults, so a score on them flatters the app. `heldout40/` is 40 questions the app was never tuned on: 8 on finding places (pharmacies, hospitals, cafés and the like, in cities the 61 do not use), 8 science and technology, 8 travel facts about other countries, 6 emergencies, 6 calculations and 4 multi-step questions.
+
+| File | What | From |
+|---|---|---|
+| `questions.jsonl` | The questions, each with a note on what a good answer holds | A Claude agent given only the brief (kinds of question and what to avoid), with no access to this repository |
+| `reference_answers.jsonl` | The reference: answers written with web search, with the pages used | A second Claude agent given only the questions |
+
+Rule: measure on it, never tune on it. If a fault shows up here, fix the general cause and check the fix on other questions.
+
 ## Running it
 
 The app, the models and the index must be on the phone (`scripts/setup.sh`).

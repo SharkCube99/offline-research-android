@@ -149,12 +149,15 @@ class SourceCompressorTest {
     }
 
     @Test
-    fun atMostTwoPassagesPerArticleAndSixInAll() {
+    fun atMostTwoPassagesPerArticleBesideItsOpeningAndTenInAll() {
         val many = (1..5).map { passage(it.toLong(), "Tide", "Tides are caused by gravity, part $it.", seq = it) } +
             (10..20).map { passage(it.toLong(), "Tide table $it", "What causes tides is explained in table $it.", seq = 1) }
         val sources = SourceCompressor(2000).select("What causes the tides?", many)
-        assertEquals(6, sources.size)
+        assertEquals(10, sources.size)
         assertEquals(2, sources.count { it.title == "Tide" })
+        // The opening comes on top of the two.
+        val withOpening = listOf(passage(99, "Tide", "Tides are the rise and fall of the sea, caused by gravity.")) + many
+        assertEquals(3, SourceCompressor(2000).select("What causes the tides?", withOpening).count { it.title == "Tide" })
     }
 
     @Test
@@ -216,9 +219,10 @@ class CompressionReportTest {
             val counts = mutableListOf<Int>()
             val report = StringBuilder()
             for ((question, planned) in queries) {
-                val first = retriever.withLeads(question, retriever.search(question))
-                val ranked = retriever.withLeads(question, interleave(listOf(first) + planned.map { retriever.search(it, context = question) }))
-                val sources = compressor.select((listOf(question) + planned).joinToString(" "), ranked)
+                val implied = QueryBuilder.impliedTerms(question)
+                val first = retriever.withLeads(question, retriever.search(question, implied = implied))
+                val ranked = retriever.withLeads(question, interleave(listOf(first) + planned.map { query -> retriever.search(query, context = question, implied = implied).map(::asSuggestion) }))
+                val sources = compressor.select(question, ranked, hints = planned + implied)
                 val before = whole.select(ranked)
                 compressed += sources.sumOf { roughTokens(it.excerpt) }
                 full += before.sumOf { roughTokens(it.text) }
@@ -228,6 +232,10 @@ class CompressionReportTest {
                 report.append("whole passages (800 budget): ${before.size} passages from ${before.map { it.title }.distinct().size} articles, ~${full.last()} tokens; ")
                 report.append("compressed ($budget budget): ${sources.size} passages from ${sources.map { it.title }.distinct().size} articles, ~${compressed.last()} tokens\n\n")
                 sources.forEachIndexed { i, s -> report.append("[${i + 1}] ").append(s.excerpt).append("\n\n") }
+                // What the sentences were chosen from; "*" marks an article the question or the planner names.
+                report.append("ranked: ").append(
+                    ranked.take(40).joinToString("; ") { "${it.corpus.take(4)}:${it.title.take(30)}#${it.seq}${if (it.named) "*" else if (it.suggested) "+" else ""}" },
+                ).append("\n\n")
             }
             fun median(values: List<Int>) = values.sorted()[values.size / 2]
             val summary = "questions ${queries.size}; estimated source tokens (chars/4), median: whole passages ${median(full)}, " +

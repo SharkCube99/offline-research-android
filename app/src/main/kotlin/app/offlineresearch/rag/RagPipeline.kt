@@ -51,6 +51,9 @@ data class AnswerSettings(
     val presencePenalty: Float,
 )
 
+/** What a planner's search names is a suggestion; only the question's own words name an article outright. */
+fun asSuggestion(passage: Passage): Passage = if (passage.named) passage.copy(named = false, suggested = true) else passage
+
 /**
  * question -> first search (shown at once) -> planner -> more searches ->
  * source selection -> answerer.
@@ -71,7 +74,8 @@ class RagPipeline(
         // useful can be on screen within about a second.
         emit(RagEvent.Stage(RagStage.SEARCHING))
         val firstStart = System.currentTimeMillis()
-        val first = withContext(Dispatchers.IO) { retriever.withLeads(question, retriever.search(question)) }
+        val implied = QueryBuilder.impliedTerms(question)
+        val first = withContext(Dispatchers.IO) { retriever.withLeads(question, retriever.search(question, implied = implied)) }
         var searchMs = System.currentTimeMillis() - firstStart
         preview?.invoke(question, first)?.let { emit(RagEvent.Preview(it)) }
 
@@ -86,11 +90,11 @@ class RagPipeline(
         if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
         val secondStart = System.currentTimeMillis()
         val (retrieved, sources) = withContext(Dispatchers.IO) {
-            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { retriever.search(it, context = question) }))
+            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { query -> retriever.search(query, context = question, implied = implied).map(::asSuggestion) }))
             // Sentences are chosen by the question's words and the planner's: a
             // question about a child and boiling water never says "burn", but the
             // planner's "Burn treatment" does, and that is the word the answer uses.
-            ranked.size to selector.select(queries.joinToString(" "), ranked)
+            ranked.size to selector.select(question, ranked, hints = extra + implied)
         }
         searchMs += System.currentTimeMillis() - secondStart
         emit(RagEvent.Sources(sources))

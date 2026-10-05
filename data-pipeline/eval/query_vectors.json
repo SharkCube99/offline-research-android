@@ -709,5 +709,70 @@
    ]
   ],
   "index_text": "sky blue"
+ },
+ {
+  "question": "How do I get from the airport to the city center?",
+  "tokens": [
+   "how",
+   "do",
+   "i",
+   "get",
+   "from",
+   "the",
+   "airport",
+   "to",
+   "the",
+   "city",
+   "center"
+  ],
+  "terms": [
+   "airport",
+   "city",
+   "center"
+  ],
+  "and_query": "\"airport\" AND \"city\" AND (\"center\" OR \"centre\")",
+  "name_grams": [
+   [
+    0,
+    11,
+    "how do i get from the airport to the city center"
+   ],
+   [
+    6,
+    5,
+    "airport to the city center"
+   ],
+   [
+    3,
+    4,
+    "get from the airport"
+   ],
+   [
+    6,
+    4,
+    "airport to the city"
+   ],
+   [
+    9,
+    2,
+    "city center"
+   ],
+   [
+    6,
+    1,
+    "airport"
+   ],
+   [
+    9,
+    1,
+    "city"
+   ],
+   [
+    10,
+    1,
+    "center"
+   ]
+  ],
+  "index_text": "get airport city center"
  }
 ]
