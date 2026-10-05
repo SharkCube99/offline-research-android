@@ -193,6 +193,20 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun ownKnowledgeIsAllowedOnlyUnderItsLabelAndCanBeSwitchedOff() {
+        val open = PromptBuilder.system()
+        assertTrue(PromptBuilder.UNSOURCED in open)
+        assertTrue(PromptBuilder.NOT_COVERED in open)
+        val strict = PromptBuilder.system(ownKnowledge = false)
+        assertTrue(PromptBuilder.UNSOURCED !in strict)
+        assertTrue("state as a fact only what a source supports" in strict)
+
+        assertTrue(Citations.hasUnsourced("Boil it [1].\n\n${PromptBuilder.UNSOURCED}\nWater weighs 1 kg per litre."))
+        assertTrue(Citations.hasUnsourced("**From my general knowledge (not from the offline sources):** yes."))
+        assertTrue(!Citations.hasUnsourced("The tide is caused by the Moon [1]."))
+    }
+
+    @Test
     fun noSuffixAddsNothing() {
         assertFalse(PromptBuilder.system().endsWith("\n"))
     }

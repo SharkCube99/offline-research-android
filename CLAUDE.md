@@ -39,7 +39,7 @@ question
 - **Inference layer (C++ and JNI):** wraps llama.cpp. Exposes `load`, `generate` (streaming callback), `cancel`, and `metrics`. Memory-map the model (mmap on, mlock off by default). Reuse the KV cache for the fixed system prompt (prefix caching).
 - **Model profiles (JSON):** selected at first launch by available RAM. The high profile uses the 30B MoE; the low profile uses a 4B dense model (and is also the development profile). Each profile sets model path, context size, threads, batch size, retrieval budget and chat template.
 - **Knowledge layer:** offline Wikipedia and Wikivoyage first, then practical corpora (first aid, survival, repair, plant and food safety) subject to licence review. Chunks of about 200 to 300 words, prefixed with the article title, stored with source metadata in SQLite FTS5.
-- **Answer contract:** the answerer may only state facts supported by the supplied passages or its own general reasoning, and must cite passage numbers. If the passages do not cover the question, it says so instead of guessing.
+- **Answer contract:** the answerer states facts from the supplied passages and cites passage numbers. Where the passages fall short it may answer from its own knowledge, but only under a fixed line that marks that part as unsourced, and the app shows a warning next to such an answer (decided 2026-10-05; `own_knowledge` in the profile switches it off). It says "not covered" only when neither can answer, such as questions that depend on the reader's location or on today's prices.
 
 ## 5. Models and data (VERIFY current availability)
 

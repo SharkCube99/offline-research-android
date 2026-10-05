@@ -215,6 +215,20 @@ Known limits: 410,598 places have no city of 15,000 people or more within 50 km 
 
 Not measured: any of this on a phone or on the benchmark.
 
+### Own knowledge, labelled, and a calculator (build 0.7.5)
+
+In the 35B benchmark run about 14 of 61 answers were refusals in one wording or another, and several arithmetic answers were right on the sum and then declined the second half ("can I take it on a plane?", "how much does the water weigh?") because no source said so. A reader who is offline has nothing else to ask.
+
+- **Own knowledge under a label.** The answer rules now tell the model to answer what the sources leave out from its own general knowledge, under a line that reads exactly "From general knowledge, not from the offline sources:", with no source numbers below it. The app looks for that line and shows a warning in red under the answer; the log records `unsourced`. The fixed "Not covered" reply remains for what neither can answer (the reader's location, today's prices, weather, opening hours). When the search finds nothing, the model is now asked anyway. `own_knowledge: false` in a profile restores the sources-only rules. This changes the answer contract in `CLAUDE.md` section 4; the owner decided it on 2026-10-05.
+- **Conversions as a source (`rag/UnitConverter.kt`).** Quantities in the question ("7.5 liters per 100 km", "104°F", "5,000 mAh at 3.85 V", km, miles, m, feet, kg, pounds, liters, gallons) are converted exactly by the app and given to the model as the last numbered source, titled "Calculator". The 4B model's wrong arithmetic answers were wrong formulas (7.5 × 235.2 for a fuel conversion), not slips of addition; this removes the choice of formula.
+- **A check of the sums (`rag/Calculator.kt`).** The model is asked to show each calculation as an equation. The app recomputes the left side and, where the stated result is wrong, writes "(calculator: …)" after it; the log records `calculator_fixes`. LaTeX that models write around sums is turned into plain text. It leaves alone whatever it cannot read and whatever may be a change of unit.
+
+Checked on the PC: 134 unit tests pass. Run over the 183 saved benchmark answers (`CalculatorReportTest`), the check of the sums changes nothing: no false alarm, and no slip to catch either, so its benefit is unproven. The conversions give 31.36 mpg, 40 °C and 19.25 Wh for the three benchmark questions that ask for them.
+
+Risk, stated plainly: an unsourced part can be wrong, and for a first-aid question that matters. The label and the warning are the safeguard; the benchmark's count of verified errors will show the cost.
+
+Not measured: any of this on a phone or on the benchmark. How the 35B and 4B models actually use the label is unknown until then.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

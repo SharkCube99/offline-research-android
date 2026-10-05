@@ -63,9 +63,14 @@ class RagPipelineTest {
     @After
     fun closeIndex() = index.close()
 
-    private fun pipeline(answerer: FakeEngine, planner: QueryPlanner = KeywordPlanner, budget: Int = 200) = RagPipeline(
+    private fun pipeline(
+        answerer: FakeEngine,
+        planner: QueryPlanner = KeywordPlanner,
+        budget: Int = 200,
+        ownKnowledge: Boolean = true,
+    ) = RagPipeline(
         planner, Retriever(mapOf("wikipedia" to index)), ContextBudgeter(budget, countTokens = answerer::countTokens),
-        answerer, settings, seed = { 7 }, preview = SourceCompressor(200)::preview,
+        answerer, settings.copy(ownKnowledge = ownKnowledge), seed = { 7 }, preview = SourceCompressor(200)::preview,
     )
 
     private fun run(pipeline: RagPipeline, question: String) = runBlocking { pipeline.answer(question).toList() }
@@ -124,9 +129,20 @@ class RagPipelineTest {
     }
 
     @Test
-    fun nothingRetrievedGivesNotCoveredWithoutRunningTheModel() {
-        val answerer = FakeEngine(listOf("should not be used"))
+    fun nothingRetrievedStillAsksTheModelWhenItMayUseItsOwnKnowledge() {
+        val answerer = FakeEngine(listOf("${PromptBuilder.UNSOURCED} a xylophone is an instrument."))
         val events = run(pipeline(answerer), "xylophone quizzical")
+
+        val request = answerer.requests.single()
+        assertTrue("(the search found none)" in request.userPrompt)
+        assertTrue(PromptBuilder.UNSOURCED in request.systemPrompt)
+        assertEquals(0, (events.last() as RagEvent.Finished).report.sources)
+    }
+
+    @Test
+    fun sourcesOnlyGivesNotCoveredWithoutRunningTheModelWhenNothingIsRetrieved() {
+        val answerer = FakeEngine(listOf("should not be used"))
+        val events = run(pipeline(answerer, ownKnowledge = false), "xylophone quizzical")
 
         assertTrue(answerer.requests.isEmpty())
         assertEquals(PromptBuilder.NOT_COVERED, events.filterIsInstance<RagEvent.Token>().single().text)

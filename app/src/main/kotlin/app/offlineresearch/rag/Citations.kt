@@ -75,6 +75,12 @@ object Citations {
         return if (MARKER.containsMatchIn(rest)) rest.trimEnd() else answer
     }
 
+    // Models reword the line a little ("From my general knowledge (not from the offline sources):").
+    private val UNSOURCED_LINE = Regex("(?i)general knowledge[^\\n]{0,12}not from the (?:offline )?sources")
+
+    /** True when part of the answer is the model's own knowledge, with no source behind it. */
+    fun hasUnsourced(answer: String): Boolean = UNSOURCED_LINE.containsMatchIn(answer)
+
     /** True when the answer says the sources do not cover the question. */
     fun isNotCovered(answer: String): Boolean =
         dropStrayNotCovered(answer).contains(PromptBuilder.NOT_COVERED.trimEnd('.'), ignoreCase = true)

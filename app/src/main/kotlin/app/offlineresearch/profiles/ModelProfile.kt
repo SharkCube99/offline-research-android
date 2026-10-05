@@ -55,6 +55,11 @@ data class ModelProfile(
     @SerialName("compress_sources") val compressSources: Boolean = true,
     /** How many passages sentences may be taken from when compressing. */
     @SerialName("source_passages") val sourcePassages: Int = 10,
+    /**
+     * Lets the answerer add what it knows itself where the sources fall short,
+     * under a fixed line that marks it as unsourced. Off: sources only.
+     */
+    @SerialName("own_knowledge") val ownKnowledge: Boolean = true,
     /** The small model that writes search queries. Null = keyword search only. */
     val planner: PlannerProfile? = null,
 ) {

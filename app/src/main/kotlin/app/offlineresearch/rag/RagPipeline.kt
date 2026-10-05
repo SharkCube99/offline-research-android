@@ -49,6 +49,8 @@ data class AnswerSettings(
     val topK: Int,
     val topP: Float,
     val presencePenalty: Float,
+    /** May the model answer from its own knowledge, labelled, where the sources fall short? */
+    val ownKnowledge: Boolean = true,
 )
 
 /** What a planner's search names is a suggestion; only the question's own words name an article outright. */
@@ -89,7 +91,7 @@ class RagPipeline(
         val extra = queries.drop(1)
         if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
         val secondStart = System.currentTimeMillis()
-        val (retrieved, sources) = withContext(Dispatchers.IO) {
+        val (retrieved, found) = withContext(Dispatchers.IO) {
             val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { query -> retriever.search(query, context = question, implied = implied).map(::asSuggestion) }))
             // Sentences are chosen by the question's words and the planner's: a
             // question about a child and boiling water never says "burn", but the
@@ -97,9 +99,12 @@ class RagPipeline(
             ranked.size to selector.select(question, ranked, hints = extra + implied)
         }
         searchMs += System.currentTimeMillis() - secondStart
+        // Exact conversions of the quantities in the question go in as the last
+        // source: the model cites them instead of recalling a factor.
+        val sources = found + listOfNotNull(UnitConverter.source(question))
         emit(RagEvent.Sources(sources))
 
-        if (sources.isEmpty()) {
+        if (sources.isEmpty() && !settings.ownKnowledge) {
             // Nothing to ground an answer on: say so without asking the model.
             emit(RagEvent.Token(PromptBuilder.NOT_COVERED))
             emit(RagEvent.Finished(RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, 0, null)))
@@ -110,7 +115,7 @@ class RagPipeline(
         var answering = false
         answerer.generate(
             GenerationRequest(
-                systemPrompt = PromptBuilder.system(settings.promptSuffix),
+                systemPrompt = PromptBuilder.system(settings.promptSuffix, settings.ownKnowledge),
                 userPrompt = PromptBuilder.user(question, sources),
                 maxTokens = settings.maxTokens,
                 temperature = settings.temperature,

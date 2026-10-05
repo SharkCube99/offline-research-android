@@ -286,6 +286,14 @@ private fun AnswerBubble(message: ChatMessage, onOpenSources: (selected: Int) ->
         stageLabel(message.stage, message.sources.size)?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         }
+        if (Citations.hasUnsourced(message.text)) {
+            Text(
+                "Part of this answer is the model's own knowledge, not taken from a source. It may be wrong or out of date.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.error,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
         if (message.sources.isNotEmpty()) {
             TextButton(onClick = { onOpenSources(0) }) { Text("Sources (${message.sources.size})") }
         }

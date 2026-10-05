@@ -22,6 +22,7 @@ import app.offlineresearch.profiles.ModelProfile
 import app.offlineresearch.profiles.ProfileChoice
 import app.offlineresearch.profiles.ProfileStore
 import app.offlineresearch.rag.AnswerSettings
+import app.offlineresearch.rag.Calculator
 import app.offlineresearch.rag.Citations
 import app.offlineresearch.rag.ContextBudgeter
 import app.offlineresearch.rag.IndexFiles
@@ -243,6 +244,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 topK = active.topK,
                 topP = active.topP,
                 presencePenalty = active.presencePenalty,
+                ownKnowledge = active.ownKnowledge,
             ),
             seed = Random::nextInt,
             preview = compressor::preview,
@@ -324,7 +326,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     is RagEvent.Token -> {
                         raw.append(event.text)
-                        val visible = Citations.dropStrayNotCovered(stripThinking(raw.toString()))
+                        val visible = Calculator.check(Citations.dropStrayNotCovered(stripThinking(raw.toString())), complete = false)
                         updateReply { it.copy(text = visible) }
                     }
                     is RagEvent.Finished -> report = event.report
@@ -334,7 +336,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             failure = e.message
         } finally {
             withContext(NonCancellable) {
-                val text = Citations.dropStrayNotCovered(stripThinking(raw.toString()))
+                val text = Calculator.check(Citations.dropStrayNotCovered(stripThinking(raw.toString())))
                 updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else text) }
                 val after = SystemStats.snapshot(getApplication())
                 val finished = report
@@ -377,6 +379,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 cited = Citations.cited(answer, sources.size),
                 invalidCitations = Citations.invalid(answer, sources.size),
                 notCovered = Citations.isNotCovered(answer),
+                unsourced = Citations.hasUnsourced(answer),
+                calculatorFixes = Regex.fromLiteral("(calculator: ").findAll(answer).count(),
             ),
             stress,
         )

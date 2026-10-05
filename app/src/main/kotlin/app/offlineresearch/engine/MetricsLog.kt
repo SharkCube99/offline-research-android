@@ -66,6 +66,10 @@ data class RagRecord(
     val cited: List<Int>,
     @SerialName("invalid_citations") val invalidCitations: List<Int>,
     @SerialName("not_covered") val notCovered: Boolean,
+    /** Part of the answer is the model's own knowledge, marked as such. */
+    val unsourced: Boolean = false,
+    /** Results the calculator found wrong and corrected in the answer. */
+    @SerialName("calculator_fixes") val calculatorFixes: Int = 0,
 )
 
 /** Marks an answer as question [index] of [total] in stress run [run]. */
