@@ -224,6 +224,19 @@ class Retriever(
             if (gram.length > 1 && QueryBuilder.isPlainName(gram.key.split(' '))) claimed += positions
             for (article in rows) articles.putIfAbsent(article.id, gram.length to article)
         }
+        // Special-purpose packs also list their entries under two-part names
+        // ("pharmacy nairobi"), which a question can contain with words in between.
+        if (corpus in strict) {
+            for ((length, key) in QueryBuilder.splitNames(question)) {
+                val rows = db.query(
+                    "SELECT a.id, a.first_passage_id, a.passage_count " +
+                        "FROM names n JOIN articles a ON a.id = n.article_id " +
+                        "WHERE n.key = ? ORDER BY n.is_title DESC, a.popularity DESC LIMIT $ARTICLES_PER_NAME",
+                    listOf(key),
+                ) { Article(it.long(0), it.long(1), it.long(2)) }
+                for (article in rows) articles.putIfAbsent(article.id, length to article)
+            }
+        }
 
         val anyTerm = QueryBuilder.match((contextTerms + implied).distinct(), "OR")
         val planned = contextTerms !== terms

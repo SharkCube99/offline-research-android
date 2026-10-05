@@ -200,6 +200,30 @@ class StrictPackTest {
     }
 
     @Test
+    fun aStrictPackIsFoundByTwoPhrasesOfTheQuestionWithWordsBetween() {
+        assertTrue("vegan berlin" in QueryBuilder.splitNames("Where can I find good vegan food when I am in Berlin?").map { it.second })
+        val places = IndexFixture.build(
+            folder.newFile("cityplaces.db"),
+            listOf(
+                FixtureArticle(
+                    "Pharmacies in Nairobi",
+                    listOf("Goodlife is a pharmacy; address: Moi Avenue."),
+                    aliases = listOf("pharmacy nairobi", "pharmacies in nairobi"),
+                ),
+            ),
+            meta = mapOf("match" to "strict"),
+        )
+        try {
+            val found = Retriever(linkedMapOf("cityplaces" to places, "wikipedia" to general))
+                .search("Is there a pharmacy open late in central Nairobi?")
+            assertEquals("Pharmacies in Nairobi", found.first().title)
+            assertTrue(found.first().named)
+        } finally {
+            places.close()
+        }
+    }
+
+    @Test
     fun aStrictPackAnswersWhenItsArticleIsNamed() {
         assertEquals("EIP-7702: Set Code for EOAs", retriever.search("What does EIP-7702 let an account do?").first().title)
         val places = retriever.search("Tell me the best vegan restaurants in Berlin")

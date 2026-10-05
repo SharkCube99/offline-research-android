@@ -99,6 +99,32 @@ def name_grams(question, max_words=MAX_NAME_WORDS):
     return grams
 
 
+# How many two-part names are looked up per question in a special-purpose pack.
+MAX_SPLIT_NAMES = 150
+
+
+def split_names(question):
+    """[(words, key)]: names made of two phrases of the question with other words between them.
+
+    "Is there a pharmacy open late in central Nairobi?" never says "pharmacy in
+    Nairobi", but a places pack lists that entry under "pharmacy nairobi" too.
+    The first phrase has one or two words, the second up to three; neither
+    starts or ends with a function word. Longest first, then in reading order.
+    Used only for special-purpose packs, whose entries carry such names.
+    """
+    parts = [(start, length, key) for start, length, key in name_grams(question, max_words=3)
+             if is_plain_name(key.split(), 3)]
+    pairs = []
+    for start1, length1, key1 in parts:
+        if length1 > 2:
+            continue
+        for start2, length2, key2 in parts:
+            if start1 + length1 < start2:  # touching phrases are an ordinary n-gram already
+                pairs.append((length1 + length2, key1 + " " + key2))
+    pairs.sort(key=lambda pair: -pair[0])
+    return pairs[:MAX_SPLIT_NAMES]
+
+
 def is_plain_name(gram, max_words=MAX_NAME_WORDS):
     """True for the n-grams that name_grams builds from parts of the question."""
     return len(gram) <= max_words and gram[0] not in FUNCTION_WORDS and gram[-1] not in FUNCTION_WORDS
@@ -153,7 +179,7 @@ def passage_channel(con, terms, weights, limit, relax=True):
     return [passage_id for passage_id, _ in rows] + extra
 
 
-def name_channel(con, question, terms, weights, max_articles=NAME_ARTICLES):
+def name_channel(con, question, terms, weights, max_articles=NAME_ARTICLES, strict=False):
     """[(name_length, score, [passage ids])] for articles named in the question, best first."""
     claimed = set()   # word positions already matched by a longer name
     articles = {}     # article id -> (name length, first passage, passage count)
@@ -179,6 +205,16 @@ def name_channel(con, question, terms, weights, max_articles=NAME_ARTICLES):
         for article_id, first, count in rows:
             articles.setdefault(article_id, (length, first, count))
 
+    if strict:
+        for length, key in split_names(question):
+            rows = con.execute(
+                "SELECT a.id, a.first_passage_id, a.passage_count "
+                "FROM names n JOIN articles a ON a.id = n.article_id "
+                "WHERE n.key = ? ORDER BY n.is_title DESC, a.popularity DESC LIMIT ?",
+                (key, ARTICLES_PER_NAME)).fetchall()
+            for article_id, first, count in rows:
+                articles.setdefault(article_id, (length, first, count))
+
     any_term = _match(terms, "OR")
     scored = []
     for length, first, count in articles.values():
@@ -199,7 +235,7 @@ def search(indexes, question, k=5, weights=DEFAULT_WEIGHTS, per_article=2, candi
     named = []      # (-name length, score, corpus, [passage ids])
     by_corpus = {}  # corpus -> passage ids from the passage channel
     for corpus, con in indexes.items():
-        for length, score, ids in name_channel(con, question, terms, weights):
+        for length, score, ids in name_channel(con, question, terms, weights, strict=is_strict(con)):
             named.append((-length, score, corpus, ids))
         by_corpus[corpus] = passage_channel(con, terms, weights, candidates, relax=not is_strict(con))
     named.sort()

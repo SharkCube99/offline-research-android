@@ -95,6 +95,13 @@ class NameTest(unittest.TestCase):
         self.assertEqual([key for _, _, key in retrieval.name_grams("heart attack")],
                          ["heart attack", "heart", "attack"])
 
+    def test_split_names_join_two_phrases_with_words_between(self):
+        keys = [key for _, key in retrieval.split_names("Is there a pharmacy open late in central Nairobi?")]
+        self.assertIn("pharmacy nairobi", keys)
+        self.assertIn("pharmacy central nairobi", keys)
+        self.assertNotIn("nairobi pharmacy", keys)   # reading order only
+        self.assertEqual(retrieval.split_names("pharmacy"), [])
+
     def test_single_filler_words_are_not_names(self):
         single = [key for _, length, key in retrieval.name_grams("best way to work") if length == 1]
         self.assertEqual(single, [])

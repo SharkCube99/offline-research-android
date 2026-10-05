@@ -8,6 +8,9 @@ object QueryBuilder {
     /** Longest question looked up whole, in words. */
     const val MAX_QUESTION_NAME_WORDS = 12
 
+    /** How many two-part names are looked up per question in a special-purpose pack. */
+    const val MAX_SPLIT_NAMES = 150
+
     data class NameGram(val start: Int, val length: Int, val key: String)
 
     /** Lower-cased content words of the question, in order, without repeats. */
@@ -32,6 +35,28 @@ object QueryBuilder {
      */
     fun impliedTerms(question: String): List<String> =
         if (GETTING_THERE.containsMatchIn(question)) listOf("transport", "metro", "bus", "taxi", "train", "shuttle") else emptyList()
+
+    /**
+     * Names made of two phrases of the question with other words between them,
+     * as (number of words, key). "Is there a pharmacy open late in central
+     * Nairobi?" never says "pharmacy in Nairobi", but a places pack lists that
+     * entry under "pharmacy nairobi" too. The first phrase has one or two words,
+     * the second up to three; neither starts or ends with a function word.
+     * Longest first, then in reading order. Used only for special-purpose
+     * packs, whose entries carry such names.
+     */
+    fun splitNames(question: String): List<Pair<Int, String>> {
+        val parts = nameGrams(question, maxWords = 3).filter { isPlainName(it.key.split(' '), 3) }
+        val pairs = mutableListOf<Pair<Int, String>>()
+        for (first in parts) {
+            if (first.length > 2) continue
+            for (second in parts) {
+                // Touching phrases are an ordinary n-gram already.
+                if (first.start + first.length < second.start) pairs += (first.length + second.length) to "${first.key} ${second.key}"
+            }
+        }
+        return pairs.sortedByDescending { it.first }.take(MAX_SPLIT_NAMES)
+    }
 
     /** True for the n-grams that [nameGrams] builds from parts of the question. */
     fun isPlainName(gram: List<String>, maxWords: Int = MAX_NAME_WORDS): Boolean =
