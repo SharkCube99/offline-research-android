@@ -40,7 +40,7 @@ expected() {
         wikivoyage.db)  echo "355127296 b4bfa0b61da4588e59cbf9c42726c1d3694c7102cb2d49f75ecabcfb3daadc2b" ;;
         cityplaces.db)  echo "1613914112 d3e7229037c8e857dd0d8b62bae847dc43e187fdb23c60898a614670e78fac38" ;;
         ethereum.db)    echo "14196736 c3870a3690b3e1ddc432136feb39a3b74d5caf6ae1c2b00d9ff03d589dc5ec85" ;;
-        places.db)      echo "13869056 f6aebc2d25923a6558d57128342e547a9e52a794d3ce89d2f43ffc107e616137" ;;
+        places.db)      echo "14503936 c607b15cc956cdb271f69c8b8f4828d53905a5bc1071bb3c2d27792ab91d8276" ;;
         travelfacts.db) echo "1204224 126bbb4a4bfc000d7a2fd1dd2a9522cc1302132fe3f6d9100896872a3b242a8d" ;;
         firstaid.db)    echo "331776 ae775ced55e0cc9f9e7dcef65f06f771a26268a102abc2e71bd149ec7ebd6eb4" ;;
         *) die "unknown file: $1" ;;

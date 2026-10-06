@@ -59,7 +59,7 @@ TAGS = [("diet:vegan", "only"), ("diet:vegan", "yes"), ("diet:vegetarian", "only
         ("cuisine", "vegan"), ("cuisine", "vegetarian")]
 # A modest time limit and the default memory limit: servers hold back requests that reserve a lot.
 # "meta" adds the date of each place's last edit, which says how fresh the entry is.
-QUERY = '[out:json][timeout:240];nwr["{key}"="{value}"]["name"];out center meta;'
+QUERY = '[out:json][timeout:240];nwr["{key}"="{value}"]["name"]{area};out center meta;'
 PLACES_PER_PASSAGE = 8
 KIND = {"restaurant": "restaurant", "cafe": "café", "fast_food": "fast-food place", "ice_cream": "ice-cream shop",
         "food_court": "food court", "pub": "pub", "bar": "bar", "biergarten": "beer garden"}
@@ -77,32 +77,67 @@ def fetch(url, dest, data=None):
     print(f"  {len(content) / 1e6:.1f} MB", flush=True)
 
 
+def ask_overpass(query, label, attempts):
+    """The parsed reply, or None when no server answered in [attempts] tries."""
+    import time
+    body = urllib.parse.urlencode({"data": query}).encode()
+    for attempt in range(attempts):
+        server = OVERPASS[attempt % len(OVERPASS)]
+        try:
+            request = urllib.request.Request(server, data=body, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(request, timeout=400) as response:
+                content = response.read()
+            payload = json.loads(content)  # a "server too busy" page is not JSON
+            if "remark" in payload and "error" in payload["remark"].lower():
+                raise RuntimeError(payload["remark"][:80])  # ran out of time or memory part-way
+            print(f"{label}: {len(content) / 1e6:.1f} MB from {server}", flush=True)
+            time.sleep(5)  # be a light user of a shared service
+            return payload
+        except Exception as error:  # busy server, timeout, error page
+            print(f"{label}: {type(error).__name__} {str(error)[:80]} at {server}; waiting", flush=True)
+            time.sleep(30)
+    return None
+
+
+def fetch_tag(key, value, box, depth=0):
+    """Elements with the tag inside box (south, west, north, east). A region the
+    servers will not answer whole is asked for in four quarters."""
+    south, west, north, east = box
+    area = "" if depth == 0 else f"({south},{west},{north},{east})"
+    label = f"{key}={value}" + (f" {area}" if area else "")
+    payload = ask_overpass(QUERY.format(key=key, value=value, area=area), label, attempts=4 if depth < 5 else 12)
+    if payload is not None:
+        return payload["elements"], payload.get("osm3s", {}).get("timestamp_osm_base", "")[:10]
+    if depth >= 5:
+        raise SystemExit(f"could not fetch {label}; run the script again later to continue")
+    middle_lat, middle_lon = (south + north) / 2, (west + east) / 2
+    elements, snapshot = [], ""
+    for quarter in ((south, west, middle_lat, middle_lon), (south, middle_lon, middle_lat, east),
+                    (middle_lat, west, north, middle_lon), (middle_lat, middle_lon, north, east)):
+        part, date = fetch_tag(key, value, quarter, depth + 1)
+        elements += part
+        snapshot = max(snapshot, date)
+    return elements, snapshot
+
+
+def keep_awake():
+    """Asks Windows not to sleep while the download runs."""
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001 | 0x00000040)
+
+
 def fetch_places():
     """One file per tag, so an interrupted run continues. Returns (elements, snapshot date)."""
-    import time
+    keep_awake()
     wanted = set(AMENITIES.split("|"))
     elements, seen, snapshot = [], set(), ""
     for key, value in TAGS:
         dest = SOURCES / "overpass" / f"{key.replace(':', '_')}_{value}_meta.json"
         if not dest.exists():
-            body = urllib.parse.urlencode({"data": QUERY.format(key=key, value=value)}).encode()
-            for attempt in range(12):
-                server = OVERPASS[attempt % len(OVERPASS)]
-                try:
-                    request = urllib.request.Request(server, data=body, headers={"User-Agent": USER_AGENT})
-                    with urllib.request.urlopen(request, timeout=900) as response:
-                        content = response.read()
-                    json.loads(content)  # a "server too busy" page is not JSON
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    dest.write_bytes(content)
-                    print(f"{key}={value}: {len(content) / 1e6:.1f} MB from {server}", flush=True)
-                    time.sleep(10)  # be a light user of a shared service
-                    break
-                except Exception as error:  # busy server, timeout, error page
-                    print(f"{key}={value}: {type(error).__name__} {str(error)[:80]} at {server}; waiting", flush=True)
-                    time.sleep(60)
-            else:
-                raise SystemExit(f"could not fetch {key}={value}; run the script again later to continue")
+            found, date = fetch_tag(key, value, (-90.0, -180.0, 90.0, 180.0))
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(json.dumps({"osm3s": {"timestamp_osm_base": date}, "elements": found}), encoding="utf-8")
         payload = json.loads(dest.read_text(encoding="utf-8"))
         snapshot = max(snapshot, payload.get("osm3s", {}).get("timestamp_osm_base", "")[:10])
         for element in payload["elements"]:

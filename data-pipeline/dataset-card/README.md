@@ -39,12 +39,12 @@ The files are data for a retrieval-augmented answering app: the app finds passag
 | `wikivoyage.db` | 355,127,296 | 32,072 | 188,396 | `enwikivoyage_content`, 2026-09-27 |
 | `cityplaces.db` | 1,613,914,112 | 519,248 lists | 888,169 | Overture Maps places, release 2026-09-23.1 |
 | `ethereum.db` | 14,196,736 | | | Ethereum repositories and NIST publications, fetched 2026-10-03 |
-| `places.db` | 13,869,056 | 6,101 lists | | OpenStreetMap, fetched 2026-10-03 |
+| `places.db` | 14,503,936 | 6,102 lists | | OpenStreetMap, fetched 2026-10-06 |
 | `travelfacts.db` | 1,204,224 | 197 countries | | Wikidata, fetched 2026-10-05 |
 | `firstaid.db` | 331,776 | 52 chapters | | Wikibooks "First Aid", fetched 2026-10-05 |
 | `manifest.json` | 1,571 | | | counts, sizes and chunking settings of the Wikipedia and Wikivoyage build |
 
-Total: 24,569,397,248 bytes (24.6 GB) for the seven database files. The licence differs by file; see "Licence and attribution".
+Total: 24,570,032,128 bytes (24.6 GB) for the seven database files. The licence differs by file; see "Licence and attribution".
 
 ## The smaller packs
 
@@ -54,7 +54,7 @@ All five use the format described below. Each marks itself in its `meta` table s
 |---|---|---|
 | `cityplaces.db` | 13,990,257 open places from Overture Maps in 24,812 cities, as lists by city and kind ("Pharmacies in Nairobi", "Hostels in Cusco"): places to eat and sleep, pharmacies, hospitals, banks, shops for daily needs, stations, police, embassies, museums. Up to 40 places per list, those Overture is most sure of first, with address | `data-pipeline/fetch_overture_places.py`, `data-pipeline/build_places_overture.py` |
 | `ethereum.db` | Ethereum Improvement Proposals, ERCs, consensus specifications, the English pages of ethereum.org, and NIST FIPS 203, 204, 205 and SP 800-208 | `data-pipeline/build_ethereum.py` |
-| `places.db` | 50,382 places to eat that OpenStreetMap tags as vegan or vegetarian, as lists by city ("Vegan restaurants in Berlin") | `data-pipeline/build_places.py` |
+| `places.db` | 50,458 places to eat that OpenStreetMap tags as vegan or vegetarian, as lists by city ("Vegan restaurants in Berlin"); places the map marks as closed are left out, and those checked or edited most recently come first | `data-pipeline/build_places.py` |
 | `travelfacts.db` | One entry per country: emergency numbers and what each is for, mains voltage and plug types, driving side, currency, dialling code, capital, official languages, time zones | `data-pipeline/build_travel_facts.py` |
 | `firstaid.db` | The Wikibooks "First Aid" book, one entry per chapter, with everyday names as aliases ("choking" for "Obstructed Airway") | `data-pipeline/build_firstaid.py` |
 
@@ -116,7 +116,7 @@ cca60646f543deef8b62949d40e004d05fb2fbad7b1332736d5df876a1f1ee2a  wikipedia.db
 b4bfa0b61da4588e59cbf9c42726c1d3694c7102cb2d49f75ecabcfb3daadc2b  wikivoyage.db
 d3e7229037c8e857dd0d8b62bae847dc43e187fdb23c60898a614670e78fac38  cityplaces.db
 c3870a3690b3e1ddc432136feb39a3b74d5caf6ae1c2b00d9ff03d589dc5ec85  ethereum.db
-f6aebc2d25923a6558d57128342e547a9e52a794d3ce89d2f43ffc107e616137  places.db
+c607b15cc956cdb271f69c8b8f4828d53905a5bc1071bb3c2d27792ab91d8276  places.db
 126bbb4a4bfc000d7a2fd1dd2a9522cc1302132fe3f6d9100896872a3b242a8d  travelfacts.db
 ae775ced55e0cc9f9e7dcef65f06f771a26268a102abc2e71bd149ec7ebd6eb4  firstaid.db
 ```
