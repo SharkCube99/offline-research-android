@@ -70,6 +70,8 @@ Two smaller source packs are built by their own scripts into the same index form
 | `cityplaces.db` (`data-pipeline/fetch_overture_places.py`, `data-pipeline/build_places_overture.py`) | Overture Maps Foundation, places theme, release 2026-09-23.1, <https://overturemaps.org> | CDLA-Permissive-2.0 | Overture Maps Foundation and its data contributors (Meta, Microsoft, Foursquare and others) |
 | | GeoNames `cities15000` and `countryInfo`, used to assign places to cities | CC BY 4.0 | GeoNames |
 
+`app/src/main/assets/cities.tsv`, which ships inside the APK, is a list of city names, countries, positions and populations taken from GeoNames `cities15000` and `countryInfo` (CC BY 4.0, GeoNames, <https://www.geonames.org>), reduced to five columns by `data-pipeline/build_cities_asset.py`.
+
 `fetch_overture_places.py` reads Overture's files with [duckdb](https://github.com/duckdb/duckdb) (MIT), which is needed on the build computer only and is not shipped.
 
 `build_ethereum.py` reads the NIST PDFs with [pypdf](https://github.com/py-pdf/pypdf) (BSD-3-Clause), which is needed on the build computer only and is not shipped; without it the NIST texts are left out.

@@ -229,6 +229,30 @@ Risk, stated plainly: an unsourced part can be wrong, and for a first-aid questi
 
 Not measured: any of this on a phone or on the benchmark. How the 35B and 4B models actually use the label is unknown until then.
 
+### Questions about "near me" (build 0.8.0)
+
+Three of the 61 benchmark questions depend on where the reader is, and the app refused them. The owner decided on 2026-10-05 that the app may ask for the location permission.
+
+- **Permission.** `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`, asked for by Android's own dialog the first time a question is about "near me", "nearby", "around here" or "the nearest ...". The app still has no network permission, so the position cannot leave the phone; `scripts/verify_offline.sh` still passes. Only the city name is written to the log, never the coordinates.
+- **Receiver (`location/GpsLocator.kt`).** Android's own `LocationManager`, no Google Play Services. A position under 15 minutes old is used as it is; otherwise one fix is requested from the satellite receiver, with a 90-second limit. The receiver only listens, so it works in airplane mode, but with no network help the first fix can take a minute or more and needs a view of the sky.
+- **Position to city (`rag/Here.kt`).** `app/src/main/assets/cities.tsv` holds 31,761 cities from GeoNames (1.3 MB, built by `data-pipeline/build_cities_asset.py`). The rule is the one the place packs were built with: the largest city within 15 km, else the nearest within 50 km. So the name is one the packs' lists use. This small file ships inside the APK rather than over adb: it is needed before any pack is, and it is a thousandth of the size of one.
+- **The question is rewritten.** "Vegan restaurants near me" becomes "vegan restaurants in Denver" before search, planning and the prompt, and the prompt gains a line with the reader's city. The log keeps the question as asked.
+- **Scripts.** `--es gps "lat,lon"` on the start command stands in for the receiver; `bench/run_bench.py` passes a question's `"gps"` field that way, which is how the benchmark states the device's position.
+
+Limits: "near me" means "in my city", since the lists carry no coordinates and are not sorted by distance; a reader more than 50 km from any city of 15,000 people gets no place; a small city that shares its name with a larger one can be answered with the larger one's list.
+
+Checked: 140 unit tests pass. On the emulator, with the position passed by script, "Tell me the best vegan restaurants near me" found "Vegan restaurants in Denver" and named four places (`docs/measurements/2026-10-05-location-emulator.jsonl`). Through the emulated receiver the app got no fix in 90 seconds and answered "Not covered"; whether that is the emulator or the code is not known. **The receiver path is unverified** until it is tried on a phone outdoors.
+
+### Fresher restaurant lists
+
+In the 35B benchmark run the graders verified 20 restaurant errors, mostly places that have closed. `data-pipeline/build_places.py` now asks OpenStreetMap for the date of each place's last edit as well, and:
+
+- leaves out places the map marks as closed (`disused`, `abandoned`, `was:amenity`, `end_date`, opening hours "closed");
+- lists first the places someone checked on the ground or edited most recently, by half-year, and among those the better-kept entries;
+- says in each list's opening line how many of its places were seen in the last two years.
+
+It cannot know that a place is open today. The public servers refuse the largest request whole, so a region that is refused is asked for in four quarters.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |
