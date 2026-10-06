@@ -72,6 +72,7 @@ internal object LlamaBridge {
         handle: Long,
         systemUtf8: ByteArray,
         userUtf8: ByteArray,
+        assistantPrefixUtf8: ByteArray,
         maxTokens: Int,
         temperature: Float,
         topK: Int,

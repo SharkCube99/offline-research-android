@@ -44,6 +44,11 @@ data class ModelProfile(
     @SerialName("chat_template") val chatTemplate: String = "auto",
     /** Model-specific switches appended to every system prompt, such as "/no_think". */
     @SerialName("prompt_suffix") val promptSuffix: String = "",
+    /**
+     * Text written at the start of the model's reply for it, after the assistant
+     * header. Ling-3.0 needs an empty thinking block here to answer without thinking.
+     */
+    @SerialName("assistant_prefix") val assistantPrefix: String = "",
     @SerialName("max_tokens") val maxTokens: Int,
     val temperature: Float,
     @SerialName("top_k") val topK: Int,

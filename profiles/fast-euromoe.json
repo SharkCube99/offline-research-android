@@ -1,6 +1,6 @@
 {
-  "name": "fast",
-  "model_file": "Ling-3.0-tiny-Q4_0.gguf",
+  "name": "fast-euromoe",
+  "model_file": "EuroMoE-2.6B-A0.6B-Instruct-2512.i1-Q4_K_M.gguf",
   "n_ctx": 4096,
   "n_batch": 512,
   "n_threads": 2,
@@ -10,8 +10,8 @@
   "use_mlock": false,
   "repack": false,
   "chat_template": "auto",
-  "prompt_suffix": "detailed thinking off",
-  "assistant_prefix": "\n<think></think>",
+  "prompt_suffix": "",
+  "answer_rules": "short",
   "max_tokens": 384,
   "temperature": 0.7,
   "top_k": 20,
@@ -21,8 +21,7 @@
   "compress_sources": true,
   "source_passages": 10,
   "planner": {
-    "model_file": "Ling-3.0-tiny-Q4_0.gguf",
-    "context_size": 1024,
-    "prompt_suffix": "detailed thinking off"
+    "model_file": "Qwen3-1.7B-Q8_0.gguf",
+    "context_size": 1024
   }
 }

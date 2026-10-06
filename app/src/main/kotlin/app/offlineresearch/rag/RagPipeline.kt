@@ -55,6 +55,8 @@ data class AnswerSettings(
     val ownKnowledge: Boolean = true,
     /** Give the model the three-sentence rules instead of the full set. */
     val shortRules: Boolean = false,
+    /** Text the model's reply is made to start with; see ModelProfile.assistantPrefix. */
+    val assistantPrefix: String = "",
 )
 
 /** What a planner's search names is a suggestion; only the question's own words name an article outright. */
@@ -140,6 +142,7 @@ class RagPipeline(
                 topP = settings.topP,
                 presencePenalty = settings.presencePenalty,
                 seed = seed(),
+                assistantPrefix = settings.assistantPrefix,
             ),
         ).collect { fragment ->
             if (!answering) {

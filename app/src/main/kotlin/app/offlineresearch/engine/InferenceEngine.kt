@@ -64,6 +64,8 @@ data class GenerationRequest(
     val topP: Float,
     val presencePenalty: Float,
     val seed: Int,
+    /** Text the reply is made to start with, written after the assistant header; not part of the output. */
+    val assistantPrefix: String = "",
 )
 
 enum class StopReason { EOS, MAX_TOKENS, CANCELLED, CONTEXT_FULL, ERROR, NONE }

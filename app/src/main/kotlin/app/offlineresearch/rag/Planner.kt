@@ -29,6 +29,8 @@ object KeywordPlanner : QueryPlanner {
 class LlmPlanner(
     private val engine: InferenceEngine,
     private val promptSuffix: String,
+    /** Text the model's reply is made to start with; see ModelProfile.assistantPrefix. */
+    private val assistantPrefix: String = "",
 ) : QueryPlanner {
 
     override suspend fun plan(question: String): Plan {
@@ -43,6 +45,7 @@ class LlmPlanner(
                     topP = 1f,
                     presencePenalty = 0f,
                     seed = 0,
+                    assistantPrefix = assistantPrefix,
                 ),
             ).toList().joinToString("")
         } catch (e: CancellationException) {

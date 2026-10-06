@@ -173,7 +173,7 @@ private fun SettingsDialog(
         ProfileChoice.AUTO to String.format(Locale.US, "Automatic (%.1f GB RAM: %s)", state.totalRamGb, auto),
         ProfileChoice.LOW to "Low (4B model)",
         ProfileChoice.HIGH to "High (35B model, 3B active)",
-        ProfileChoice.FAST to "Fast (2.6B model, 0.6B active)",
+        ProfileChoice.FAST to "Fast (7.9B model, 1.3B active)",
     )
     AlertDialog(
         onDismissRequest = onDismiss,

@@ -364,7 +364,7 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoad(
 JNIEXPORT jint JNICALL
 Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
         JNIEnv *env, jobject, jlong handle, jbyteArray system_utf8, jbyteArray user_utf8,
-        jint max_tokens, jfloat temperature, jint top_k, jfloat top_p, jfloat presence_penalty,
+        jbyteArray assistant_prefix_utf8, jint max_tokens, jfloat temperature, jint top_k, jfloat top_p, jfloat presence_penalty,
         jint seed, jobject callback) {
     Session &session = *from_handle(handle);
     std::unique_lock<std::mutex> lock(session.run_mutex, std::try_to_lock);
@@ -377,12 +377,15 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     jmethodID on_token = env->GetMethodID(callback_class, "onToken", "([B)V");
     if (on_token == nullptr) return GEN_ERR_DECODE;  // NoSuchMethodError is pending
 
-    const std::string prompt = apply_chat_template(session, bytes_to_string(env, system_utf8),
-                                                   bytes_to_string(env, user_utf8));
+    std::string prompt = apply_chat_template(session, bytes_to_string(env, system_utf8),
+                                             bytes_to_string(env, user_utf8));
     if (prompt.empty()) {
         LOGE("chat template could not be applied");
         return GEN_ERR_TEMPLATE;
     }
+    // Some models need the start of their reply written for them, such as an
+    // empty thinking block that turns their thinking off.
+    prompt += bytes_to_string(env, assistant_prefix_utf8);
 
     std::vector<llama_token> tokens;
     if (!tokenize(session, prompt, true, tokens) || tokens.empty()) return GEN_ERR_TOKENIZE;

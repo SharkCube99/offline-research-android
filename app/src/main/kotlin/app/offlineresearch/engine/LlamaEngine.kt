@@ -66,6 +66,7 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
             session,
             request.systemPrompt.toByteArray(Charsets.UTF_8),
             request.userPrompt.toByteArray(Charsets.UTF_8),
+            request.assistantPrefix.toByteArray(Charsets.UTF_8),
             request.maxTokens,
             request.temperature,
             request.topK,

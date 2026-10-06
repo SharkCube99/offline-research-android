@@ -267,7 +267,7 @@ What was found on Hugging Face that day, at about 1B active or less:
 | AliceAI-T5-35B-A0.6B | 35B / 0.6B | Apache-2.0 on the converted files | A base encoder-decoder model, not instruction-tuned; needs a fork of llama.cpp |
 | granite-swash-3b-a600m | 3B / 0.6B | Apache-2.0 | A base model, not instruction-tuned |
 
-`profiles/fast.json` names the EuroMoE file. It is a third choice in Settings and for scripts (`--es profile fast`); it is never picked automatically, because its answer quality is unknown. The planner stays Qwen3-1.7B. EuroMoE's context is 4,096 tokens, which the profile's budget fits (450 for sources, 384 for the answer). Its sampling settings are placeholders, not tuned.
+`profiles/fast.json` named the EuroMoE file in build 0.8.2; since 0.8.3 that profile is `profiles/fast-euromoe.json` (see the next section). "Fast" is a third choice in Settings and for scripts (`--es profile fast`); it is never picked automatically. The planner stays Qwen3-1.7B. EuroMoE's context is 4,096 tokens, which the profile's budget fits (450 for sources, 384 for the answer). Its sampling settings are placeholders, not tuned.
 
 **First trial, on the emulator (2026-10-06, record `docs/measurements/2026-10-06-fast-profile-emulator.jsonl`).** The file loads and answers through the app's llama.cpp with its own chat format, so nothing in the engine had to change. The answers were poor, on three questions:
 
@@ -275,6 +275,24 @@ What was found on Hugging Face that day, at about 1B active or less:
 - With the short rules it writes fluent answers that are weak or wrong: no citation in any of the three; it called 104 °F "not dangerous for a long walk" and ignored the calculator's 40 °C; asked what to do when someone is choking it said only to call for help, with the first-aid chapter among its sources; for Brazil's plugs it gave the voltages and no plug types.
 
 So the profile meets the "under 1B active" line and, on this evidence, does not give useful research answers. It stays an option and is not recommended. Speed on a phone is still unmeasured; the emulator's timings say nothing about it.
+
+### The three tiers, with Ling-3.0-tiny as the fast one (build 0.8.3)
+
+After the EuroMoE trial the owner decided on 2026-10-06: the 35B model stays the entry for 12 GB phones, the 4B model stays for small phones, and the fast tier becomes Ling-3.0-tiny (inclusionAI, MIT; 7.9B parameters, 1.3B active per token; `Ling-3.0-tiny-Q4_0.gguf`, 4.62 GB). It is just over the bounty's "under 1B active" suggestion; it was chosen because another entry to the bounty reports useful answers and a seven-second wait with it on a 12 GB phone, where the only model found under 1B did not answer usefully.
+
+| Tier | Profile | Answerer | Total / active per token | Picked |
+|---|---|---|---|---|
+| High | `high.json` | Qwen3.6-35B-A3B, 2-bit, streamed from storage | 35B / about 3B | automatically from 10 GB of RAM |
+| Low | `low.json` | Qwen3-4B | 4B / 4B | automatically under 10 GB |
+| Fast | `fast.json` | Ling-3.0-tiny | 7.9B / 1.3B | only by choice |
+
+What the fast profile needed:
+
+- **Thinking off.** Ling thinks before answering unless told otherwise. The profile ends the instructions with "detailed thinking off" (`prompt_suffix`) and starts the model's reply with an empty thinking block (`assistant_prefix`, new: text the engine writes after the assistant header). Both come from the notes of the Commonplace project, which found that the chat format llama.cpp applies to this model adds neither.
+- **One model for both jobs.** The file is 4.62 GB; with the 1.83 GB planner beside it an 8 GB phone would have little left. When a profile names the same file for the planner and the answerer, the app now uses the loaded model for planning too and loads nothing else. The cost: planning and answering take turns in one context, so the fixed instructions are read again for each question instead of being kept.
+- llama.cpp at the pinned tag already knows the architecture (`bailingmoe3`).
+
+**Not tested at all.** The file does not fit the emulator's 4 GB, so this profile has never loaded the model. Whether it loads, whether thinking is really off, how fast it is and how well it answers are all unknown until it runs on a phone. The sampling settings are placeholders.
 
 ## Decisions and defaults
 

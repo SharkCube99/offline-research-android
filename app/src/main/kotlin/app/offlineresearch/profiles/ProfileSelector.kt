@@ -4,7 +4,7 @@ package app.offlineresearch.profiles
 enum class ProfileChoice {
     AUTO, LOW, HIGH,
 
-    /** A small mixture-of-experts answerer with under 1B parameters active per token. Never picked automatically. */
+    /** A small mixture-of-experts answerer (Ling-3.0-tiny, 1.3B parameters active per token). Never picked automatically. */
     FAST;
 
     companion object {

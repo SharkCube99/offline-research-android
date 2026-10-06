@@ -244,7 +244,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val plannerFile = active.planner?.let { planner ->
             withContext(Dispatchers.IO) { profiles.findModel(planner.modelFile) }
         }
-        val planner: QueryPlanner = if (active.planner != null && plannerFile != null) {
+        val planner: QueryPlanner = if (active.planner != null && active.planner.modelFile == active.modelFile && active.engine != "bmoe") {
+            // One model does both jobs: nothing more to load, and no second model in memory.
+            LlmPlanner(answerer, active.planner.promptSuffix, active.assistantPrefix)
+        } else if (active.planner != null && plannerFile != null) {
             plannerEngine.load(plannerFile.absolutePath, config(active.planner.contextSize))
             LlmPlanner(plannerEngine, active.planner.promptSuffix)
         } else {
@@ -277,6 +280,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 presencePenalty = active.presencePenalty,
                 ownKnowledge = active.ownKnowledge,
                 shortRules = active.answerRules == "short",
+                assistantPrefix = active.assistantPrefix,
             ),
             seed = Random::nextInt,
             preview = compressor::preview,

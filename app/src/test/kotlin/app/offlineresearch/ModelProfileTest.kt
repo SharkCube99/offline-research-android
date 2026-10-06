@@ -16,7 +16,7 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesParse() {
-        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json", "fast-euromoe.json")) {
             val profile = shipped(name)
             assertTrue("$name: model_file must be a GGUF", profile.modelFile.endsWith(".gguf"))
             assertTrue("$name: n_ctx", profile.contextSize > 0)
@@ -27,7 +27,7 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesLeaveRoomInTheContextForTheAnswer() {
-        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json", "fast-euromoe.json")) {
             val profile = shipped(name)
             // Passages + answer + about 400 tokens for the contract and the question.
             assertTrue(
@@ -39,7 +39,7 @@ class ModelProfileTest {
 
     @Test
     fun shippedProfilesStreamFromFlashByDefault() {
-        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json", "fast-euromoe.json")) {
             val profile = shipped(name)
             assertTrue("$name: mmap must be on", profile.useMmap)
             assertFalse("$name: mlock must be off", profile.useMlock)
@@ -62,9 +62,14 @@ class ModelProfileTest {
         // The high profile's answerer takes no suffix; the Qwen3 planner still needs its thinking turned off.
         val high = shipped("high.json")
         assertEquals("", high.promptSuffix)
-        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json")) {
+        for (name in listOf("low.json", "high.json", "high-llama.json", "fast-euromoe.json")) {
             assertEquals(name, "/no_think", shipped(name).planner!!.promptSuffix)
         }
+        // The fast profile's planner is the Ling answerer itself, which has its own switch.
+        val fast = shipped("fast.json")
+        assertEquals(fast.modelFile, fast.planner!!.modelFile)
+        assertEquals("detailed thinking off", fast.planner!!.promptSuffix)
+        assertEquals("\n<think></think>", fast.assistantPrefix)
     }
 
     @Test
