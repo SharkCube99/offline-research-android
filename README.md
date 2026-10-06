@@ -16,7 +16,7 @@ A signed APK is attached to each [release](https://github.com/SharkCube99/offlin
 git clone https://github.com/SharkCube99/offline-research-android.git    # scripts only; no submodules needed
 cd offline-research-android
 scripts/fetch_index.sh                                                    # 24.6 GB knowledge index (seven files)
-scripts/setup.sh --apk /path/to/offline-research-0.7.5.apk                  --model /path/to/Qwen3-4B-Q4_K_M.gguf                  --model /path/to/Qwen3-1.7B-Q8_0.gguf                  --index data-pipeline/work/index
+scripts/setup.sh --apk /path/to/offline-research-0.8.1.apk                  --model /path/to/Qwen3-4B-Q4_K_M.gguf                  --model /path/to/Qwen3-1.7B-Q8_0.gguf                  --index data-pipeline/work/index
 ```
 
 The model files come from the pages listed under "Put it on a phone". For a 12 GB phone, also push `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB, <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>); the app picks the high profile by itself when the phone reports 10 GB of RAM or more. The time this takes is mostly download and USB copy time.

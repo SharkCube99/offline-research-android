@@ -116,7 +116,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         getApplication<Application>().assets.open(CITIES_ASSET).bufferedReader().use(Gazetteer::read)
     }
 
-    /** A position given by a script (--es gps "lat,lon") instead of the receiver; used by the benchmark. */
+    /** A position given by a script (--es gps "lat,lon") instead of the receiver, for the next question only; used by the benchmark. */
     @Volatile
     private var scriptedPosition: Position? = null
 
@@ -367,6 +367,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: EngineException) {
             failure = e.message
         } finally {
+            // A script's position is for the one question it came with. Left in
+            // place, it would answer the user's next "near me" for the wrong city.
+            scriptedPosition = null
             withContext(NonCancellable) {
                 val text = Calculator.check(Citations.dropStrayNotCovered(stripThinking(raw.toString())))
                 updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else text) }

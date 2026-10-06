@@ -275,6 +275,17 @@ The signed 0.7.5 build was installed on the same Pixel 8 emulator image as above
 
 Not covered by this check: the 4B and 35B models, the BigMoeOnEdge engine, `cityplaces.db`, and a real phone.
 
+## Builds 0.8.0 and 0.8.1 on the Redmi 12 5G (2026-10-06)
+
+The signed 0.8.0 build replaced 0.7.2 on the phone with `adb install -r`, and the four new or rebuilt packs were copied, so all seven index files are there. Airplane mode on, low profile (4B model, planner on). Records: `docs/measurements/2026-10-06-redmi12-0.8.0-check.jsonl`, `docs/measurements/2026-10-06-redmi12-gps-check.jsonl`.
+
+- "What is the emergency number in Thailand, and is a 5,000 mAh power bank at 3.85 V allowed on a plane?" The answer gives 1669, 191 and 199 from the travel-facts pack with a citation, uses the calculator's 19.25 Wh, and puts the airline rule under the "From general knowledge" line. First word after 120 s, 4.0 tok/s. Flaws: the calculator is cited as [4] though it was source 6, and the unsourced part garbles a limit ("3.5 Ah (16.75 W-h)") beside the correct 100 Wh.
+- "Is there a pharmacy near me?" with a position passed by script (Nairobi): rewritten to "in Nairobi", answered from "Pharmacies in Nairobi" with ten pharmacies and addresses. First word after 141 s.
+- **A fault found by the owner.** The scripted position stayed in memory, so the owner's own "near me" question was answered for Nairobi and Android never asked for the permission. Fixed in 0.8.1: a scripted position applies to the one question it came with.
+- **The phone's own position, 0.8.1.** The owner typed "is there a pharmacy near me", allowed location in Android's dialog, and the app answered for Bengaluru, India, from "Pharmacies in Bengaluru". First word after 154 s. The position came from one the phone already held (under 15 minutes old), in airplane mode. A fix requested fresh from the satellites, with no recent position to fall back on, has still not been seen to work.
+
+Nothing here is a benchmark; these are single questions.
+
 ## Signed release APK on the Redmi 12 5G (2026-10-03)
 
 The released `offline-research-0.6.0.apk` replaced the debug build on the phone (the debug build had to be uninstalled first; models and index were moved aside on the phone and back). Record: `docs/measurements/2026-10-03-redmi12-release-apk.jsonl`; screen: `screens/2026-10-03-release-redmi-1.png`.

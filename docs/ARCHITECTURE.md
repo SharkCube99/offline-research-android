@@ -241,7 +241,7 @@ Three of the 61 benchmark questions depend on where the reader is, and the app r
 
 Limits: "near me" means "in my city", since the lists carry no coordinates and are not sorted by distance; a reader more than 50 km from any city of 15,000 people gets no place; a small city that shares its name with a larger one can be answered with the larger one's list.
 
-Checked: 140 unit tests pass. On the emulator, with the position passed by script, "Tell me the best vegan restaurants near me" found "Vegan restaurants in Denver" and named four places (`docs/measurements/2026-10-05-location-emulator.jsonl`). Through the emulated receiver the app got no fix in 90 seconds and answered "Not covered"; whether that is the emulator or the code is not known. **The receiver path is unverified** until it is tried on a phone outdoors.
+Checked: 140 unit tests pass. On the emulator, with the position passed by script, "Tell me the best vegan restaurants near me" found "Vegan restaurants in Denver" and named four places (`docs/measurements/2026-10-05-location-emulator.jsonl`). Through the emulated receiver the app got no fix in 90 seconds and answered "Not covered"; whether that is the emulator or the code is not known. **The receiver path is unverified** until it is tried on a phone outdoors. Tried on the Redmi on 2026-10-06 with build 0.8.1: the permission dialog and a position the phone already held work (see `docs/PERFORMANCE.md`); a fresh satellite fix is still unseen.
 
 ### Fresher restaurant lists
 
