@@ -172,7 +172,8 @@ private fun SettingsDialog(
     val labels = listOf(
         ProfileChoice.AUTO to String.format(Locale.US, "Automatic (%.1f GB RAM: %s)", state.totalRamGb, auto),
         ProfileChoice.LOW to "Low (4B model)",
-        ProfileChoice.HIGH to "High (30B model)",
+        ProfileChoice.HIGH to "High (35B model, 3B active)",
+        ProfileChoice.FAST to "Fast (2.6B model, 0.6B active)",
     )
     AlertDialog(
         onDismissRequest = onDismiss,

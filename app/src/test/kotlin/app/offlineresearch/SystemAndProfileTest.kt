@@ -32,12 +32,14 @@ class ProfileSelectorTest {
     fun aManualChoiceIgnoresRam() {
         assertEquals("high.json", ProfileSelector.assetFor(ProfileChoice.HIGH, 4 * gb))
         assertEquals("low.json", ProfileSelector.assetFor(ProfileChoice.LOW, 16 * gb))
+        assertEquals("fast.json", ProfileSelector.assetFor(ProfileChoice.FAST, 16 * gb))
     }
 
     @Test
     fun choiceParsingIsLenient() {
         assertEquals(ProfileChoice.HIGH, ProfileChoice.parse(" High "))
         assertEquals(ProfileChoice.LOW, ProfileChoice.parse("low"))
+        assertEquals(ProfileChoice.FAST, ProfileChoice.parse("fast"))
         assertEquals(ProfileChoice.AUTO, ProfileChoice.parse(null))
         assertEquals(ProfileChoice.AUTO, ProfileChoice.parse("turbo"))
     }
@@ -45,7 +47,7 @@ class ProfileSelectorTest {
     @Test
     fun bothBundledProfilesExist() {
         // Unit tests run with the module directory (app/) as the working directory.
-        for (asset in listOf(ProfileSelector.LOW_ASSET, ProfileSelector.HIGH_ASSET)) {
+        for (asset in listOf(ProfileSelector.LOW_ASSET, ProfileSelector.HIGH_ASSET, ProfileSelector.FAST_ASSET)) {
             assertEquals(true, File("../profiles/$asset").isFile)
         }
     }

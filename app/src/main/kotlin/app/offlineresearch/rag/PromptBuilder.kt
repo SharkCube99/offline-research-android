@@ -41,13 +41,23 @@ object PromptBuilder {
         - Use that sentence only as your whole reply. Never add it to an answer.
     """.trimIndent()
 
+    // For small models. Given the full rules, a 2.6B model copied their fixed
+    // sentences into its answers instead of answering; these name no sentence to copy.
+    private val SHORT = """
+        Answer the question in a few clear sentences, using the numbered sources below.
+        After each fact put the number of the source it came from in square brackets, like [1].
+        If the sources do not hold the answer, answer briefly from what you know and say that this part is not from the sources.
+    """.trimIndent()
+
     private const val EXCERPTS = "- A source may be an excerpt; \"…\" marks where text was left out."
 
     /**
      * [suffix] carries model-specific switches from the profile, such as "/no_think".
      * [ownKnowledge] lets the model answer what the sources leave out, under the [UNSOURCED] line.
+     * [short] replaces the rules with three plain sentences, for models too small to follow the full set.
      */
-    fun system(suffix: String = "", ownKnowledge: Boolean = true): String {
+    fun system(suffix: String = "", ownKnowledge: Boolean = true, short: Boolean = false): String {
+        if (short) return if (suffix.isBlank()) SHORT else "$SHORT\n\n${suffix.trim()}"
         val rules = listOf(FROM_SOURCES, if (ownKnowledge) OWN_KNOWLEDGE else SOURCES_ONLY, EXCERPTS).joinToString("\n")
         val contract = "$OPENING\n\nHow to answer:\n$rules"
         return if (suffix.isBlank()) contract else "$contract\n\n${suffix.trim()}"

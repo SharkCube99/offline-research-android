@@ -253,6 +253,29 @@ In the 35B benchmark run the graders verified 20 restaurant errors, mostly place
 
 It cannot know that a place is open today. The public servers refuse the largest request whole, so a region that is refused is asked for in four quarters.
 
+### A "fast" profile with under 1B active parameters (build 0.8.2)
+
+The bounty's text suggests a mixture-of-experts model with under 1B parameters active per token as one promising direction ("not a requirement"). The owner asked on 2026-10-06 for an answerer that meets it. The two existing answerers do not: Qwen3-4B uses all 4B per token, and Qwen3.6-35B-A3B about 3B.
+
+What was found on Hugging Face that day, at about 1B active or less:
+
+| Model | Total / active | Licence | Why used or not |
+|---|---|---|---|
+| EuroMoE-2.6B-A0.6B-Instruct-2512 | 2.6B / 0.6B | Apache-2.0 | **Used.** Instruction-tuned, an architecture stock llama.cpp runs, 1.62 GB at Q4_K_M |
+| maple-preview | 20B / 1B | MIT | At 1B, not under; needs its makers' fork of llama.cpp |
+| LFM2.5-8B-A1B | 8B / about 1B | LFM Open License 1.0 | Not an open-source licence |
+| AliceAI-T5-35B-A0.6B | 35B / 0.6B | Apache-2.0 on the converted files | A base encoder-decoder model, not instruction-tuned; needs a fork of llama.cpp |
+| granite-swash-3b-a600m | 3B / 0.6B | Apache-2.0 | A base model, not instruction-tuned |
+
+`profiles/fast.json` names the EuroMoE file. It is a third choice in Settings and for scripts (`--es profile fast`); it is never picked automatically, because its answer quality is unknown. The planner stays Qwen3-1.7B. EuroMoE's context is 4,096 tokens, which the profile's budget fits (450 for sources, 384 for the answer). Its sampling settings are placeholders, not tuned.
+
+**First trial, on the emulator (2026-10-06, record `docs/measurements/2026-10-06-fast-profile-emulator.jsonl`).** The file loads and answers through the app's llama.cpp with its own chat format, so nothing in the engine had to change. The answers were poor, on three questions:
+
+- With the full answer rules the model copied their fixed sentences ("Not covered by the offline sources", "From general knowledge, ...") into its replies in place of an answer. A profile can therefore ask for short rules (`"answer_rules": "short"`: three plain sentences that name nothing to copy), and `fast.json` does.
+- With the short rules it writes fluent answers that are weak or wrong: no citation in any of the three; it called 104 °F "not dangerous for a long walk" and ignored the calculator's 40 °C; asked what to do when someone is choking it said only to call for help, with the first-aid chapter among its sources; for Brazil's plugs it gave the voltages and no plug types.
+
+So the profile meets the "under 1B active" line and, on this evidence, does not give useful research answers. It stays an option and is not recommended. Speed on a phone is still unmeasured; the emulator's timings say nothing about it.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

@@ -207,6 +207,15 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun theShortRulesNameNoFixedSentenceToCopy() {
+        val short = PromptBuilder.system(short = true)
+        assertTrue("square brackets" in short)
+        assertTrue(PromptBuilder.NOT_COVERED !in short)
+        assertTrue(PromptBuilder.UNSOURCED !in short)
+        assertTrue(short.length < PromptBuilder.system().length / 3)
+    }
+
+    @Test
     fun noSuffixAddsNothing() {
         assertFalse(PromptBuilder.system().endsWith("\n"))
     }

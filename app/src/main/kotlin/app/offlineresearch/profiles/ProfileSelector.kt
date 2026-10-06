@@ -2,7 +2,10 @@ package app.offlineresearch.profiles
 
 /** Which profile the user asked for. AUTO decides from the phone's RAM. */
 enum class ProfileChoice {
-    AUTO, LOW, HIGH;
+    AUTO, LOW, HIGH,
+
+    /** A small mixture-of-experts answerer with under 1B parameters active per token. Never picked automatically. */
+    FAST;
 
     companion object {
         /** Lenient parse for values coming from settings or an adb intent; unknown text means AUTO. */
@@ -20,11 +23,13 @@ object ProfileSelector {
 
     const val LOW_ASSET = "low.json"
     const val HIGH_ASSET = "high.json"
+    const val FAST_ASSET = "fast.json"
 
     /** The bundled profile file for [choice] on a phone with [totalRamBytes] of memory. */
     fun assetFor(choice: ProfileChoice, totalRamBytes: Long): String = when (choice) {
         ProfileChoice.LOW -> LOW_ASSET
         ProfileChoice.HIGH -> HIGH_ASSET
+        ProfileChoice.FAST -> FAST_ASSET
         ProfileChoice.AUTO -> if (totalRamBytes >= HIGH_PROFILE_MIN_RAM_BYTES) HIGH_ASSET else LOW_ASSET
     }
 }

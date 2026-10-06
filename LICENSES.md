@@ -43,6 +43,7 @@ Models are not stored in this repository or in the APK. They are pushed to the p
 | Qwen3-4B | `Qwen3-4B-Q4_K_M.gguf` | 2.5 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> | Low tier and development (M1) |
 | Qwen3.6-35B-A3B, 2-bit quantisation by Unsloth | `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` | 12.3 GB | Apache-2.0 | <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF> (base model <https://huggingface.co/Qwen/Qwen3.6-35B-A3B>) | High tier (`profiles/high.json`); licence read from the Hugging Face API on 2026-10-03 |
 | Qwen3-30B-A3B | `Qwen3-30B-A3B-Q4_K_M.gguf` | 18.6 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF> | Earlier high tier, kept as `profiles/high-llama.json` |
+| EuroMoE-2.6B-A0.6B-Instruct-2512 (UTTER project), quantisation by mradermacher | `EuroMoE-2.6B-A0.6B-Instruct-2512.i1-Q4_K_M.gguf` | 1.62 GB | Apache-2.0 | <https://huggingface.co/mradermacher/EuroMoE-2.6B-A0.6B-Instruct-2512-i1-GGUF> (base model <https://huggingface.co/utter-project/EuroMoE-2.6B-A0.6B-Instruct-2512>) | Optional fast tier (`profiles/fast.json`): 0.6B parameters active per token |
 | Qwen3-1.7B | `Qwen3-1.7B-Q8_0.gguf` | 1.83 GB | Apache-2.0 | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> | Planner: writes search queries. Q8_0 is the only file in the official repository |
 
 File names, sizes and licences were read from the Hugging Face repository pages on 2026-10-01.

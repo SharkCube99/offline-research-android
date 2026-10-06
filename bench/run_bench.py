@@ -11,7 +11,7 @@ Usage:
       --out bench/vitalik61/answers_redmi12_low.jsonl --profile low
 
 Options:
-  --profile NAME     auto, low or high (default: low)
+  --profile NAME     auto, low, high or fast (default: low)
   --timeout S        give up on a question after S seconds (default: 1800)
   --limit N          ask only the first N unanswered questions
   --serial ID        adb device serial, if more than one device is attached
@@ -106,7 +106,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--questions", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--profile", default="low", choices=["auto", "low", "high"])
+    parser.add_argument("--profile", default="low", choices=["auto", "low", "high", "fast"])
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--serial")

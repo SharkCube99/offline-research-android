@@ -53,6 +53,8 @@ data class AnswerSettings(
     val presencePenalty: Float,
     /** May the model answer from its own knowledge, labelled, where the sources fall short? */
     val ownKnowledge: Boolean = true,
+    /** Give the model the three-sentence rules instead of the full set. */
+    val shortRules: Boolean = false,
 )
 
 /** What a planner's search names is a suggestion; only the question's own words name an article outright. */
@@ -130,7 +132,7 @@ class RagPipeline(
         var answering = false
         answerer.generate(
             GenerationRequest(
-                systemPrompt = PromptBuilder.system(settings.promptSuffix, settings.ownKnowledge),
+                systemPrompt = PromptBuilder.system(settings.promptSuffix, settings.ownKnowledge, settings.shortRules),
                 userPrompt = PromptBuilder.user(question, sources, location),
                 maxTokens = settings.maxTokens,
                 temperature = settings.temperature,

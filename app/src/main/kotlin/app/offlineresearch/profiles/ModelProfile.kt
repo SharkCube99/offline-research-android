@@ -60,6 +60,8 @@ data class ModelProfile(
      * under a fixed line that marks it as unsourced. Off: sources only.
      */
     @SerialName("own_knowledge") val ownKnowledge: Boolean = true,
+    /** "full" (the default) or "short": three plain sentences, for small models that copy the full rules into their answers. */
+    @SerialName("answer_rules") val answerRules: String = "full",
     /** The small model that writes search queries. Null = keyword search only. */
     val planner: PlannerProfile? = null,
 ) {

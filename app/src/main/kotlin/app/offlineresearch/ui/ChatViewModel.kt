@@ -276,6 +276,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 topP = active.topP,
                 presencePenalty = active.presencePenalty,
                 ownKnowledge = active.ownKnowledge,
+                shortRules = active.answerRules == "short",
             ),
             seed = Random::nextInt,
             preview = compressor::preview,
