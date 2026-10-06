@@ -286,6 +286,20 @@ The signed 0.8.0 build replaced 0.7.2 on the phone with `adb install -r`, and th
 
 Nothing here is a benchmark; these are single questions.
 
+## The README followed from an empty folder (2026-10-06)
+
+The "Quick start without building" steps were followed in an empty folder, from the public repository and the published 0.8.1 APK, onto a blank Android emulator. Log: `docs/measurements/2026-10-06-stranger-test.log`.
+
+| Step | Time |
+|---|---|
+| `git clone` (no submodules) | 4 s |
+| APK from the release page | 14 s |
+| `scripts/fetch_index.sh` for five of the seven library files (385 MB), each checked against its SHA-256 | 135 s |
+| `scripts/setup.sh`: install, copy the model and the five files, start the app | 67 s |
+| A cited answer in airplane mode ("What plugs and voltage does Brazil use, and what is 220 V good for?") | 131 s after asking |
+
+Where it departs from the README: Wikipedia (22.6 GB) and the places file (1.6 GB) were not downloaded again; the emulator has 4 GB of memory, so the 1.7B model stood in as answerer through a test profile; a question was sent over adb rather than typed. The log also holds two failed attempts: in one the emulator sat on its lock screen, in the other its low-memory killer stopped the app half a minute after a cold boot. Neither has been seen on a phone.
+
 ## Signed release APK on the Redmi 12 5G (2026-10-03)
 
 The released `offline-research-0.6.0.apk` replaced the debug build on the phone (the debug build had to be uninstalled first; models and index were moved aside on the phone and back). Record: `docs/measurements/2026-10-03-redmi12-release-apk.jsonl`; screen: `screens/2026-10-03-release-redmi-1.png`.

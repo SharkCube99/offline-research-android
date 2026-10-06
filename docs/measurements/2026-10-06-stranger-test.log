@@ -1,0 +1,45 @@
+== stranger test 2026-10-06T13:30:33Z, following README 'Quick start without building'
+clone: 4 s, commit e072a0e
+apk download: 14 s, 30483197 bytes, sha256 20367d071caa2946...
+wikivoyage.db: checking SHA-256
+ethereum.db: checking SHA-256
+places.db: checking SHA-256
+travelfacts.db: checking SHA-256
+firstaid.db: checking SHA-256
+index is in data-pipeline/work/index
+fetch_index (5 of 7 files, 385 MB): 135 s
+Success
+Qwen3-1.7B-Q8_0.gguf verified on device (1834426016 bytes)
+ethereum.db verified on device (14196736 bytes)
+firstaid.db verified on device (331776 bytes)
+places.db verified on device (14503936 bytes)
+travelfacts.db verified on device (1204224 bytes)
+wikivoyage.db verified on device (355127296 bytes)
+done. The app is starting; turn on airplane mode and ask a question.
+setup.sh on a device with no trace of the app (emulator; 1.7B model as answerer by test profile, 5 index files): 144 s
+19:21:04 1/1 s-1 timeout,  901 s in all
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+TypeError: 'NoneType' object is not subscriptable
+first answer in airplane mode: 902 s after asking
+-- repeat on a blank emulator (the first one lost its state)
+Success
+Qwen3-1.7B-Q8_0.gguf verified on device (1834426016 bytes)
+ethereum.db verified on device (14196736 bytes)
+firstaid.db verified on device (331776 bytes)
+places.db verified on device (14503936 bytes)
+travelfacts.db verified on device (1204224 bytes)
+wikivoyage.db verified on device (355127296 bytes)
+done. The app is starting; turn on airplane mode and ask a question.
+setup.sh: 67 s
+1
+19:45:49 1/1 s-1 died,  13 s in all
+status died | app None | sources []
+answer: 
+question to finished answer, airplane mode on: 14 s
+19:50:50 1/1 s-1 ok first word 87 s,  131 s in all
+status ok | app 0.8.1 | sources ['travelfacts:6 Brazil: travel facts', 'wikivoyage:15370 Brazil', 'wikivoyage:36425 Electrical systems', 'wikivoyage:36424 Electrical systems']
+answer: Brazil uses both Type C (Europlug) and Type N (IEC 60906-1) electric outlets [1][2]. The mains voltage in Brazil is 127?220 V, and the plug types are typically flat (North American) and round (European) plugs [1][2]. The voltage can vary as you travel within Brazil, sometimes even within the same building or state [2]. 
+
+220 V is good for devices that require higher voltage, such as certain types of appliances, motor
+retry after the emulator settled; question to finished answer, airplane mode on: 133 s
