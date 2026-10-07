@@ -286,6 +286,31 @@ The signed 0.8.0 build replaced 0.7.2 on the phone with `adb install -r`, and th
 
 Nothing here is a benchmark; these are single questions.
 
+## Ling-3.0-tiny against Qwen3-4B on the Redmi 12 5G (2026-10-07)
+
+Build 0.8.3, airplane mode on, the same five questions asked first with the fast profile (Ling-3.0-tiny Q4_0, which also plans its own searches) and then with the low profile (Qwen3-4B, planner Qwen3-1.7B). Each question started from a stopped app, so each time includes loading the model. Records: `docs/measurements/2026-10-07-redmi12-fast-ling.jsonl`, `docs/measurements/2026-10-07-redmi12-low-4b.jsonl`.
+
+| Median of five | Ling-3.0-tiny (fast) | Qwen3-4B (low) |
+|---|---|---|
+| First word after asking | 83 s | 159 s |
+| Answer finished | 108 s | 224 s |
+| Reading the prompt | 14.9 tok/s | 5.7 tok/s |
+| Writing | 5.8 tok/s | 3.2 tok/s |
+
+Ling loads through the stock engine in about 5 s; its thinking stays off with the profile's two switches; planning with the same model took 16 s on the first question.
+
+The answers, read side by side (five questions, no grading):
+
+| Question | Ling-3.0-tiny | Qwen3-4B |
+|---|---|---|
+| Someone is choking | correct steps; labelled the whole answer as general knowledge and put [1][2] at the end | correct steps; also labelled as general knowledge, no citation |
+| 104 °F in Celsius, dangerous for a long walk? | 40 °C; then **wrong**: "not dangerous ... if you avoid strenuous activities" | 40 °C; dangerous, with heat stroke and heat exhaustion cited |
+| Brazil's plugs and voltage | types C and N, 127 and 220 V at 60 Hz, cited; thin on what 220 V is for | the same facts, cited; says what 220 V is used for |
+| Naismith's rule, 18 km and 1,200 m | about 5.7 hours, steps shown (it used the mile form of the rule) | 5 hours 36 minutes, steps shown |
+| Tsunami and storm surge | causes and reactions, cited | causes and reactions, cited |
+
+So on this phone Ling answers in about half the time. On these five questions its answers were about as good on four and wrong on one where the 4B was right. Five questions do not settle quality; the benchmark would.
+
 ## The README followed from an empty folder (2026-10-06)
 
 The "Quick start without building" steps were followed in an empty folder, from the public repository and the published 0.8.1 APK, onto a blank Android emulator. Log: `docs/measurements/2026-10-06-stranger-test.log`.

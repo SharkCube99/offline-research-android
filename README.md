@@ -90,7 +90,7 @@ Three kinds of file go on the phone, all over adb. Every model and data source, 
 |---|---|---|
 | Answerer model | `Qwen3-4B-Q4_K_M.gguf` (2.5 GB) | <https://huggingface.co/Qwen/Qwen3-4B-GGUF> |
 | Planner model | `Qwen3-1.7B-Q8_0.gguf` (1.83 GB) | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> |
-| Optional fast answerer (7.9B, 1.3B active per token; not yet run on a phone) | `Ling-3.0-tiny-Q4_0.gguf` (4.62 GB) | <https://huggingface.co/bartowski/Ling-3.0-tiny-GGUF>; pick "Fast" in the app's Settings |
+| Optional fast answerer (7.9B, 1.3B active per token; about twice as fast as the 4B on the Redmi, `docs/PERFORMANCE.md`) | `Ling-3.0-tiny-Q4_0.gguf` (4.62 GB) | <https://huggingface.co/bartowski/Ling-3.0-tiny-GGUF>; pick "Fast" in the app's Settings |
 | Answerer for 12 GB phones | `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB) | <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF> |
 | Knowledge index | `wikipedia.db`, `wikivoyage.db` (22.9 GB) | Downloaded by `scripts/fetch_index.sh` from <https://huggingface.co/datasets/SHARK787/offline-research-index>, or built from the Wikipedia dumps by `data-pipeline/build_index.py` (many hours; see `data-pipeline/README.md`) |
 | Smaller packs | `cityplaces.db` (1.6 GB: pharmacies, hospitals, places to eat and sleep and more, by city), `ethereum.db`, `places.db`, `travelfacts.db`, `firstaid.db` (30 MB together) | Downloaded by the same script, or built by the `data-pipeline/build_*.py` scripts named in `LICENSES.md`. The app works without them; each adds answers to one kind of question |

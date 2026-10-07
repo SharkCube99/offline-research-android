@@ -292,7 +292,7 @@ What the fast profile needed:
 - **One model for both jobs.** The file is 4.62 GB; with the 1.83 GB planner beside it an 8 GB phone would have little left. When a profile names the same file for the planner and the answerer, the app now uses the loaded model for planning too and loads nothing else. The cost: planning and answering take turns in one context, so the fixed instructions are read again for each question instead of being kept.
 - llama.cpp at the pinned tag already knows the architecture (`bailingmoe3`).
 
-**Not tested at all.** The file does not fit the emulator's 4 GB, so this profile has never loaded the model. Whether it loads, whether thinking is really off, how fast it is and how well it answers are all unknown until it runs on a phone. The sampling settings are placeholders.
+**First run on the Redmi, 2026-10-07** (`docs/PERFORMANCE.md`): it loads through the stock engine, thinking stays off, and on five questions the first word came after a median of 83 s against 159 s for the 4B model. Its answers were about as good on four and wrong on one. The sampling settings are still placeholders, and its quality has not been benchmarked.
 
 ## Decisions and defaults
 
