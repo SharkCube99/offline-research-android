@@ -25,8 +25,8 @@ android {
         applicationId = "app.offlineresearch"
         minSdk = 28
         targetSdk = 35
-        versionCode = 18
-        versionName = "0.8.3"
+        versionCode = 19
+        versionName = "0.8.4"
 
         ndk {
             abiFilters += "arm64-v8a"

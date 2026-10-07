@@ -81,6 +81,82 @@ object Citations {
     /** True when part of the answer is the model's own knowledge, with no source behind it. */
     fun hasUnsourced(answer: String): Boolean = UNSOURCED_LINE.containsMatchIn(answer)
 
+    // "The provided sources do not explicitly state ...", "since the sources do not specify this, I cannot ...".
+    private val SOURCE_REMARK = Regex(
+        "(?i)\\bsources? (?:do not|don't|does not|doesn't|did not|cannot|can't)\\b[^\\n]*?" +
+            "\\b(?:state|specify|provide|contain|mention|cover|include|address|give|say|explain|discuss|list|confirm|answer|describe|detail|offer)\\b",
+    )
+
+    /**
+     * Removes sentences that only remark on what the sources lack. The rules
+     * tell the model not to write them; a large model writes them anyway, and
+     * they tell the reader nothing. A sentence that also cites a source stays,
+     * and so does the whole answer if nothing else would be left of it.
+     * While the answer streams, only finished sentences are judged.
+     */
+    fun dropSourceRemarks(answer: String): String {
+        if (!SOURCE_REMARK.containsMatchIn(answer)) return answer
+        val kept = StringBuilder()
+        var start = 0
+        var removed = false
+        for (end in sentenceEnds(answer)) {
+            val sentence = answer.substring(start, end)
+            val finished = sentence.trimEnd().lastOrNull().let { it == '.' || it == '!' || it == '?' }
+            if (finished && SOURCE_REMARK.containsMatchIn(sentence) && !MARKER.containsMatchIn(sentence)) {
+                removed = true
+            } else {
+                kept.append(sentence)
+            }
+            start = end
+        }
+        if (!removed) return answer
+        val text = kept.toString().replace(Regex("[ \\t]+\\n"), "\n").replace(Regex("\\n\\n\\n+"), "\n\n").trim()
+        // An answer made only of such remarks is a refusal in other words; leave it as written.
+        return if (text.any { it.isLetterOrDigit() } && text.length >= 40) text else answer
+    }
+
+    /** Offsets just past each sentence: after ". ", "! ", "? " or a line break. The last one is the text's end. */
+    private fun sentenceEnds(text: String): List<Int> {
+        val ends = mutableListOf<Int>()
+        var index = 0
+        while (index < text.length) {
+            val char = text[index]
+            val closes = char == '\n' ||
+                ((char == '.' || char == '!' || char == '?') && (index + 1 == text.length || text[index + 1].isWhitespace()))
+            if (closes) {
+                // The space after the full stop belongs to the sentence it ends.
+                var end = index + 1
+                while (end < text.length && text[end] == ' ') end++
+                ends += end
+                index = end
+            } else {
+                index++
+            }
+        }
+        if (ends.lastOrNull() != text.length) ends += text.length
+        return ends
+    }
+
+    /**
+     * Below the line that marks a part as unsourced, source numbers contradict
+     * the line; they are removed there. Not when the line opens the answer:
+     * then the model has mislabelled a sourced answer, and its citations are
+     * the more useful half of the contradiction.
+     */
+    fun dropCitationsUnderUnsourced(answer: String): String {
+        val label = UNSOURCED_LINE.find(answer) ?: return answer
+        // The match begins inside the line ("From general knowledge ..."); what matters is the text above that line.
+        val lineStart = answer.lastIndexOf('\n', label.range.first) + 1
+        if (answer.substring(0, lineStart).none { it.isLetterOrDigit() }) return answer
+        val below = answer.substring(label.range.last + 1)
+        if (!MARKER.containsMatchIn(below)) return answer
+        val cleaned = below.replace(Regex("[ \\t]*" + MARKER.pattern), "")
+        return answer.substring(0, label.range.last + 1) + cleaned
+    }
+
+    /** Every clean-up of a model's answer, in order. */
+    fun tidy(answer: String): String = dropCitationsUnderUnsourced(dropSourceRemarks(dropStrayNotCovered(answer)))
+
     /** True when the answer says the sources do not cover the question. */
     fun isNotCovered(answer: String): Boolean =
         dropStrayNotCovered(answer).contains(PromptBuilder.NOT_COVERED.trimEnd('.'), ignoreCase = true)

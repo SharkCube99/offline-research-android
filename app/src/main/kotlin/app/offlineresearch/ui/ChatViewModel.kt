@@ -363,7 +363,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     is RagEvent.Token -> {
                         raw.append(event.text)
-                        val visible = Calculator.check(Citations.dropStrayNotCovered(stripThinking(raw.toString())), complete = false)
+                        val visible = Calculator.check(Citations.tidy(stripThinking(raw.toString())), complete = false)
                         updateReply { it.copy(text = visible) }
                     }
                     is RagEvent.Finished -> report = event.report
@@ -376,7 +376,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             // place, it would answer the user's next "near me" for the wrong city.
             scriptedPosition = null
             withContext(NonCancellable) {
-                val text = Calculator.check(Citations.dropStrayNotCovered(stripThinking(raw.toString())))
+                val text = Calculator.check(Citations.tidy(stripThinking(raw.toString())))
                 updateReply { it.copy(stage = null, text = if (failure != null) "[error] $failure" else text) }
                 val after = SystemStats.snapshot(getApplication())
                 val finished = report

@@ -35,6 +35,7 @@ object PromptBuilder {
     private val OWN_KNOWLEDGE = """
         - Next to a source number, state as a fact only what that source supports.
         - If the sources do not answer the question, or answer only part of it, answer the rest from your own general knowledge. Start that part with a line that reads exactly: $UNSOURCED
+        - Use that line only above what the sources do not contain. When the sources hold the answer, cite them and leave the line out.
         - Below that line cite no source numbers. Keep to what is widely known and does not change quickly, and say so when you are unsure.
         - Do not describe what the sources lack or apologise for them. Just answer.
         - Reply with exactly "$NOT_COVERED" only when neither the sources nor general knowledge can answer, for example when the answer depends on where the reader is right now and no location is given, or on today's prices, weather or opening hours.
