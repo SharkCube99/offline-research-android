@@ -2,7 +2,7 @@
 
 An Android app that answers research questions with no network connection. It searches an offline library on the phone, and a language model on the phone writes an answer that cites the passages it used.
 
-It is an entry for the [offline AI research app bounty](https://poidh.xyz/mainnet/bounty/31). **Status: it works on a real phone, and it is below the bounty's bar on both quality and speed.** The measured state is under "Where it stands" below; nothing there is estimated.
+It is an entry for the [offline AI research app bounty](https://poidh.xyz/mainnet/bounty/31). **Status: it works on a real phone; its latest quality score is just above the bounty's bar, by less than the graders' margin of error, and it is far too slow on the only phone it has been run on.** The measured state is under "Where it stands" below; nothing there is estimated.
 
 ## What it does
 
@@ -20,10 +20,10 @@ Every figure here comes from a log in this repository; the files are named besid
 
 | | Measured | Source |
 |---|---|---|
-| Quality, 35B model | 45% of Claude Opus 5.5 with web search, on 61 questions, graded blind (build 0.7.2) | `docs/BENCHMARK.md` |
+| Quality, 35B model | 54% of Claude Opus 5.5 with web search, on 61 questions, graded blind (build 0.8.4; 45% for build 0.7.2) | `docs/BENCHMARK.md` |
 | Quality, 4B model | 34% on the same questions (build 0.7.0) | `docs/BENCHMARK.md` |
 | Speed on a Redmi 12 5G (8 GB), 4B model | first word after a median of 136 s; answer finished after 179 s | `docs/BENCHMARK.md` |
-| Speed on the same phone, 35B model | first word after a median of 209 s; finished after 443 s | `docs/BENCHMARK.md` |
+| Speed on the same phone, 35B model | first word after a median of 247 s; finished after 507 s | `docs/BENCHMARK.md` |
 | Storage on the phone, 4B setup | 28.9 GB: library 24.6, models 4.3, app 0.03 | file sizes in "Put it on a phone" |
 | Storage on the phone, 35B setup | 38.7 GB: library 24.6, models 14.1, app 0.03 | the same |
 | Search quality | a relevant passage in the top 5 for 46 of 50 test questions and 24 of 25 held-out ones | `docs/KNOWLEDGE_INDEX.md` |
@@ -31,7 +31,7 @@ Every figure here comes from a log in this repository; the files are named besid
 What this does not show:
 
 - **No 12 GB phone has been measured.** The only phone used is a low-end 8 GB one. The 35B model needs a faster phone to be usable; on this one it is not.
-- **Nothing after build 0.7.2 has been benchmarked.** Since then: fixes to search (in the 45% run the search planner was silent, by a defect since fixed), three more library files, unsourced answers under a label, conversions, and location. Each has been tried on single questions on the phone (`docs/PERFORMANCE.md`), which shows that it runs, not how good it is.
+- **The 54% is not a safe pass.** Grader instances have differed by ten points, the margin over 50% is four, and these 61 questions were used to find and fix faults. A second set of 40 questions the app was never tuned on has not been run. The run also showed faults not yet fixed: answers cut off at the length limit, restaurant answers that decline to name places, and two location questions refused (`docs/BENCHMARK.md`).
 - **Known weak points:** restaurant lists come from map data and include places that have closed; unsourced parts of an answer can be wrong; a small model does not always use the unsourced label.
 
 Other entries to the bounty report higher scores and faster answers on 12 GB phones.

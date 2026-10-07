@@ -9,10 +9,50 @@ How the app's answers compare with a frontier model that has internet search. Me
 | 2026-10-03 | 0.6.0 | Qwen3-4B | Wikipedia, Wikivoyage | 26% |
 | 2026-10-04 | 0.7.0 | Qwen3-4B | plus the Ethereum and places packs | 34% |
 | 2026-10-04 | 0.7.2 | Qwen3.6-35B-A3B (2-bit) | the same packs; answer rules reworded | 45% |
+| 2026-10-07 | 0.8.4 | Qwen3.6-35B-A3B (2-bit) | seven library files; working planner; unsourced answers under a label; conversions; location | **54%** |
 
-The bounty's bar is more than 50%. No run meets it yet. The 35B run is the configuration meant for a 12 GB phone; its answers were produced on the 8 GB Redmi, so its quality figures stand and its timings do not carry over.
+The bounty's bar is more than 50%. The latest run is the first above it, by four points, on a measure whose graders can differ by ten. It should be read as "about at the bar", not as proof of clearing it; see the cautions in its section. The 35B runs are the configuration meant for a 12 GB phone; their answers were produced on the 8 GB Redmi, so the quality figures stand and the timings do not carry over.
 
 The two runs were graded on different days by different grader instances. Shares from different graders can differ by 10 points or more, so the 8-point difference overall is suggestive, not proof; the larger changes in the two groups the packs target (restaurants 14% to 31%, crypto 27% to 40%) go with a fall in flat refusals from 17 to 7.
+
+## High profile, build 0.8.4, 2026-10-07
+
+**The app reaches 54% of the reference, against 45% for build 0.7.2 with the same model.**
+
+- Same 61 questions, reference, phone and model as the run below; build 0.8.4; airplane mode on throughout; all 61 answered (one question stalled for an hour with the phone idle and was asked again). Files: `bench/vitalik61/answers_redmi12_high_v084.jsonl`, `bench/vitalik61/grading_redmi12_high_v084/`, `bench/vitalik61/run_log_redmi12_high_v084.txt`.
+- Graded by three fresh grader instances given word for word the instructions of the earlier runs.
+
+| Group | n | App (mean /10) | Reference | App as share of reference | Preferred app / reference / tie | Errors app / reference | Not answered | First word (median) | Done (median) |
+|---|---|---|---|---|---|---|---|---|---|
+| Restaurants | 20 | 3.85 | 8.82 | **44%** | 0 / 20 / 0 | 3 / 4 | 0 | 267 s | 727 s |
+| Crypto | 20 | 5.40 | 9.57 | **56%** | 0 / 20 / 0 | 6 / 0 | 0 | 234 s | 434 s |
+| Travel | 10 | 7.00 | 9.75 | **72%** | 0 / 10 / 0 | 2 / 0 | 0 | 244 s | 437 s |
+| Emergencies | 5 | 4.20 | 9.90 | **42%** | 0 / 5 / 0 | 3 / 0 | 0 | 231 s | 542 s |
+| Arithmetic | 6 | 6.17 | 10.00 | **62%** | 0 / 6 / 0 | 2 / 0 | 0 | 298 s | 577 s |
+| All | 61 | 5.13 | 9.43 | **54%** | 0 / 61 / 0 | 16 / 4 | 0 | 247 s | 507 s |
+
+What moved, against the 0.7.2 run:
+
+- **Travel 42% to 72% and emergencies 13% to 42%.** These are the groups the search fixes, the first-aid book and the travel-facts file were aimed at, and the planner, silent in the earlier run, worked on all 61 questions here.
+- **Crypto 49% to 56%**, with six verified errors against three.
+- **Restaurants unchanged at 44%.** Verified errors fell from 20 to 3, but so did what the answers offer: see the first fault below.
+- **Arithmetic 71% to 62%**, a loss caused by this build: see the second fault.
+- The reference was preferred on all 61 questions, as before.
+
+Faults this run shows, all in the app and none yet fixed:
+
+- **It still declines to name restaurants.** Three answers (Singapore, Tokyo, Taipei; 1 to 1.5 points) say the sources "do not provide a ranked list of the best" and then give general advice, with the list of places in front of the model. The lists' own opening line ("not ranked by quality") invites this.
+- **Answers cut off at the length limit.** Seven answers stopped at the 512-token cap, five restaurant lists and two calculations; one calculation never reached its total, which a grader scored 3 where the earlier build's complete answer scored 10. Answers are longer now and the cap was not raised.
+- **Two "where I am" questions refused.** "The city I am currently in" is not among the phrases the app recognises as asking about the reader's position, so the position the benchmark supplies was never used (1 point each). The third, "near me", was located and scored 4.5.
+- **The clean-up of remarks about the sources damages some answers.** Four answers begin mid-thought ("However, they list...", "They define...") because their first sentence was removed.
+- **Thin or wrong first aid.** The scald answer is one line; the earthquake answer leaves out "drop, cover, hold on"; the snakebite answer says to raise the bite, the hypothermia answer advises against warm water for frostbite, and the flood-water answer gives a bleach dose four times too high in teaspoons. Three of these were under the unsourced label.
+
+Cautions:
+
+- **Four points over the bar is inside the graders' spread.** Different grader instances have differed by ten points on the same answers' groups. The size of the changes in travel and emergencies is beyond that; the overall margin over 50% is not.
+- **These questions have been used to find and fix faults**, so this score flatters the app. The 40 held-out questions in `bench/heldout40/` have not been run.
+- The graders were language-model instances that checked a sample of facts on the web; no human has reviewed the grades.
+- The timings are from an 8 GB phone below this profile's intended memory: a median of over four minutes to the first word.
 
 ## High profile (Qwen3.6-35B-A3B, BigMoeOnEdge), 2026-10-04
 

@@ -1,0 +1,67 @@
+0 answered already, 61 to ask, profile high
+09:42:51 1/61 food-001 ok first word 225 s,  689 s in all
+09:56:07 2/61 food-002 ok first word 270 s,  796 s in all
+10:10:05 3/61 food-003 ok first word 284 s,  838 s in all
+3 answered already, 58 to ask, profile high
+10:21:18 1/58 food-004 ok first word 267 s,  389 s in all
+10:31:43 2/58 food-005 ok first word 254 s,  626 s in all
+10:45:28 3/58 food-006 ok first word 305 s,  825 s in all
+10:58:18 4/58 food-007 ok first word 225 s,  770 s in all
+11:11:03 5/58 food-008 ok first word 256 s,  765 s in all
+11:21:44 6/58 food-009 ok first word 278 s,  640 s in all
+11:30:50 7/58 food-010 ok first word 303 s,  546 s in all
+11:43:35 8/58 food-011 ok first word 280 s,  764 s in all
+11:57:25 9/58 food-012 ok first word 284 s,  830 s in all
+12:05:52 10/58 food-013 ok first word 245 s,  507 s in all
+12:20:05 11/58 food-014 ok first word 297 s,  853 s in all
+12:33:45 12/58 food-015 ok first word 266 s,  820 s in all
+12:44:50 13/58 food-016 ok first word 267 s,  665 s in all
+12:54:35 14/58 food-017 ok first word 263 s,  584 s in all
+12:59:08 15/58 food-018 ok first word 234 s,  273 s in all
+13:03:42 16/58 food-019 ok first word 232 s,  273 s in all
+13:16:37 17/58 food-020 ok first word 274 s,  775 s in all
+13:28:39 18/58 cry-001 ok first word 219 s,  722 s in all
+13:36:12 19/58 cry-002 ok first word 226 s,  453 s in all
+13:43:20 20/58 cry-003 ok first word 219 s,  428 s in all
+13:54:12 21/58 cry-004 ok first word 254 s,  652 s in all
+14:02:04 22/58 cry-005 ok first word 236 s,  472 s in all
+14:09:31 23/58 cry-006 ok first word 228 s,  446 s in all
+14:15:59 24/58 cry-007 ok first word 230 s,  388 s in all
+14:21:24 25/58 cry-008 ok first word 230 s,  325 s in all
+14:31:22 26/58 cry-009 ok first word 242 s,  598 s in all
+14:38:43 27/58 cry-010 ok first word 208 s,  440 s in all
+14:45:11 28/58 cry-011 ok first word 246 s,  388 s in all
+14:51:29 29/58 cry-012 ok first word 274 s,  377 s in all
+14:58:08 30/58 cry-013 ok first word 252 s,  399 s in all
+15:03:29 31/58 cry-014 ok first word 240 s,  321 s in all
+15:12:41 32/58 cry-015 ok first word 227 s,  552 s in all
+15:22:03 33/58 cry-016 ok first word 251 s,  563 s in all
+15:29:09 34/58 cry-017 ok first word 241 s,  426 s in all
+15:35:55 35/58 cry-018 ok first word 225 s,  405 s in all
+15:44:30 36/58 cry-019 ok first word 259 s,  515 s in all
+15:51:20 37/58 cry-020 ok first word 232 s,  410 s in all
+15:58:58 38/58 trv-001 ok first word 242 s,  457 s in all
+16:05:01 39/58 trv-002 ok first word 228 s,  363 s in all
+16:12:23 40/58 trv-003 ok first word 236 s,  442 s in all
+16:20:28 41/58 trv-004 ok first word 247 s,  484 s in all
+16:26:57 42/58 trv-005 ok first word 257 s,  389 s in all
+16:34:09 43/58 trv-006 ok first word 249 s,  432 s in all
+16:41:54 44/58 trv-007 ok first word 249 s,  465 s in all
+17:48:16 45/58 trv-008 timeout,  3982 s in all
+17:52:53 46/58 trv-009 ok first word 151 s,  267 s in all
+17:59:03 47/58 trv-010 ok first word 176 s,  370 s in all
+18:09:18 48/58 dng-001 ok first word 203 s,  614 s in all
+18:20:34 49/58 dng-002 ok first word 232 s,  676 s in all
+18:25:32 50/58 dng-003 ok first word 246 s,  298 s in all
+18:33:44 51/58 dng-004 ok first word 231 s,  492 s in all
+18:42:46 52/58 dng-005 ok first word 227 s,  542 s in all
+18:48:34 53/58 mth-001 ok first word 290 s,  348 s in all
+19:03:05 54/58 mth-002 ok first word 306 s,  870 s in all
+19:17:27 55/58 mth-003 ok first word 307 s,  862 s in all
+19:27:07 56/58 mth-004 ok first word 315 s,  580 s in all
+19:35:16 57/58 mth-005 ok first word 278 s,  489 s in all
+19:44:50 58/58 mth-006 ok first word 253 s,  574 s in all
+finished
+60 answered already, 1 to ask, profile high
+19:55:30 1/1 trv-008 ok first word 259 s,  615 s in all
+finished
