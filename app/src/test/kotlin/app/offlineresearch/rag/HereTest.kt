@@ -28,6 +28,8 @@ class HereTest {
             "Where am I?",
             "What hostels are in my area",
             "Where can I find the closest ATM",
+            "Tell me the best vegan restaurants in the city I am currently in",
+            "What is there to see in the town I'm staying in?",
         )) {
             assertTrue(question, Here.asksAbout(question))
         }
@@ -52,6 +54,10 @@ class HereTest {
         assertEquals("Is there a pharmacy in Denver?", Here.inPlace("Is there a pharmacy nearby?", denver))
         assertEquals("Where is the nearest hospital in Denver?", Here.inPlace("Where is the nearest hospital?", denver))
         assertEquals("Where am I?", Here.inPlace("Where am I?", denver))
+        assertEquals(
+            "Tell me the best vegan restaurants in Denver",
+            Here.inPlace("Tell me the best vegan restaurants in the city I am currently in", denver),
+        )
         assertEquals("Denver, United States", Here.describe(denver))
     }
 

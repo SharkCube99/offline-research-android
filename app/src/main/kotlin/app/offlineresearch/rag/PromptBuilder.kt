@@ -17,7 +17,7 @@ object PromptBuilder {
     private val FROM_SOURCES = """
         - Give the most helpful answer the sources allow. Use the relevant details in them: names, numbers, addresses, steps.
         - Cite the source number in square brackets right after each fact, like [1] or [2][3]. Cite only the source numbers given.
-        - If the question asks for the best, for recommendations or for places, and a source lists places, give the places on that list with their details and note that the list is not ranked.
+        - If the question asks for the best, for recommendations or for places, and a source lists places, name the places from that list with their details. Such lists carry no ratings: say once that the order is not a ranking and that a place may have closed, and never decline to name places for that reason.
         - Show each calculation as an equation with its numbers, like 235.2 / 7.5 = 31.36. The app checks the arithmetic.
     """.trimIndent()
 
@@ -64,12 +64,20 @@ object PromptBuilder {
         return if (suffix.isBlank()) contract else "$contract\n\n${suffix.trim()}"
     }
 
+    // The place lists say of themselves that they are not ranked. Read by a
+    // large model that sentence became a reason to name no place at all, so the
+    // model is not shown it; the rules tell it to say so itself, once.
+    private val NOT_RANKED = Regex("The list is not ranked[^.]*\\.[ \\t]*")
+
+    /** A source's text as the model is given it. */
+    fun forModel(excerpt: String): String = NOT_RANKED.replace(excerpt, "")
+
     /** [location] is the reader's city from the phone's GPS, when the question depends on it. */
     fun user(question: String, sources: List<Passage>, location: String? = null): String = buildString {
         append("Sources:\n")
         if (sources.isEmpty()) append("\n(the search found none)\n")
         sources.forEachIndexed { index, passage ->
-            append("\n[").append(index + 1).append("] ").append(passage.excerpt).append('\n')
+            append("\n[").append(index + 1).append("] ").append(forModel(passage.excerpt)).append('\n')
         }
         if (location != null) append("\nThe reader's location, from the phone's GPS: ").append(location).append('\n')
         append("\nQuestion: ").append(question.trim())

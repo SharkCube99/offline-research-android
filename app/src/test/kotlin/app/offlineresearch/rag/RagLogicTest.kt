@@ -216,6 +216,18 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun theModelIsNotShownThatAListIsUnranked() {
+        val intro = "Vegan restaurants in Tokyo: OpenStreetMap lists 18 fully vegan places to eat in Tokyo, Japan, as of 2026-10-06. " +
+            "The list is not ranked by quality, because the map data has no ratings. Places confirmed most recently come first. Ain Soph is a fully vegan restaurant."
+        val shown = PromptBuilder.forModel(intro)
+        assertTrue(shown, "not ranked" !in shown)
+        assertTrue(shown, "as of 2026-10-06. Places confirmed most recently come first. Ain Soph is a fully vegan restaurant." in shown)
+        assertTrue("never decline to name places" in PromptBuilder.system())
+        val prompt = PromptBuilder.user("Best vegan restaurants in Tokyo?", listOf(passage(1, "Vegan restaurants in Tokyo", intro)))
+        assertTrue(prompt, "not ranked" !in prompt)
+    }
+
+    @Test
     fun noSuffixAddsNothing() {
         assertFalse(PromptBuilder.system().endsWith("\n"))
     }

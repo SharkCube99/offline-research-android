@@ -99,13 +99,17 @@ object Citations {
         val kept = StringBuilder()
         var start = 0
         var removed = false
+        var afterRemoval = false
         for (end in sentenceEnds(answer)) {
             val sentence = answer.substring(start, end)
             val finished = sentence.trimEnd().lastOrNull().let { it == '.' || it == '!' || it == '?' }
             if (finished && SOURCE_REMARK.containsMatchIn(sentence) && !MARKER.containsMatchIn(sentence)) {
                 removed = true
+                afterRemoval = true
             } else {
-                kept.append(sentence)
+                // The sentence after a removed one may lean on it ("However, they list ...").
+                kept.append(if (afterRemoval && sentence.isNotBlank()) standingAlone(sentence) else sentence)
+                if (sentence.isNotBlank()) afterRemoval = false
             }
             start = end
         }
@@ -113,6 +117,20 @@ object Citations {
         val text = kept.toString().replace(Regex("[ \\t]+\\n"), "\n").replace(Regex("\\n\\n\\n+"), "\n\n").trim()
         // An answer made only of such remarks is a refusal in other words; leave it as written.
         return if (text.any { it.isLetterOrDigit() } && text.length >= 40) text else answer
+    }
+
+    private val LEADING_CONNECTIVE = Regex("^(?:However|But|Nevertheless|Nonetheless|Still|Instead|That said|Even so|Rather),?[ \\t]+", RegexOption.IGNORE_CASE)
+    private val LEADING_THEY = Regex("^They\\b", RegexOption.IGNORE_CASE)
+
+    /**
+     * A sentence made to stand without the one before it: an opening "However,"
+     * goes, and an opening "they", which meant the sources, says so.
+     */
+    private fun standingAlone(sentence: String): String {
+        val lead = sentence.takeWhile { it.isWhitespace() }
+        var text = LEADING_CONNECTIVE.replace(sentence.substring(lead.length), "")
+        text = LEADING_THEY.replace(text, "The sources")
+        return lead + text.replaceFirstChar { it.uppercaseChar() }
     }
 
     /** Offsets just past each sentence: after ". ", "! ", "? " or a line break. The last one is the text's end. */

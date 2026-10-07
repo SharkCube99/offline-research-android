@@ -84,7 +84,7 @@ class Gazetteer(private val cities: List<City>) {
 object Here {
     // Phrases that stand for the reader's own position and can be replaced by "in <city>".
     private val PHRASE = Regex(
-        """\b(?:near(?:est| by|by)? (?:to )?(?:me|here|my (?:location|position|hotel|place))|close to (?:me|here)|around (?:me|here)|in my (?:area|city|town|neighbou?rhood)|in this (?:area|city|town)|nearby|near here|where i am(?: now)?|at my (?:current )?location)\b""",
+        """\b(?:in (?:the|this) (?:city|town|area|place) (?:that )?(?:i am|i'm|we are|we're) (?:currently |now |right now )?(?:in|at|staying in|visiting)|near(?:est| by|by)? (?:to )?(?:me|here|my (?:location|position|hotel|place))|close to (?:me|here)|around (?:me|here)|in my (?:area|city|town|neighbou?rhood)|in this (?:area|city|town)|nearby|near here|where i am(?: now)?|at my (?:current )?location)\b""",
         RegexOption.IGNORE_CASE,
     )
 

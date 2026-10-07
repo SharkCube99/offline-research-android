@@ -11,7 +11,7 @@
   "repack": false,
   "chat_template": "auto",
   "prompt_suffix": "/no_think",
-  "max_tokens": 384,
+  "max_tokens": 512,
   "temperature": 0.7,
   "top_k": 20,
   "top_p": 0.8,

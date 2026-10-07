@@ -19,9 +19,26 @@ class AnswerTidyTest {
         val tidy = Citations.dropSourceRemarks(answer)
         assertFalse(tidy, "do not explicitly state" in tidy)
         assertFalse(tidy, "I cannot confirm" in tidy)
-        assertTrue(tidy, "Brazil uses mains voltages of 127 V and 220 V [1][3]. They note that many devices support both voltages [3]." in tidy)
+        assertTrue(tidy, "Brazil uses mains voltages of 127 V and 220 V [1][3]. The sources note that many devices support both voltages [3]." in tidy)
         assertTrue(tidy, tidy.endsWith("220 V is typically used for high-power appliances."))
         assertTrue(Citations.hasUnsourced(tidy))
+    }
+
+    @Test
+    fun theSentenceAfterARemovedOneIsMadeToStandAlone() {
+        // The openings of two answers from the benchmark run of build 0.8.4.
+        val list = "The offline sources do not provide a ranked list of the best vegan restaurants near you. " +
+            "However, they list several vegan restaurants in Denver with their details.\n\nFrom Overture Maps: Radish [1]."
+        assertEquals(
+            "The sources list several vegan restaurants in Denver with their details.\n\nFrom Overture Maps: Radish [1].",
+            Citations.dropSourceRemarks(list),
+        )
+        val traffic = "The sources do not state which side of the road Thailand drives on. " +
+            "They only mention that motorbikes often drive on the wrong side of the road [1]."
+        assertEquals(
+            "The sources only mention that motorbikes often drive on the wrong side of the road [1].",
+            Citations.dropSourceRemarks(traffic),
+        )
     }
 
     @Test
