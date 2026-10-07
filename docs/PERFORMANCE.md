@@ -311,6 +311,31 @@ The answers, read side by side (five questions, no grading):
 
 So on this phone Ling answers in about half the time. On these five questions its answers were about as good on four and wrong on one where the 4B was right. Five questions do not settle quality; the benchmark would.
 
+## The same five questions with the 35B model on the Redmi 12 5G (2026-10-07)
+
+Build 0.8.3, airplane mode on, high profile (Qwen3.6-35B-A3B at 2 bits through BigMoeOnEdge, planner Qwen3-1.7B), on the 8 GB Redmi, which is below the memory this profile is meant for. Record: `docs/measurements/2026-10-07-redmi12-high-35b.jsonl`. All five answered; the app was not killed.
+
+| Median of five | 35B (high) | Ling-3.0-tiny (fast) | Qwen3-4B (low) |
+|---|---|---|---|
+| First word after asking | 227 s | 83 s | 159 s |
+| Answer finished | 502 s | 108 s | 224 s |
+| Reading the prompt | 3.9 tok/s | 14.9 tok/s | 5.7 tok/s |
+| Writing | 1.0 tok/s | 5.8 tok/s | 3.2 tok/s |
+
+This is the first run of the high profile with a working planner (`planner_fallback` is false in every record; in the 45% benchmark run it was silent), and with the library files and answer rules added since.
+
+The answers are the fullest of the three and the only ones that cite throughout:
+
+- **Choking:** five numbered steps, each cited. One step is a misreading: for an unconscious victim it says the procedure "is usually performed by someone with ... surgical skills", which a source says of a surgical airway, not of first aid.
+- **104 °F:** 40 °C from the calculator, then "Yes, it is dangerous", with heat exhaustion and heat stroke thresholds cited.
+- **Brazil:** voltages and the Type N plug with pin sizes, cited; it leaves out Type C, which its first source lists. What 220 V is for is given under the unsourced label.
+- **Naismith's rule:** 5.6 hours, 5 hours 36 minutes, every step shown.
+- **Tsunami and storm surge:** causes cited; reactions under the unsourced label, and sensible.
+
+Two things it still does against its rules: it comments on what the sources lack ("the provided sources do not explicitly state..."), and after labelling a part as unsourced it sometimes cites a source inside it.
+
+Five questions are not a benchmark. They do show the configuration that matters working end to end with everything built since 0.7.2, at a speed only a faster phone can change.
+
 ## The README followed from an empty folder (2026-10-06)
 
 The "Quick start without building" steps were followed in an empty folder, from the public repository and the published 0.8.1 APK, onto a blank Android emulator. Log: `docs/measurements/2026-10-06-stranger-test.log`.
