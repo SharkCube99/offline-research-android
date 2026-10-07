@@ -39,7 +39,7 @@ What moved, against the 0.7.2 run:
 - **Arithmetic 71% to 62%**, a loss caused by this build: see the second fault.
 - The reference was preferred on all 61 questions, as before.
 
-Faults this run shows, all in the app and none yet fixed:
+Faults this run shows, all in the app. The first four were addressed in build 0.8.5 (a longer answer limit, the "not ranked" sentence kept from the model, the phrase recognised, the sentence after a removed remark repaired); that build has not been benchmarked, so whether they are cured is not yet known:
 
 - **It still declines to name restaurants.** Three answers (Singapore, Tokyo, Taipei; 1 to 1.5 points) say the sources "do not provide a ranked list of the best" and then give general advice, with the list of places in front of the model. The lists' own opening line ("not ranked by quality") invites this.
 - **Answers cut off at the length limit.** Seven answers stopped at the 512-token cap, five restaurant lists and two calculations; one calculation never reached its total, which a grader scored 3 where the earlier build's complete answer scored 10. Answers are longer now and the cap was not raised.
