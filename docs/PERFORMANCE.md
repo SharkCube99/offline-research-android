@@ -336,6 +336,18 @@ Two things it still does against its rules: it comments on what the sources lack
 
 Five questions are not a benchmark. They do show the configuration that matters working end to end with everything built since 0.7.2, at a speed only a faster phone can change.
 
+## Rules read ahead: emulator check of build 0.8.6 (2026-10-08)
+
+A check that the mechanism works, not a speed measurement: the emulator translates ARM code and ran a stand-in model (EuroMoE, the only model that fits its 4 GB). Log: `docs/measurements/2026-10-08-read-ahead-emulator.log`.
+
+| Step | Prompt tokens | Reused |
+|---|---|---|
+| Rules read after loading, no question | 446 | 0 |
+| First question | 765 | 440 |
+| Second question | 827 | 448 |
+
+No planner ran (0 ms). The Redmi has not been measured with this build.
+
 ## The README followed from an empty folder (2026-10-06)
 
 The "Quick start without building" steps were followed in an empty folder, from the public repository and the published 0.8.1 APK, onto a blank Android emulator. Log: `docs/measurements/2026-10-06-stranger-test.log`.

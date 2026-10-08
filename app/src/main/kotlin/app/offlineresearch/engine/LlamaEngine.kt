@@ -94,6 +94,28 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
         }
     }.buffer(Channel.UNLIMITED).flowOn(dispatcher)
 
+    // A prompt with these rules and an empty question, and no reply asked for:
+    // the bridge keeps what it read, and the next prompt that starts the same
+    // way skips that part. Queued on the engine thread like any other call, so
+    // a question asked meanwhile waits for it and then benefits from it.
+    override suspend fun prime(systemPrompt: String) = withContext(dispatcher) {
+        val session = handle
+        if (session == 0L) return@withContext
+        LlamaBridge.nativeGenerate(
+            session,
+            systemPrompt.toByteArray(Charsets.UTF_8),
+            ByteArray(0),
+            ByteArray(0),
+            0,
+            0f,
+            1,
+            1f,
+            0f,
+            0,
+        ) { }
+        Unit
+    }
+
     override fun countTokens(text: String): Int {
         val count = LlamaBridge.nativeTokenCount(requireHandle(), text.toByteArray(Charsets.UTF_8))
         if (count < 0) throw EngineException("The text could not be tokenised")

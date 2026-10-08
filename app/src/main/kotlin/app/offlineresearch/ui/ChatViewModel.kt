@@ -27,6 +27,7 @@ import app.offlineresearch.rag.Calculator
 import app.offlineresearch.rag.Gazetteer
 import app.offlineresearch.rag.Place
 import app.offlineresearch.rag.Position
+import app.offlineresearch.rag.PromptBuilder
 import app.offlineresearch.rag.Citations
 import app.offlineresearch.rag.ContextBudgeter
 import app.offlineresearch.rag.IndexFiles
@@ -154,6 +155,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var pendingStress: Int? = null
     private var work: Job? = null
     private var loading: Job? = null
+    private var priming: Job? = null
 
     init {
         // Why did the previous run end? Only Android knows, and only afterwards.
@@ -171,6 +173,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Only one load at a time: a second request (a profile change arriving
         // while the first load runs) replaces the first.
         loading?.cancel()
+        priming?.cancel()
         loading = viewModelScope.launch {
             val status = try {
                 load()
@@ -189,10 +192,32 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             if (ready) {
+                prime()
                 pendingStress?.let { runStress(it) } ?: pendingQuestion?.let { send(it) }
             }
             pendingQuestion = null
             pendingStress = null
+        }
+    }
+
+    /**
+     * Has the model read the answer rules now, while the user is still typing.
+     * They are the same for every question and make up about half of a prompt.
+     */
+    private fun prime() {
+        val active = profile ?: return
+        val engine = answerer
+        val rules = PromptBuilder.system(active.promptSuffix, active.ownKnowledge, active.answerRules == "short")
+        priming = viewModelScope.launch {
+            try {
+                val start = System.currentTimeMillis()
+                engine.prime(rules)
+                Log.i(MetricsLog.TAG, "answer rules read ahead in ${System.currentTimeMillis() - start} ms")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(MetricsLog.TAG, "reading the answer rules ahead failed: ${e.message}")
+            }
         }
     }
 

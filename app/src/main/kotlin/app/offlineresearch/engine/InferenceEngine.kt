@@ -16,6 +16,13 @@ interface InferenceEngine {
      */
     fun generate(request: GenerationRequest): Flow<String>
 
+    /**
+     * Reads the fixed start of every prompt into the model ahead of the first
+     * question, so that question only has its own part left to read. Engines
+     * that keep nothing between prompts do nothing.
+     */
+    suspend fun prime(systemPrompt: String) {}
+
     /** Number of tokens [text] occupies in this model's context. Safe to call from any thread. */
     fun countTokens(text: String): Int
 

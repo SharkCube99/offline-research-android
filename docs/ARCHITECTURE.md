@@ -294,6 +294,17 @@ What the fast profile needed:
 
 **First run on the Redmi, 2026-10-07** (`docs/PERFORMANCE.md`): it loads through the stock engine, thinking stays off, and on five questions the first word came after a median of 83 s against 159 s for the 4B model. Its answers were about as good on four and wrong on one. The sampling settings are still placeholders, and its quality has not been benchmarked.
 
+### Rules read ahead, and a fast tier without a planner (build 0.8.6)
+
+On the Redmi the fast tier's time to the first word (median 83 s over five questions, `docs/measurements/2026-10-07-redmi12-fast-ling.jsonl`) split into about 16 to 23 s writing search queries, 1 to 13 s searching and 52 to 67 s reading a prompt of 770 to 1,010 tokens. None of the prompt was ever reused. Three changes follow from that.
+
+- **The answer rules are read when the model has loaded, not when the first question arrives.** They are the same for every question and are roughly half of a prompt. `InferenceEngine.prime()` has the model read them while the user is still typing; the bridge's prefix cache then skips them for every question. A question asked before the reading has finished waits for it. This applies to every profile on the llama.cpp engine (low and fast); the BigMoeOnEdge helper has no such call.
+- **The fast profile has no planner.** Its planner was the Ling answerer itself, which cost the 16 to 23 s and, sharing one context, threw away the cached rules on every question. The fast tier now searches on the question alone. Cost: no article titles suggested by a model, so questions whose words differ from the article's are found less often.
+- **The fast profile carries fewer sources**: 300 tokens from at most 6 passages instead of 450 from 10.
+- **The rules were left at full length.** Once they are read ahead their length costs nothing per question, and the short rules gave worse answers.
+
+Not yet measured on the Redmi. On the emulator with a stand-in model, 440 of 765 and 448 of 827 prompt tokens were reused and planning took 0 ms (`docs/measurements/2026-10-08-read-ahead-emulator.log`). The benchmark runner restarts the app for every question, so it measures the first question after a start; a question asked into a running app is the case this helps most.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |

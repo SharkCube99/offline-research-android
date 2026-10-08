@@ -1,0 +1,5 @@
+10-08 18:31:57.380 loaded 'llama ?B Q4_K - Medium' in 20326 ms: n_ctx=4096 n_batch=256 threads=4/4 size=1.50 GiB
+10-08 18:32:52.927 generate: prompt 446 tok (0 reused) in 53918 ms, ttft 0 ms, 0 tok in 1 ms (0.00 tok/s), stop=1
+10-08 18:32:52.928 answer rules read ahead in 53920 ms
+10-08 18:34:01.531 generate: prompt 765 tok (440 reused) in 36710 ms, ttft 36722 ms, 46 tok in 16844 ms (2.73 tok/s), stop=0
+10-08 18:35:10.615 generate: prompt 827 tok (448 reused) in 42750 ms, ttft 42757 ms, 60 tok in 22069 ms (2.72 tok/s), stop=1

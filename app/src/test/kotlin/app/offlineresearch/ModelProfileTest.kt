@@ -20,6 +20,8 @@ class ModelProfileTest {
             val profile = shipped(name)
             assertTrue("$name: model_file must be a GGUF", profile.modelFile.endsWith(".gguf"))
             assertTrue("$name: n_ctx", profile.contextSize > 0)
+            // The fast profile searches on the question alone.
+            if (name == "fast.json") continue
             assertNotNull("$name: planner", profile.planner)
             assertTrue("$name: planner model must be a GGUF", profile.planner!!.modelFile.endsWith(".gguf"))
         }
@@ -65,10 +67,9 @@ class ModelProfileTest {
         for (name in listOf("low.json", "high.json", "high-llama.json", "fast-euromoe.json")) {
             assertEquals(name, "/no_think", shipped(name).planner!!.promptSuffix)
         }
-        // The fast profile's planner is the Ling answerer itself, which has its own switch.
+        // The fast profile has no planner: writing searches took a fifth of its time to the first word.
         val fast = shipped("fast.json")
-        assertEquals(fast.modelFile, fast.planner!!.modelFile)
-        assertEquals("detailed thinking off", fast.planner!!.promptSuffix)
+        assertEquals(null, fast.planner)
         assertEquals("\n<think></think>", fast.assistantPrefix)
     }
 
