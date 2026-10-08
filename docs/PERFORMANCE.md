@@ -348,6 +348,15 @@ A check that the mechanism works, not a speed measurement: the emulator translat
 
 No planner ran (0 ms). The Redmi has not been measured with this build.
 
+Build 0.8.7 keeps what was read in a file. Same emulator and stand-in model, log `docs/measurements/2026-10-08-saved-rules-emulator.log`:
+
+| Start | Rules ready after | How |
+|---|---|---|
+| First start | 58.6 s | read (446 tokens), then saved in 33 ms |
+| Second start | 0.12 s | restored from the file in 31 ms |
+
+The question asked after the second start reused 440 of its 765 prompt tokens. The size of the file was not measured.
+
 ## The README followed from an empty folder (2026-10-06)
 
 The "Quick start without building" steps were followed in an empty folder, from the public repository and the published 0.8.1 APK, onto a blank Android emulator. Log: `docs/measurements/2026-10-06-stranger-test.log`.

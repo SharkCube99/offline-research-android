@@ -82,6 +82,12 @@ internal object LlamaBridge {
         callback: TokenCallback,
     ): Int
 
+    /** Restores a context written by [nativeSaveState]. Returns the tokens restored, or a negative number. */
+    external fun nativeLoadState(handle: Long, path: String): Int
+
+    /** Writes what the context holds to a file. */
+    external fun nativeSaveState(handle: Long, path: String): Boolean
+
     external fun nativeTokenCount(handle: Long, textUtf8: ByteArray): Int
 
     external fun nativeCancel(handle: Long)

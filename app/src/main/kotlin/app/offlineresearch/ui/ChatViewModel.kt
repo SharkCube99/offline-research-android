@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.security.MessageDigest
 import java.time.Instant
 import kotlin.random.Random
 
@@ -211,14 +212,30 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         priming = viewModelScope.launch {
             try {
                 val start = System.currentTimeMillis()
-                engine.prime(rules)
-                Log.i(MetricsLog.TAG, "answer rules read ahead in ${System.currentTimeMillis() - start} ms")
+                engine.prime(rules, withContext(Dispatchers.IO) { savedRules(active, rules) })
+                Log.i(MetricsLog.TAG, "answer rules ready in ${System.currentTimeMillis() - start} ms")
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.w(MetricsLog.TAG, "reading the answer rules ahead failed: ${e.message}")
             }
         }
+    }
+
+    /**
+     * The file that holds the model's state after reading [rules]. Its name is a
+     * digest of everything that state depends on, so a changed model, setting,
+     * prompt or app version gets a new file; files under other names are stale
+     * and removed. It lives in the cache directory, which Android may empty.
+     */
+    private fun savedRules(active: ModelProfile, rules: String): File? {
+        val model = profiles.findModel(active.modelFile) ?: return null
+        val dir = getApplication<Application>().cacheDir
+        val key = listOf(appVersion, model.name, model.length(), model.lastModified(), active.contextSize, active.chatTemplate, rules)
+        val digest = MessageDigest.getInstance("SHA-256").digest(key.joinToString("\n").toByteArray())
+        val file = File(dir, SAVED_RULES_PREFIX + digest.take(8).joinToString("") { "%02x".format(it) } + ".state")
+        dir.listFiles { other -> other.name.startsWith(SAVED_RULES_PREFIX) && other.name != file.name }?.forEach { it.delete() }
+        return file
     }
 
     /** Picks the profile to use from now on and reloads the models with it. */
@@ -473,5 +490,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         private const val STRESS_ASSET = "stress_questions.txt"
         private const val CITIES_ASSET = "cities.tsv"
         private const val KEYWORDS = "keywords"
+        private const val SAVED_RULES_PREFIX = "rules-"
     }
 }

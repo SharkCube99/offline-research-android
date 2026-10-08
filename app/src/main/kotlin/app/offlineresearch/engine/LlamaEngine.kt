@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.concurrent.Executors
 
 /**
@@ -98,10 +99,14 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
     // the bridge keeps what it read, and the next prompt that starts the same
     // way skips that part. Queued on the engine thread like any other call, so
     // a question asked meanwhile waits for it and then benefits from it.
-    override suspend fun prime(systemPrompt: String) = withContext(dispatcher) {
+    override suspend fun prime(systemPrompt: String, saved: File?) = withContext(dispatcher) {
         val session = handle
         if (session == 0L) return@withContext
-        LlamaBridge.nativeGenerate(
+        if (saved != null && saved.isFile) {
+            if (LlamaBridge.nativeLoadState(session, saved.absolutePath) > 0) return@withContext
+            saved.delete()
+        }
+        val code = LlamaBridge.nativeGenerate(
             session,
             systemPrompt.toByteArray(Charsets.UTF_8),
             ByteArray(0),
@@ -113,7 +118,11 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
             0f,
             0,
         ) { }
-        Unit
+        // Written under another name first: a file cut short by the app being closed must never be read back.
+        if (saved != null && code == LlamaBridge.STOP_MAX_TOKENS) {
+            val partial = File(saved.path + ".part")
+            if (!LlamaBridge.nativeSaveState(session, partial.absolutePath) || !partial.renameTo(saved)) partial.delete()
+        }
     }
 
     override fun countTokens(text: String): Int {

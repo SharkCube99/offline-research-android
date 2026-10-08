@@ -303,6 +303,8 @@ On the Redmi the fast tier's time to the first word (median 83 s over five quest
 - **The fast profile carries fewer sources**: 300 tokens from at most 6 passages instead of 450 from 10.
 - **The rules were left at full length.** Once they are read ahead their length costs nothing per question, and the short rules gave worse answers.
 
+- **What the model read is kept in a file (build 0.8.7).** After the first reading the context is written to the app's cache directory with llama.cpp's own state file format, and every later start restores it instead of reading the rules again. The file is named after a digest of the app version, the model file (name, size, date), the context size, the chat template and the rules text, so a change to any of them makes a new file and removes the old one. It is written under a temporary name and renamed, so a file cut short is never read back; a file that fails to load is deleted and the rules are read afresh. Android may empty the cache directory, which costs one reading.
+
 Not yet measured on the Redmi. On the emulator with a stand-in model, 440 of 765 and 448 of 827 prompt tokens were reused and planning took 0 ms (`docs/measurements/2026-10-08-read-ahead-emulator.log`). The benchmark runner restarts the app for every question, so it measures the first question after a start; a question asked into a running app is the case this helps most.
 
 ## Decisions and defaults

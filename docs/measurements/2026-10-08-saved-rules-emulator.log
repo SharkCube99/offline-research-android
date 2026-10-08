@@ -1,0 +1,8 @@
+10-08 19:01:43.198 loaded 'llama ?B Q4_K - Medium' in 14639 ms: n_ctx=4096 n_batch=256 threads=4/4 size=1.50 GiB
+10-08 19:02:43.517 generate: prompt 446 tok (0 reused) in 58459 ms, ttft 0 ms, 0 tok in 42 ms (0.00 tok/s), stop=1
+10-08 19:02:43.551 state saved: 446 tok in 33 ms
+10-08 19:02:43.554 answer rules ready in 58634 ms
+10-08 19:02:52.870 loaded 'llama ?B Q4_K - Medium' in 2343 ms: n_ctx=4096 n_batch=256 threads=4/4 size=1.50 GiB
+10-08 19:02:54.540 state restored: 446 tok in 31 ms
+10-08 19:02:54.540 answer rules ready in 121 ms
+10-08 19:04:01.923 generate: prompt 765 tok (440 reused) in 39657 ms, ttft 39668 ms, 60 tok in 22199 ms (2.70 tok/s), stop=1

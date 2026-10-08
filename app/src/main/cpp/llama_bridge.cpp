@@ -484,6 +484,52 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     return stop;
 }
 
+// Restores a context saved by nativeSaveState: what the model had read, so it
+// need not read it again. Returns the number of tokens restored, or -1 when the
+// file is missing, damaged or from another model; the context is then empty.
+JNIEXPORT jint JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeLoadState(JNIEnv *env, jobject, jlong handle,
+                                                            jstring path) {
+    Session &session = *from_handle(handle);
+    std::unique_lock<std::mutex> lock(session.run_mutex, std::try_to_lock);
+    if (!lock.owns_lock()) return ERR_BUSY;
+
+    const auto t_start = Clock::now();
+    std::vector<llama_token> tokens((size_t) session.n_ctx);
+    size_t n_tokens = 0;
+    const char *file = env->GetStringUTFChars(path, nullptr);
+    const bool ok = llama_state_load_file(session.ctx, file, tokens.data(), tokens.size(), &n_tokens);
+    env->ReleaseStringUTFChars(path, file);
+    if (!ok || n_tokens == 0) {
+        // A failed load can leave the context half filled.
+        llama_memory_clear(llama_get_memory(session.ctx), true);
+        session.cached.clear();
+        LOGW("saved state could not be restored");
+        return -1;
+    }
+    tokens.resize(n_tokens);
+    session.cached = tokens;
+    LOGI("state restored: %d tok in %.0f ms", (int) n_tokens, ms_since(t_start));
+    return (jint) n_tokens;
+}
+
+// Writes what the context holds now, with its tokens, to a file.
+JNIEXPORT jboolean JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeSaveState(JNIEnv *env, jobject, jlong handle,
+                                                            jstring path) {
+    Session &session = *from_handle(handle);
+    std::unique_lock<std::mutex> lock(session.run_mutex, std::try_to_lock);
+    if (!lock.owns_lock() || session.cached.empty()) return JNI_FALSE;
+
+    const auto t_start = Clock::now();
+    const char *file = env->GetStringUTFChars(path, nullptr);
+    const bool ok = llama_state_save_file(session.ctx, file, session.cached.data(), session.cached.size());
+    env->ReleaseStringUTFChars(path, file);
+    if (ok) LOGI("state saved: %d tok in %.0f ms", (int) session.cached.size(), ms_since(t_start));
+    else LOGW("state could not be saved");
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+
 // Number of tokens in `text` for this model, or -1. Uses only the vocabulary,
 // so it is safe to call while a generate() is running.
 JNIEXPORT jint JNICALL

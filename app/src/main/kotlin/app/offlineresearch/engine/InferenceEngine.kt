@@ -1,6 +1,7 @@
 package app.offlineresearch.engine
 
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 
 /**
  * The only surface the UI and (later) the retrieval pipeline see. The model,
@@ -20,8 +21,12 @@ interface InferenceEngine {
      * Reads the fixed start of every prompt into the model ahead of the first
      * question, so that question only has its own part left to read. Engines
      * that keep nothing between prompts do nothing.
+     *
+     * With a [saved] file the reading is done once: the engine writes what it
+     * read there and restores it from there the next time. The caller names the
+     * file after everything the content depends on (model, settings, prompt).
      */
-    suspend fun prime(systemPrompt: String) {}
+    suspend fun prime(systemPrompt: String, saved: File? = null) {}
 
     /** Number of tokens [text] occupies in this model's context. Safe to call from any thread. */
     fun countTokens(text: String): Int
