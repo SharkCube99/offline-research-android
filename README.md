@@ -23,6 +23,7 @@ Every figure here comes from a log in this repository; the files are named besid
 | Quality, 35B model | 54% of Claude Opus 5.5 with web search, on 61 questions, graded blind (build 0.8.4; 45% for build 0.7.2) | `docs/BENCHMARK.md` |
 | Quality, 4B model | 34% on the same questions (build 0.7.0) | `docs/BENCHMARK.md` |
 | Speed on a Redmi 12 5G (8 GB), 4B model | first word after a median of 136 s; answer finished after 179 s | `docs/BENCHMARK.md` |
+| Speed on the same phone, optional fast model (Ling-3.0-tiny), five questions | first word after a median of 29.5 s; finished after 71 s (build 0.8.8) | `docs/PERFORMANCE.md` |
 | Speed on the same phone, 35B model | first word after a median of 247 s; finished after 507 s | `docs/BENCHMARK.md` |
 | Storage on the phone, 4B setup | 28.9 GB: library 24.6, models 4.3, app 0.03 | file sizes in "Put it on a phone" |
 | Storage on the phone, 35B setup | 38.7 GB: library 24.6, models 14.1, app 0.03 | the same |

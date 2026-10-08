@@ -336,6 +336,28 @@ Two things it still does against its rules: it comments on what the sources lack
 
 Five questions are not a benchmark. They do show the configuration that matters working end to end with everything built since 0.7.2, at a speed only a faster phone can change.
 
+## The fast tier after the speed changes, Redmi 12 5G (2026-10-08)
+
+Build 0.8.8, airplane mode on, the fast profile (Ling-3.0-tiny Q4_0), the same five questions as the comparison of 2026-10-07 below, each asked from a stopped app so each time includes loading the model. Records: `docs/measurements/2026-10-08-redmi12-fast-ling-0.8.8.jsonl`; the earlier run is `docs/measurements/2026-10-07-redmi12-fast-ling.jsonl`.
+
+| Median of five | Build 0.8.3 | Build 0.8.8 |
+|---|---|---|
+| First word after asking | 82.5 s | **29.5 s** |
+| Answer finished | 107.6 s | 71.0 s |
+| Planning searches | 16 to 23 s | none |
+| Prompt tokens, of which already read | 771 to 1,011, 0 | 708 to 885, 432 |
+| Reading the rest of the prompt | 52 to 67 s | 21 to 36 s |
+
+What the time is made of now: loading the model about 6 s, searching 0.6 to 10 s, reading the 276 to 453 tokens that are not the rules 21 to 36 s.
+
+Reading the rules for the first time after an install took 32.2 s (432 tokens) and saving them 18 ms; later starts restored them in 20 to 60 ms. Two questions asked into the running app had their first word after 25 s and 19 s.
+
+Build 0.8.7, which had the saved file but not yet the fix for Ling described in `docs/ARCHITECTURE.md`, reused nothing: first word after a median of 53.4 s (`docs/measurements/2026-10-08-redmi12-fast-ling-0.8.7.jsonl`). That gain over 0.8.3 is the missing planner and the smaller sources alone.
+
+The answers were read, not graded. Choking, the 104 °F walk, Brazil's plugs and the tsunami comparison were answered correctly; the 104 °F answer, wrong in the earlier run, is right here. **The Naismith answer is wrong** (3.94 hours; the rule gives about 5.6), where the earlier run had it right. With a temperature of 0.7 answers vary between runs, and this run had fewer sources and no planner; five questions cannot say which of these it was.
+
+The low profile (Qwen3-4B) was checked with the same build for the mechanism only: the rules (416 tokens) took 72 s to read once, were saved and restored, and the next question reused all 416 of its 838 prompt tokens.
+
 ## Rules read ahead: emulator check of build 0.8.6 (2026-10-08)
 
 A check that the mechanism works, not a speed measurement: the emulator translates ARM code and ran a stand-in model (EuroMoE, the only model that fits its 4 GB). Log: `docs/measurements/2026-10-08-read-ahead-emulator.log`.

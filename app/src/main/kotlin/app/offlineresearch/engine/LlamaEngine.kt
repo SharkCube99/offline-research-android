@@ -121,7 +121,13 @@ class LlamaEngine(private val nativeLibDir: String, name: String = "llama-engine
         // Written under another name first: a file cut short by the app being closed must never be read back.
         if (saved != null && code == LlamaBridge.STOP_MAX_TOKENS) {
             val partial = File(saved.path + ".part")
-            if (!LlamaBridge.nativeSaveState(session, partial.absolutePath) || !partial.renameTo(saved)) partial.delete()
+            if (LlamaBridge.nativeSaveState(session, partial.absolutePath) && partial.renameTo(saved)) {
+                // Read back at once: it proves the file, and tells the bridge where to
+                // find it for models that must start from it before every prompt.
+                if (LlamaBridge.nativeLoadState(session, saved.absolutePath) <= 0) saved.delete()
+            } else {
+                partial.delete()
+            }
         }
     }
 

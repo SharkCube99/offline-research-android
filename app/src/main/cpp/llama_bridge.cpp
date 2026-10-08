@@ -82,6 +82,11 @@ struct Session {
     // starts the same way (the fixed system prompt) is not processed again.
     std::vector<llama_token> cached;
 
+    // The file the context was last saved to or restored from. Some models'
+    // memory cannot be cut back to an earlier point; for those the saved start
+    // of the prompt is restored from here before each prompt.
+    std::string state_path;
+
     std::mutex run_mutex;  // held for the whole of a generate() call
     std::atomic<bool> cancel{false};
 
@@ -245,6 +250,36 @@ bool tokenize(const Session &session, const std::string &text, bool special,
                                     tokens.data(), n, special, special) >= 0;
 }
 
+// Marks where the question goes when only the fixed start of a prompt is wanted.
+constexpr const char *QUESTION_MARK = "@@QUESTION@@";
+
+// Fills the context from a file written by llama_state_save_file and records
+// the tokens it holds. On failure the context is left empty.
+bool restore_state(Session &session, const std::string &path) {
+    std::vector<llama_token> tokens((size_t) session.n_ctx);
+    size_t n_tokens = 0;
+    if (!llama_state_load_file(session.ctx, path.c_str(), tokens.data(), tokens.size(), &n_tokens)
+        || n_tokens == 0) {
+        // A failed load can leave the context half filled.
+        llama_memory_clear(llama_get_memory(session.ctx), true);
+        session.cached.clear();
+        return false;
+    }
+    tokens.resize(n_tokens);
+    session.cached = tokens;
+    return true;
+}
+
+// How many leading tokens of `tokens` the context already holds, after cutting
+// the context back to exactly those; 0 when it could not be cut back.
+int keep_common_prefix(Session &session, const std::vector<llama_token> &tokens) {
+    int n = 0;
+    const int limit = std::min((int) session.cached.size(), (int) tokens.size() - 1);
+    while (n < limit && session.cached[(size_t) n] == tokens[(size_t) n]) n++;
+    if (n > 0 && llama_memory_seq_rm(llama_get_memory(session.ctx), 0, n, -1)) return n;
+    return 0;
+}
+
 llama_sampler *make_sampler(const Session &session, float temperature, int top_k, float top_p,
                             float presence_penalty, uint32_t seed) {
     llama_sampler *chain = llama_sampler_chain_init(llama_sampler_chain_default_params());
@@ -377,15 +412,24 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     jmethodID on_token = env->GetMethodID(callback_class, "onToken", "([B)V");
     if (on_token == nullptr) return GEN_ERR_DECODE;  // NoSuchMethodError is pending
 
+    // No reply asked for: only the fixed start of the prompt is read, up to
+    // where a question would begin, so that any question continues from it.
+    const bool start_only = max_tokens <= 0;
     std::string prompt = apply_chat_template(session, bytes_to_string(env, system_utf8),
-                                             bytes_to_string(env, user_utf8));
+                                             start_only ? QUESTION_MARK : bytes_to_string(env, user_utf8));
     if (prompt.empty()) {
         LOGE("chat template could not be applied");
         return GEN_ERR_TEMPLATE;
     }
-    // Some models need the start of their reply written for them, such as an
-    // empty thinking block that turns their thinking off.
-    prompt += bytes_to_string(env, assistant_prefix_utf8);
+    if (start_only) {
+        const size_t mark = prompt.find(QUESTION_MARK);
+        if (mark == std::string::npos || mark == 0) return GEN_ERR_TEMPLATE;
+        prompt.resize(mark);
+    } else {
+        // Some models need the start of their reply written for them, such as an
+        // empty thinking block that turns their thinking off.
+        prompt += bytes_to_string(env, assistant_prefix_utf8);
+    }
 
     std::vector<llama_token> tokens;
     if (!tokenize(session, prompt, true, tokens) || tokens.empty()) return GEN_ERR_TOKENIZE;
@@ -398,14 +442,13 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeGenerate(
     // Prefix caching: keep the part of the context this prompt shares with the
     // previous one (at least the fixed system prompt) and process only the rest.
     // The last token is always processed, because sampling needs its output.
-    int n_reused = 0;
-    const int max_reuse = std::min((int) session.cached.size(), n_prompt - 1);
-    while (n_reused < max_reuse && session.cached[(size_t) n_reused] == tokens[(size_t) n_reused]) n_reused++;
-    llama_memory_t memory = llama_get_memory(session.ctx);
-    if (n_reused == 0 || !llama_memory_seq_rm(memory, 0, n_reused, -1)) {
-        llama_memory_clear(memory, true);
-        n_reused = 0;
+    int n_reused = keep_common_prefix(session, tokens);
+    if (n_reused == 0 && !session.state_path.empty() && restore_state(session, session.state_path)) {
+        // This model's memory holds only its latest point and cannot go back to
+        // the end of the rules. The saved file is that point: start from it again.
+        n_reused = keep_common_prefix(session, tokens);
     }
+    if (n_reused == 0) llama_memory_clear(llama_get_memory(session.ctx), true);
     // If this call stops early, only the reused prefix is known to be intact.
     session.cached.assign(tokens.begin(), tokens.begin() + n_reused);
 
@@ -495,22 +538,16 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeLoadState(JNIEnv *env, jobject
     if (!lock.owns_lock()) return ERR_BUSY;
 
     const auto t_start = Clock::now();
-    std::vector<llama_token> tokens((size_t) session.n_ctx);
-    size_t n_tokens = 0;
     const char *file = env->GetStringUTFChars(path, nullptr);
-    const bool ok = llama_state_load_file(session.ctx, file, tokens.data(), tokens.size(), &n_tokens);
+    const std::string state_path(file);
     env->ReleaseStringUTFChars(path, file);
-    if (!ok || n_tokens == 0) {
-        // A failed load can leave the context half filled.
-        llama_memory_clear(llama_get_memory(session.ctx), true);
-        session.cached.clear();
+    if (!restore_state(session, state_path)) {
         LOGW("saved state could not be restored");
         return -1;
     }
-    tokens.resize(n_tokens);
-    session.cached = tokens;
-    LOGI("state restored: %d tok in %.0f ms", (int) n_tokens, ms_since(t_start));
-    return (jint) n_tokens;
+    session.state_path = state_path;
+    LOGI("state restored: %d tok in %.0f ms", (int) session.cached.size(), ms_since(t_start));
+    return (jint) session.cached.size();
 }
 
 // Writes what the context holds now, with its tokens, to a file.
