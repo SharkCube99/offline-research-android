@@ -88,6 +88,15 @@ internal object LlamaBridge {
     /** Writes what the context holds to a file. */
     external fun nativeSaveState(handle: Long, path: String): Boolean
 
+    /** Loads a reranking model. Returns a handle, or a LOAD_ERR_* code. */
+    external fun nativeRankerLoad(modelPath: String, nCtx: Int, nThreads: Int): Long
+
+    /** One score per passage, higher is better; null on failure. */
+    external fun nativeRank(handle: Long, questionUtf8: ByteArray, passagesUtf8: Array<ByteArray>): FloatArray?
+
+    /** The handle must not be used again afterwards. */
+    external fun nativeRankerUnload(handle: Long)
+
     external fun nativeTokenCount(handle: Long, textUtf8: ByteArray): Int
 
     external fun nativeCancel(handle: Long)

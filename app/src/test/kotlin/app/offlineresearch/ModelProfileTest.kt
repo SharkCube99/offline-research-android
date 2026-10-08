@@ -74,6 +74,17 @@ class ModelProfileTest {
     }
 
     @Test
+    fun onlyTheExperimentalProfileHasAReranker() {
+        for (name in listOf("low.json", "high.json", "high-llama.json", "fast.json", "fast-euromoe.json")) {
+            assertEquals(name, null, shipped(name).reranker)
+        }
+        val rerank = shipped("fast-rerank.json")
+        assertTrue(rerank.reranker!!.modelFile.endsWith(".gguf"))
+        assertTrue(rerank.reranker!!.keep < rerank.reranker!!.candidates)
+        assertEquals(shipped("fast.json").modelFile, rerank.modelFile)
+    }
+
+    @Test
     fun optionalFieldsHaveDefaultsAndUnknownKeysAreIgnored() {
         val profile = ModelProfile.parse(
             """{"name":"t","model_file":"m.gguf","n_ctx":2048,"n_batch":256,"max_tokens":128,

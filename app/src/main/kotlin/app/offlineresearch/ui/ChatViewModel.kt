@@ -11,6 +11,7 @@ import app.offlineresearch.engine.EngineMetrics
 import app.offlineresearch.engine.ExitLog
 import app.offlineresearch.engine.InferenceEngine
 import app.offlineresearch.engine.LlamaEngine
+import app.offlineresearch.engine.LlamaRanker
 import app.offlineresearch.engine.MetricsLog
 import app.offlineresearch.engine.RagRecord
 import app.offlineresearch.engine.RunInfo
@@ -39,6 +40,7 @@ import app.offlineresearch.rag.RagEvent
 import app.offlineresearch.rag.RagPipeline
 import app.offlineresearch.rag.RagReport
 import app.offlineresearch.rag.RagStage
+import app.offlineresearch.rag.Reranking
 import app.offlineresearch.rag.Retriever
 import app.offlineresearch.rag.SourceCompressor
 import app.offlineresearch.rag.SqlDatabase
@@ -110,6 +112,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     /** Replaced when the profile names a different engine. */
     private var answerer: InferenceEngine = llamaAnswerer
     private val plannerEngine: InferenceEngine = LlamaEngine(nativeLibDir, "llama-planner")
+    private val ranker = LlamaRanker(nativeLibDir)
     private val profiles = ProfileStore(application)
     private val gps = GpsLocator(application)
 
@@ -298,6 +301,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
         plannerName = plannerFile?.name ?: KEYWORDS
 
+        // The reranker is optional too: without its file, search's own order stands.
+        val reranking = withContext(Dispatchers.IO) {
+            ranker.unload()
+            val wanted = active.reranker ?: return@withContext null
+            val file = profiles.findModel(wanted.modelFile)
+            if (file == null) {
+                Log.w(MetricsLog.TAG, "reranker model ${wanted.modelFile} not found; search order is used as it is")
+                return@withContext null
+            }
+            ranker.load(file.absolutePath, wanted.contextSize, if (wanted.threads > 0) wanted.threads else active.batchThreads)
+            Reranking(ranker, wanted.candidates, wanted.keep)
+        }
+
         indexes.values.forEach { it.close() }
         indexes = withContext(Dispatchers.IO) { IndexFiles.open(indexFiles) }
         Log.i(MetricsLog.TAG, "index: ${indexFiles.map { "${it.key} (${it.value.length() / 1_000_000} MB)" }}, planner: $plannerName")
@@ -327,6 +343,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             seed = Random::nextInt,
             preview = compressor::preview,
             locate = ::locate,
+            reranking = reranking,
         )
         return ModelStatus.Ready(active.name, loaded.source, active.modelFile, indexFiles.keys.toList(), plannerFile?.name)
     }
@@ -453,7 +470,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 queries = report.queries,
                 planMs = report.planMs,
                 searchMs = report.searchMs,
-                totalTimeToFirstTokenMs = report.planMs + report.searchMs + (report.answerer?.timeToFirstTokenMs ?: 0.0),
+                rerankMs = report.rerankMs,
+                totalTimeToFirstTokenMs = report.planMs + report.searchMs + report.rerankMs + (report.answerer?.timeToFirstTokenMs ?: 0.0),
                 retrieved = report.retrieved,
                 sources = sources.map { "${it.passageId} ${it.title}" },
                 sourceChars = sources.sumOf { it.excerpt.length },
@@ -482,6 +500,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         stop()
+        ranker.unload()
         indexes.values.forEach { it.close() }
     }
 

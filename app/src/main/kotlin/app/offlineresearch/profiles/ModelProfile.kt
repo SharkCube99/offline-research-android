@@ -69,6 +69,8 @@ data class ModelProfile(
     @SerialName("answer_rules") val answerRules: String = "full",
     /** The small model that writes search queries. Null = keyword search only. */
     val planner: PlannerProfile? = null,
+    /** A reranking model that reorders search results by meaning. Null = search's own order. */
+    val reranker: RerankerProfile? = null,
 ) {
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -89,6 +91,18 @@ data class PlannerProfile(
      * its few tokens on thoughts and returns no searches.
      */
     @SerialName("prompt_suffix") val promptSuffix: String = "/no_think",
+)
+
+@Serializable
+data class RerankerProfile(
+    @SerialName("model_file") val modelFile: String,
+    /** How many of the top search results the model reads; each costs time. */
+    val candidates: Int = 20,
+    /** How many it passes on. */
+    val keep: Int = 4,
+    @SerialName("context_size") val contextSize: Int = 512,
+    /** 0 = the answerer's prompt-processing threads. */
+    val threads: Int = 0,
 )
 
 /** The active profile and a short note on why it was picked, for the status line. */

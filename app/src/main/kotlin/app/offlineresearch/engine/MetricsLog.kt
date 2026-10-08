@@ -56,6 +56,7 @@ data class RagRecord(
     val queries: List<String>,
     @SerialName("plan_ms") val planMs: Long,
     @SerialName("search_ms") val searchMs: Long,
+    @SerialName("rerank_ms") val rerankMs: Long = 0,
     /** From sending the question to the first answer token: plan + search + prompt processing. */
     @SerialName("total_ttft_ms") val totalTimeToFirstTokenMs: Double,
     val retrieved: Int,

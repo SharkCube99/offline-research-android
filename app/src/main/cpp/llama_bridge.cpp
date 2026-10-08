@@ -101,6 +101,21 @@ struct Session {
     }
 };
 
+// A reranking model: it reads a question and a passage together and gives one
+// number for how well the passage answers the question.
+struct Ranker {
+    llama_model *model = nullptr;
+    llama_context *ctx = nullptr;
+    const llama_vocab *vocab = nullptr;
+    int n_ctx = 0;
+    std::mutex run_mutex;
+
+    ~Ranker() {
+        if (ctx) llama_free(ctx);
+        if (model) llama_model_free(model);
+    }
+};
+
 using Clock = std::chrono::steady_clock;
 
 double ms_since(Clock::time_point start) {
@@ -565,6 +580,124 @@ Java_app_offlineresearch_engine_LlamaBridge_nativeSaveState(JNIEnv *env, jobject
     if (ok) LOGI("state saved: %d tok in %.0f ms", (int) session.cached.size(), ms_since(t_start));
     else LOGW("state could not be saved");
     return ok ? JNI_TRUE : JNI_FALSE;
+}
+
+// Loads a reranking model. Returns a handle, or LOAD_ERR_MODEL / LOAD_ERR_CONTEXT.
+JNIEXPORT jlong JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeRankerLoad(JNIEnv *env, jobject, jstring model_path,
+                                                             jint n_ctx, jint n_threads) {
+    auto *ranker = new Ranker();
+    llama_model_params model_params = llama_model_default_params();
+    model_params.n_gpu_layers = 0;
+    const char *path = env->GetStringUTFChars(model_path, nullptr);
+    const auto t_start = Clock::now();
+    ranker->model = llama_model_load_from_file(path, model_params);
+    env->ReleaseStringUTFChars(model_path, path);
+    if (ranker->model == nullptr) {
+        delete ranker;
+        return LOAD_ERR_MODEL;
+    }
+
+    const int threads = n_threads > 0 ? n_threads : default_thread_count();
+    llama_context_params ctx_params = llama_context_default_params();
+    ctx_params.n_ctx = (uint32_t) n_ctx;
+    // An encoder reads a whole text in one piece, so a batch must hold all of it.
+    ctx_params.n_batch = (uint32_t) n_ctx;
+    ctx_params.n_ubatch = (uint32_t) n_ctx;
+    ctx_params.n_threads = threads;
+    ctx_params.n_threads_batch = threads;
+    ctx_params.embeddings = true;
+    ctx_params.pooling_type = LLAMA_POOLING_TYPE_RANK;
+    ranker->ctx = llama_init_from_model(ranker->model, ctx_params);
+    if (ranker->ctx == nullptr) {
+        delete ranker;
+        return LOAD_ERR_CONTEXT;
+    }
+    ranker->vocab = llama_model_get_vocab(ranker->model);
+    ranker->n_ctx = (int) llama_n_ctx(ranker->ctx);
+    LOGI("ranker loaded in %.0f ms: n_ctx=%d threads=%d", ms_since(t_start), ranker->n_ctx, threads);
+    return reinterpret_cast<jlong>(ranker);
+}
+
+// One score per passage, higher for a passage that answers the question
+// better. Null when the model could not be run.
+JNIEXPORT jfloatArray JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeRank(JNIEnv *env, jobject, jlong handle,
+                                                       jbyteArray question_utf8, jobjectArray passages_utf8) {
+    Ranker &ranker = *reinterpret_cast<Ranker *>(handle);
+    std::lock_guard<std::mutex> lock(ranker.run_mutex);
+    const auto t_start = Clock::now();
+
+    // The layout llama.cpp's own server uses when the model file names no other:
+    // [BOS] question [EOS] [SEP] passage [EOS], each mark only if the vocabulary wants it.
+    const llama_vocab *vocab = ranker.vocab;
+    llama_token eos = llama_vocab_eos(vocab);
+    if (eos == LLAMA_TOKEN_NULL) eos = llama_vocab_sep(vocab);
+    auto plain_tokens = [&](const std::string &text, std::vector<llama_token> &out) {
+        const int n = -llama_tokenize(vocab, text.c_str(), (int32_t) text.size(), nullptr, 0, false, false);
+        out.resize((size_t) std::max(n, 0));
+        return n <= 0 || llama_tokenize(vocab, text.c_str(), (int32_t) text.size(), out.data(), n, false, false) >= 0;
+    };
+    std::vector<llama_token> question;
+    if (!plain_tokens(bytes_to_string(env, question_utf8), question)) return nullptr;
+    // A long question must leave the passage most of the room.
+    if ((int) question.size() > ranker.n_ctx / 4) question.resize((size_t) ranker.n_ctx / 4);
+
+    const jsize count = env->GetArrayLength(passages_utf8);
+    std::vector<float> scores((size_t) count, 0.0f);
+    llama_batch batch = llama_batch_init(ranker.n_ctx, 0, 1);
+    int total_tokens = 0;
+    bool ok = true;
+    for (jsize i = 0; i < count && ok; i++) {
+        auto passage_bytes = (jbyteArray) env->GetObjectArrayElement(passages_utf8, i);
+        std::vector<llama_token> passage;
+        ok = plain_tokens(bytes_to_string(env, passage_bytes), passage);
+        env->DeleteLocalRef(passage_bytes);
+        if (!ok) break;
+
+        std::vector<llama_token> tokens;
+        if (llama_vocab_get_add_bos(vocab)) tokens.push_back(llama_vocab_bos(vocab));
+        tokens.insert(tokens.end(), question.begin(), question.end());
+        if (llama_vocab_get_add_eos(vocab)) tokens.push_back(eos);
+        if (llama_vocab_get_add_sep(vocab)) tokens.push_back(llama_vocab_sep(vocab));
+        // What does not fit is cut from the end of the passage.
+        const int room = ranker.n_ctx - (int) tokens.size() - 1;
+        if ((int) passage.size() > room) passage.resize((size_t) std::max(room, 0));
+        tokens.insert(tokens.end(), passage.begin(), passage.end());
+        if (llama_vocab_get_add_eos(vocab)) tokens.push_back(eos);
+
+        batch.n_tokens = (int32_t) tokens.size();
+        for (int t = 0; t < batch.n_tokens; t++) {
+            batch.token[t] = tokens[(size_t) t];
+            batch.pos[t] = t;
+            batch.n_seq_id[t] = 1;
+            batch.seq_id[t][0] = 0;
+            batch.logits[t] = 1;
+        }
+        llama_memory_clear(llama_get_memory(ranker.ctx), true);
+        if (llama_decode(ranker.ctx, batch) != 0) { ok = false; break; }
+        const float *out = llama_get_embeddings_seq(ranker.ctx, 0);
+        if (out == nullptr) { ok = false; break; }
+        scores[(size_t) i] = out[0];
+        total_tokens += batch.n_tokens;
+    }
+    llama_batch_free(batch);
+    if (!ok) {
+        LOGW("ranking failed");
+        return nullptr;
+    }
+    LOGI("ranked %d passages (%d tok) in %.0f ms", (int) count, total_tokens, ms_since(t_start));
+    jfloatArray result = env->NewFloatArray(count);
+    if (result != nullptr) env->SetFloatArrayRegion(result, 0, count, scores.data());
+    return result;
+}
+
+// The handle must not be used again after this call.
+JNIEXPORT void JNICALL
+Java_app_offlineresearch_engine_LlamaBridge_nativeRankerUnload(JNIEnv *, jobject, jlong handle) {
+    auto *ranker = reinterpret_cast<Ranker *>(handle);
+    { std::lock_guard<std::mutex> lock(ranker->run_mutex); }
+    delete ranker;
 }
 
 // Number of tokens in `text` for this model, or -1. Uses only the vocabulary,

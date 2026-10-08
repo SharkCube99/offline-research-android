@@ -41,6 +41,8 @@ data class RagReport(
     val answerer: EngineMetrics?,
     /** The reader's city, when the question asked about "here" and the phone could tell. */
     val location: String? = null,
+    /** Time spent reordering search results with the reranking model; 0 without one. */
+    val rerankMs: Long = 0,
 )
 
 /** How the answerer samples; comes from the model profile. */
@@ -78,6 +80,8 @@ class RagPipeline(
     private val preview: ((question: String, ranked: List<Passage>) -> Passage?)? = null,
     /** Where the reader is, for questions about "near me"; null when the app cannot tell. */
     private val locate: (suspend () -> Place?)? = null,
+    /** Reorders and thins what search found before sources are chosen; null leaves search's order. */
+    private val reranking: Reranking? = null,
 ) {
     fun answer(asked: String): Flow<RagEvent> = flow {
         // "Near me" becomes "in <city>" before anything else, so that search, the
@@ -110,14 +114,18 @@ class RagPipeline(
         val extra = queries.drop(1)
         if (extra.isNotEmpty()) emit(RagEvent.Stage(RagStage.SEARCHING))
         val secondStart = System.currentTimeMillis()
+        var rerankMs = 0L
         val (retrieved, found) = withContext(Dispatchers.IO) {
-            val ranked = retriever.withLeads(question, interleave(listOf(first) + extra.map { query -> retriever.search(query, context = question, implied = implied).map(::asSuggestion) }))
+            val searched = retriever.withLeads(question, interleave(listOf(first) + extra.map { query -> retriever.search(query, context = question, implied = implied).map(::asSuggestion) }))
+            val rerankStart = System.currentTimeMillis()
+            val ranked = reranking?.apply(question, searched) ?: searched
+            rerankMs = System.currentTimeMillis() - rerankStart
             // Sentences are chosen by the question's words and the planner's: a
             // question about a child and boiling water never says "burn", but the
             // planner's "Burn treatment" does, and that is the word the answer uses.
-            ranked.size to selector.select(question, ranked, hints = extra + implied)
+            searched.size to selector.select(question, ranked, hints = extra + implied)
         }
-        searchMs += System.currentTimeMillis() - secondStart
+        searchMs += System.currentTimeMillis() - secondStart - rerankMs
         // Exact conversions of the quantities in the question go in as the last
         // source: the model cites them instead of recalling a factor.
         val sources = found + listOfNotNull(UnitConverter.source(question))
@@ -126,7 +134,7 @@ class RagPipeline(
         if (sources.isEmpty() && !settings.ownKnowledge) {
             // Nothing to ground an answer on: say so without asking the model.
             emit(RagEvent.Token(PromptBuilder.NOT_COVERED))
-            emit(RagEvent.Finished(RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, 0, null, location)))
+            emit(RagEvent.Finished(RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, 0, null, location, rerankMs)))
             return@flow
         }
 
@@ -153,7 +161,7 @@ class RagPipeline(
         }
         emit(
             RagEvent.Finished(
-                RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, sources.size, answerer.metrics(), location),
+                RagReport(queries, plan.usedFallback, planMs, searchMs, retrieved, sources.size, answerer.metrics(), location, rerankMs),
             ),
         )
     }

@@ -309,6 +309,15 @@ On the Redmi the fast tier's time to the first word (median 83 s over five quest
 
 Measured on the Redmi with build 0.8.8: first word after a median of 29.5 s on the fast tier, from 82.5 s (`docs/PERFORMANCE.md`). On the emulator with a stand-in model, 440 of 765 and 448 of 827 prompt tokens were reused and planning took 0 ms (`docs/measurements/2026-10-08-read-ahead-emulator.log`). The benchmark runner restarts the app for every question, so it measures the first question after a start; a question asked into a running app is the case this helps most.
 
+### An optional reranker (build 0.8.9, experimental)
+
+Reading the sources is now most of the fast tier's wait, so the next saving is fewer sources, which is only safe if they are better chosen. Search ranks passages by shared words. A reranking model reads the question and a passage together and scores how well one answers the other.
+
+- **Model:** jina-reranker-v1-turbo-en, Q8, 41.7 MB, Apache-2.0, 38M parameters, English only like the library. Chosen for size: bge-reranker-v2-m3 is stronger on paper but about fifteen times larger, and every candidate passage is read in full. It runs through the same llama.cpp build (`jina-bert-v2`, rank pooling); the prompt layout is the one llama.cpp's server uses.
+- **Where:** after search and before the sentence selection. The top `candidates` passages (20) are scored, the best `keep` (4) go on; passages of an article the question names are kept whatever their score. If the model is missing or fails, search's order stands.
+- **Configuration:** a `reranker` block in the profile. No shipped tier has one. `profiles/fast-rerank.json` is the fast profile with it and with 200 tokens of sources from 4 passages; push it as `profile.json` to try it.
+- **State:** it runs. On the emulator it scored 18 to 20 passages (about 7,300 tokens) in 10 to 12 s, a figure that says nothing about a phone. Whether it finds better passages than search alone, and whether its own time is less than what the shorter prompt saves, has not been measured. It stays out of the tiers until both are.
+
 ## Decisions and defaults
 
 | Decision | Choice | Reason |
