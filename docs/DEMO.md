@@ -48,7 +48,7 @@ Main post (fits X's limit):
 
 Replies under it:
 
-> How it works: Qwen3-1.7B writes the searches. SQLite full-text search finds passages and the app keeps only the sentences that matter. The answer comes from Qwen3-4B on small phones, or Qwen3.6-35B-A3B (2-bit, streamed from storage with BigMoeOnEdge) on 12 GB phones. Citations open the source passage.
+> How it works: Qwen3-1.7B plans the search, SQLite finds the passages, and Qwen3-4B (small phones) or Qwen3.6-35B-A3B (2-bit, 12 GB phones) writes the answer. Citations open the source.
 
 > What is not from a source is labelled: the model may add what it knows, under a line that marks it as unsourced, and the app warns beside it. Unit conversions are computed by the app. "Near me" turns the phone's position into a city on the phone; nothing can be sent anywhere.
 
