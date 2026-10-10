@@ -50,13 +50,13 @@ Replies under it:
 
 > How it works: Qwen3-1.7B plans the search, SQLite finds the passages, and Qwen3-4B (small phones) or Qwen3.6-35B-A3B (2-bit, 12 GB phones) writes the answer. Citations open the source.
 
-> What is not from a source is labelled: the model may add what it knows, under a line that marks it as unsourced, and the app warns beside it. Unit conversions are computed by the app. "Near me" turns the phone's position into a city on the phone; nothing can be sent anywhere.
+> Parts of an answer with no source are labelled as unsourced, with a warning. Unit conversions are computed by the app. "Near me" turns GPS into a city on the phone; nothing is sent anywhere.
 
-> Honest numbers, all logged in the repo: 45% of Claude Opus 5.5 with web search on 61 blind-graded questions (35B model, an earlier build). This video is a low-end 8 GB Redmi 12 5G with the 4B model: about two minutes to the first word. No 12 GB phone measured yet.
+> Honest numbers, logged in the repo: 54% of Claude Opus 5.5 with web search on 61 blind-graded questions (35B model), within grader noise of the 50% bar. Video: 8 GB Redmi 12 5G. No 12 GB phone measured yet.
 
 > Signed APK, one script to download the library and one to set up the phone: https://github.com/SharkCube99/offline-research-android/releases
 
-Change the third reply if a newer benchmark result exists by then, and the fourth if the recording was made on another phone or model.
+Change the third reply if a newer benchmark result exists by then or the recording was made on another phone. It leaves out which model the video shows; there is room to add it ("Video: 8 GB Redmi 12 5G, fast model, about 30 s to the first word").
 
 ## Text for the claim
 
