@@ -51,6 +51,8 @@ That is the whole setup. The script reads the phone's memory and picks the model
 
 Then turn on airplane mode and ask a question.
 
+The app it installs is the APK from the [latest release](https://github.com/SharkCube99/offline-research-android/releases/latest), now v0.8.9 (signed, arm64, no network permission; its SHA-256 is in the release notes). To install without the script, download `offline-research-0.8.9.apk` from that page and follow "Put it on a phone" below, passing the file to `scripts/setup.sh --apk`.
+
 | Flag | What it does |
 |---|---|
 | `--dry-run` | Prints the plan and checks the download addresses; changes nothing. Works without a phone if you give `--tier low` or `--tier high`. |
