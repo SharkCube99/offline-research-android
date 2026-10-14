@@ -1,19 +1,19 @@
-# M4 runbook: the 30B model on a 12 GB phone
+# M4 runbook: the high profile (Qwen3.6-35B-A3B, 2-bit) on a 12 GB phone
 
-M4 is accepted when the 30B model answers 20 consecutive questions on a 12 GB phone with no crash and no out-of-memory kill, and the measurements are saved in `docs/PERFORMANCE.md`.
+M4 is accepted when the high-profile model answers 20 consecutive questions on a 12 GB phone with no crash and no out-of-memory kill, and the measurements are saved in `docs/PERFORMANCE.md`.
 
 **This has not been run.** No 12 GB phone has been available. Everything below is the procedure; none of it is a result.
 
 ## What you need
 
-- A 12 GB arm64 Android phone (Android 11 or newer, so the app can read why a process died) with about 45 GB free and USB debugging on.
+- A 12 GB arm64 Android phone (Android 11 or newer, so the app can read why a process died) with about 40 GB free and USB debugging on.
 - A USB cable to the build computer, and the phone charged or charging.
 - On the computer, already present if you followed the README:
 
 | File | Size | Where |
 |---|---|---|
 | `app-debug.apk` | 33 MB | `app/build/outputs/apk/debug/` after `./gradlew assembleDebug` |
-| `Qwen3-30B-A3B-Q4_K_M.gguf` | 18.56 GB | <https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF> |
+| `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` | 12.3 GB | <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF> |
 | `Qwen3-1.7B-Q8_0.gguf` | 1.83 GB | <https://huggingface.co/Qwen/Qwen3-1.7B-GGUF> |
 | `wikipedia.db`, `wikivoyage.db` | 22.93 GB | `data-pipeline/work/index/`, built by `data-pipeline/build_index.py` |
 
@@ -32,7 +32,7 @@ One line ending in `device`. If it says `unauthorized`, accept the prompt on the
 ### 2. Install and push everything (about 25 minutes)
 
 ```bash
-scripts/setup.sh --model /path/to/Qwen3-30B-A3B-Q4_K_M.gguf \
+scripts/setup.sh --model /path/to/Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf \
                  --model /path/to/Qwen3-1.7B-Q8_0.gguf \
                  --index data-pipeline/work/index
 ```
@@ -47,7 +47,7 @@ adb logcat -d -s OfflineResearch | grep "profile:"
 
 On a 12 GB phone it should print `profile: high (auto, 11.x GB RAM)`. If it prints `low`, the phone reports less than 10 GB; force the high profile in step 5 with `--profile high`.
 
-The first load of the 30B model can take a minute or more. The app's status line shows the model, the profile and why it was chosen. "Settings" under it lets you change the profile by hand and start the stress test from the phone.
+The first load of the 35B model can take a minute or more. The app's status line shows the model, the profile and why it was chosen. "Settings" under it lets you change the profile by hand and start the stress test from the phone.
 
 ### 4. Turn on airplane mode
 
@@ -56,7 +56,7 @@ On the phone. The app has no network permission either way; this is so the resul
 ### 5. Run the stress test
 
 ```bash
-scripts/stress.sh --profile high --label high-30b
+scripts/stress.sh --profile high --label high-35b
 ```
 
 It restarts the app, waits for the models to load, starts 20 questions in the app and watches. Leave the phone alone: screen on (the app keeps it on), not swiped away, not locked. Swiping the app out of the recent-apps list kills it and fails the run.
@@ -71,7 +71,7 @@ The script writes four files under `docs/measurements/`:
 
 | File | Contents |
 |---|---|
-| `<date>-<device>-stress-high-30b.md` | The report: PASS or FAIL, one row per question, medians |
+| `<date>-<device>-stress-high-35b.md` | The report: PASS or FAIL, one row per question, medians |
 | `...jsonl` | The raw metrics line for every answer |
 | `...txt` | Model load lines, and memory and battery readings after every question |
 | `...exits.jsonl` | Why Android says the app exited, if it did |
@@ -98,4 +98,4 @@ Whatever happens, keep the files: a failed run is a measurement too.
 
 Run on an 8 GB Redmi 12 5G (see `docs/PERFORMANCE.md`): profile selection, the overlay, the exit log, and the stress mode with the 4B model.
 
-Not run anywhere: the 30B model on a 12 GB phone. Unknown until then: whether it loads, how long loading takes, how much memory it holds, how many page faults an answer costs, prefill and generation speed, whether the phone throttles, and whether 20 questions complete. The thread settings in `profiles/high.json` are untuned defaults (`n_threads` 0, which lets the engine pick at most 4 threads, not pinned).
+Not run anywhere: the high profile (35B, 2-bit) on a 12 GB phone. Unknown until then: whether it loads, how long loading takes, how much memory it holds, how many page faults an answer costs, prefill and generation speed, whether the phone throttles, and whether 20 questions complete. The thread settings in `profiles/high.json` are untuned defaults (`n_threads` 0, which lets the engine pick at most 4 threads, not pinned).

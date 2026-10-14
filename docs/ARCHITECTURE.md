@@ -128,7 +128,7 @@ Not measured: the effect on time to first word and on answer quality on a phone.
 
 ## Second engine: BigMoeOnEdge for the high profile (2026-10-03)
 
-The high profile now names `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB) and `"engine": "bmoe"`. The earlier plan, the 4-bit Qwen3-30B-A3B memory-mapped by plain llama.cpp, is kept as `profiles/high-llama.json`.
+The high profile now names `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB) and `"engine": "bmoe"`. The earlier plan, the 4-bit Qwen3-30B-A3B memory-mapped by plain llama.cpp, was dropped on 2026-10-14 (`profiles/high-llama.json` removed): it was never run on a 12 GB phone and the 35B profile replaces it.
 
 - **Why.** An 18.6 GB file memory-mapped on a 12 GB phone leaves the kernel to page experts in and out on its own. BigMoeOnEdge (Apache-2.0) reads the experts a token needs itself and keeps recent ones in a cache it sizes to the phone. Another entry to the same bounty publishes much higher speeds with it than plain mmap gave us on the Redmi. None of that is measured by us yet.
 - **How it is attached.** The engine is a program, `bmoe-cli --session`, not a library. `BmoeEngine` starts it from the app's native library directory and talks to it over standard input and output (`BmoeProtocol`, from the engine's `docs/telemetry.md`). It implements the same `InferenceEngine` interface as `LlamaEngine`, so retrieval and UI code did not change. The planner still runs on llama.cpp in the app's own process.

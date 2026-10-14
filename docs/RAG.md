@@ -89,5 +89,5 @@ The first planner prompt asked for "search queries"; the 1.7B model paraphrased 
 ## Not verified
 
 - **Answer quality at scale.** 12 answers were read by hand. The 100-question benchmark is M6.
-- **The 1,000-token budget** of the high profile, and the 30B model, on any 12 GB phone (M4).
+- **The 1,000-token budget** of the high profile, and the 35B model, on any 12 GB phone (M4).
 - **Search time with a cold file cache.** Searches took 2 to 15 s; the slowest were the first after the 22.9 GB file was pushed.

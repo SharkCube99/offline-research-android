@@ -21,9 +21,9 @@ Against the 50 GB limit for the whole install:
 | Item | GB | Status |
 |---|---|---|
 | Knowledge index | 22.93 | measured |
-| Qwen3-30B-A3B Q4_K_M | 18.6 | size listed on Hugging Face; not downloaded yet |
+| Qwen3.6-35B-A3B UD-Q2_K_XL (high profile) | 12.3 | size listed on Hugging Face |
 | App | 0.03 | measured (debug APK, 31 MB) |
-| **Subtotal** | **41.6** | |
+| **Subtotal** | **35.3** | |
 | Planner model, further corpora | up to about 8 | not chosen or measured yet |
 
 ## What is and is not in the Wikipedia index

@@ -113,7 +113,7 @@ With the 1,000-token budget (first smoke run): a 1,096-token prompt took 188 s t
 
 ## Speed work on the Redmi 12 5G: thread pinning, thread counts, batch size, prefix caching (2026-10-02)
 
-This is M5-style tuning done before M4, on the low-end phone with the 4B model. It is not the M5 result: that has to be measured against an M4 baseline on a 12 GB phone with the 30B model.
+This is M5-style tuning done before M4, on the low-end phone with the 4B model. It is not the M5 result: that has to be measured against an M4 baseline on a 12 GB phone with the high-profile model (Qwen3.6-35B-A3B, 2-bit).
 
 Source: `docs/measurements/2026-10-02-23076RN4BI-t*.jsonl` and `.txt`, taken with `scripts/measure.sh`. Each configuration: restart the app, ask the same two questions over adb, answers capped at 64 tokens, airplane mode on, full 22.9 GB index, profile `low` (800 passage tokens), app 0.5.0-speed. "Reading" is prompt processing over the tokens actually processed (prompt tokens minus reused tokens); "writing" is generation.
 
@@ -164,17 +164,17 @@ The answerer reuses its fixed instructions, 171 tokens, which is 18% of a 927-to
 
 Each configuration is two questions, run once, on a phone that was warming up; differences of 10% are within the noise. Not tried: 4 pinned threads for reading, llama.cpp's polling and priority settings, an OpenMP or KleidiAI build, a smaller passage budget, and a smaller answerer model for the low tier.
 
-## M4: 30B on a 12 GB phone
+## M4: high profile on a 12 GB phone
 
 **Not measured.** No 12 GB phone has run the app. The procedure is in `docs/M4_RUNBOOK.md`. When it has been run, replace this paragraph with the filled-in template below. Do not fill in any cell that was not measured.
 
 ### Template
 
 ```markdown
-## M4: Qwen3-30B-A3B Q4_K_M on <phone model> (<RAM> GB), <date>
+## M4: Qwen3.6-35B-A3B UD-Q2_K_XL on <phone model> (<RAM> GB), <date>
 
-Source: `docs/measurements/<date>-<device>-stress-high-30b.md`, `.jsonl`, `.txt` and `.exits.jsonl`, taken with
-`scripts/stress.sh --profile high --label high-30b`. Airplane mode: <on/off, as printed in the .txt file>.
+Source: `docs/measurements/<date>-<device>-stress-high-35b.md`, `.jsonl`, `.txt` and `.exits.jsonl`, taken with
+`scripts/stress.sh --profile high --label high-35b`. Airplane mode: <on/off, as printed in the .txt file>.
 
 <paste the whole of the .md report here: the Result line, the setup lines, the table and the medians>
 
