@@ -1,0 +1,9 @@
+# Retry: v0.8.9 release APK, high profile, 35B model, Pixel_8_12GB (fresh device, 12.2 GB), 2026-10-14T16:28:44Z
+# Pushed and size-checked: Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf, Qwen3-1.7B-Q8_0.gguf, wikivoyage + 4 small packs.
+# Observed: model 'not found' until models/ and index/ were chmod 777 (created by adb shell as mode 770, owner shell).
+# Observed: after that, three starts (two after a clean reboot) ended with the app killed, reason LOW_MEMORY, 3.3 to 4.3 min in.
+# Sampled every 20 s in the last run: guest MemAvailable stayed near 10 GB; the engine (ndk_translation runner) grew 0.3 -> 2.2 GB by 240 s.
+# No native crash dump in these runs (unlike 2026-10-14-emulator-12gb-high-profile.log, SIGILL).
+
+          timestamp=2026-10-14 21:57:51.632 pid=1953 realUid=10229 packageUid=10229 definingUid=10229 user=0
+          process=app.offlineresearch reason=3 (LOW_MEMORY) subreason=0 (UNKNOWN) status=0

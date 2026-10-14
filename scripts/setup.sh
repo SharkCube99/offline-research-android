@@ -125,6 +125,20 @@ push_file() {
     echo "$name verified on device ($remote bytes)"
 }
 
+# open_dir SUBDIR: makes <files>/SUBDIR and lets the app read it. A folder made
+# here, rather than by the app, belongs to the shell user with mode 770, and on
+# a fresh Android 17 emulator the app then reported pushed files as "not found"
+# until the folder was opened up (docs/measurements/2026-10-14-emulator-12gb-35b-retry.log).
+# Done for folders that already exist too, so rerunning the script repairs them.
+# Some phones do not allow chmod here; that is not an error.
+open_dir() {
+    [ "$INTERNAL" -eq 0 ] || return 0
+    adb shell mkdir -p "$EXT_DIR/$1"
+    adb shell chmod 777 "$EXT_DIR/$1" >/dev/null 2>&1 || true
+}
+
+[ ${#MODELS[@]} -eq 0 ] || open_dir models
+[ ${#INDEXES[@]} -eq 0 ] || open_dir index
 for model in ${MODELS[@]+"${MODELS[@]}"}; do push_file "$model" models; done
 for db in ${INDEXES[@]+"${INDEXES[@]}"}; do push_file "$db" index; done
 

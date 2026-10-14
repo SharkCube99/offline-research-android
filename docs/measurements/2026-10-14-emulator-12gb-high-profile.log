@@ -1,0 +1,22 @@
+# v0.8.9 release APK on Pixel_8_12GB (Android 17, x86_64 with ARM translation, 12.2 GB), high profile, 2026-10-14T15:35:07Z
+# Pushed and size-checked: Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf, Qwen3-1.7B-Q8_0.gguf, all seven index files (setup.sh).
+# Result: profile chosen automatically; engine process crashed while loading the 35B model (SIGILL in the emulator's ARM translator).
+
+10-14 20:59:43.653  8301  8301 I OfflineResearch: profile: high (auto, 12.5 GB RAM)
+10-14 21:04:13.117  8301  8301 E OfflineResearch: app.offlineresearch.engine.EngineException: The engine stopped while loading /storage/emulated/0/Android/data/app.offlineresearch/files/models/Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf.
+
+DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:17/CP31.260618.005/15731206:user/dev-keys'
+DEBUG   : Guest architecture: 'arm64'
+DEBUG   : Process uptime: 266s
+DEBUG   : Executable: /system/bin/ndk_translation_program_runner_binfmt_misc_arm64
+DEBUG   : signal 4 (SIGILL), code -1 (SI_QUEUE), fault addr --------
+DEBUG   : backtrace:
+DEBUG   :       #00 pc 00000000000bdc35  /apex/com.android.runtime/lib64/bionic/libc.so (raise+165) (BuildId: 31d9c7e84272403b9dbdd97d6cb13ac7)
+DEBUG   :       #01 pc 00000000007d61bd  /system/lib64/libndk_translation.so (berberis::(anonymous namespace)::UndefinedInsnThunk(unsigned long)+13) (BuildId: 062a896d948cc468a865033a6bc04fa7)
+DEBUG   :       #02 pc 000000000001b537  /memfd:exec (deleted)
+DEBUG   : backtrace:
+DEBUG   :       #00 pc 00000000005a4a54  /data/app/~~NMxPlVBdA60rtvEdd260Bg==/app.offlineresearch-amgMwbLmbZZQq2Ie7S8X3A==/lib/arm64/libbmoe-cli.so (BuildId: b1f9cef45c6093c410862f61d01ed71a982b6638)
+DEBUG   :       #01 pc 0000000000514458  /data/app/~~NMxPlVBdA60rtvEdd260Bg==/app.offlineresearch-amgMwbLmbZZQq2Ie7S8X3A==/lib/arm64/libbmoe-cli.so (BuildId: b1f9cef45c6093c410862f61d01ed71a982b6638)
+DEBUG   :       #02 pc 0000000000516460  /data/app/~~NMxPlVBdA60rtvEdd260Bg==/app.offlineresearch-amgMwbLmbZZQq2Ie7S8X3A==/lib/arm64/libbmoe-cli.so (BuildId: b1f9cef45c6093c410862f61d01ed71a982b6638)
+DEBUG   :       #03 pc 0000000000516f98  /data/app/~~NMxPlVBdA60rtvEdd260Bg==/app.offlineresearch-amgMwbLmbZZQq2Ie7S8X3A==/lib/arm64/libbmoe-cli.so (BuildId: b1f9cef45c6093c410862f61d01ed71a982b6638)
+DEBUG   :       #04 pc 0000000000008018  /system/lib64/arm64/libnative_bridge_vdso.so (BuildId: 669de18a1b49081cead6374c9d053f94)
