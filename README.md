@@ -39,23 +39,32 @@ Other entries to the bounty report higher scores and faster answers on 12 GB pho
 
 ## Quick start without building
 
-A signed APK is attached to each [release](https://github.com/SharkCube99/offline-research-android/releases). You need a computer with `git`, `curl`, bash (Git Bash on Windows) and Android platform-tools (`adb`), and a phone with USB debugging on and about 32 GB free.
+You need a computer with `git`, `curl`, bash (Git Bash on Windows) and Android platform-tools (`adb`), and an arm64 phone with USB debugging on. Plug the phone in, unlock it, and run:
 
 ```bash
 git clone https://github.com/SharkCube99/offline-research-android.git    # scripts only; no submodules needed
 cd offline-research-android
-scripts/fetch_index.sh                                                    # 24.6 GB knowledge index (seven files)
-scripts/setup.sh --apk /path/to/offline-research-0.8.1.apk \
-                 --model /path/to/Qwen3-4B-Q4_K_M.gguf \
-                 --model /path/to/Qwen3-1.7B-Q8_0.gguf \
-                 --index data-pipeline/work/index
+scripts/quickstart.sh
 ```
 
-Then unlock the phone, turn on airplane mode and ask a question.
+That is the whole setup. The script reads the phone's memory and picks the models for it (Qwen3-4B under 10 GB, the 35B model from 10 GB), prints what it will download with the sizes, and asks before it starts. It then downloads the models and the 24.6 GB knowledge index, checks every file against its published SHA-256, installs the newest release APK, pushes everything over USB and starts the app. Run it again after an interruption: finished files are skipped and a partial download continues.
 
-The model files come from the pages listed under "Put it on a phone". For a 12 GB phone, also push `Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf` (12.3 GB, <https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF>); the app picks the high profile by itself when the phone reports 10 GB of RAM or more. The time this takes is mostly download and USB copy time.
+Then turn on airplane mode and ask a question.
 
-These steps were followed from an empty folder on 2026-10-06 with the published 0.8.1 APK: clone 4 s, APK download 14 s, five of the seven library files (385 MB) 135 s, install and copy to a blank Android emulator 67 s, and a cited answer in airplane mode 131 s after asking. The two large files (Wikipedia, 22.6 GB, and the places file, 1.6 GB) were not downloaded again for that run, and the emulator, which has 4 GB of memory, was given the 1.7B model as answerer. Log, including two failed attempts caused by the emulator: `docs/measurements/2026-10-06-stranger-test.log`.
+| Flag | What it does |
+|---|---|
+| `--dry-run` | Prints the plan and checks the download addresses; changes nothing. Works without a phone if you give `--tier low` or `--tier high`. |
+| `--core-only` | Skips the small packs and the city places (1.6 GB less; fewer kinds of question are answered). |
+| `--fast` | Also fetches the optional fast answerer (Ling-3.0-tiny, 4.6 GB); pick "Fast" in the app's Settings. |
+| `--apk FILE` | Installs this APK instead of the newest release. |
+| `--tier low\|high` | Overrides the choice made from the phone's memory. |
+| `--yes` | Does not ask before downloading. |
+
+You need about 32 GB free on the phone for the 4B setup and 39 GB for the 35B setup (the table under "Where it stands"), and as much again on the computer for the downloads, which are kept in `downloads/`.
+
+The steps the script runs are the ones below, so each can also be done by hand: `scripts/fetch_index.sh` for the index, then `scripts/setup.sh --apk ... --model ... --index ...`. The model files come from the pages listed under "Put it on a phone".
+
+`scripts/quickstart.sh` has been checked with `--dry-run` against the live download addresses, which confirmed the file names, sizes and checksums it will use; it has not yet been run end to end on a phone. The two commands it wraps (`fetch_index.sh`, then `setup.sh`) were followed from an empty folder on 2026-10-06 with the published 0.8.1 APK: clone 4 s, APK download 14 s, five of the seven library files (385 MB) 135 s, install and copy to a blank Android emulator 67 s, and a cited answer in airplane mode 131 s after asking. The two large files (Wikipedia, 22.6 GB, and the places file, 1.6 GB) were not downloaded again for that run, and the emulator, which has 4 GB of memory, was given the 1.7B model as answerer. Log, including two failed attempts caused by the emulator: `docs/measurements/2026-10-06-stranger-test.log`.
 
 ## Build it yourself
 

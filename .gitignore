@@ -15,3 +15,4 @@ keystore.properties
 .DS_Store
 data-pipeline/work/
 __pycache__/
+downloads/
