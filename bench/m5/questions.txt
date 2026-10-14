@@ -1,0 +1,13 @@
+# Fixed question list for scripts/m5_run.sh: general-knowledge questions from
+# data-pipeline/eval/queries.jsonl (the M2 retrieval test set), two or more per category.
+# Do not edit between a 'before' and an 'after' run: the prompts must be the same.
+What should I know about altitude sickness before trekking in Nepal?
+How do I prevent malaria when travelling?
+How do I treat a minor burn?
+What should I do if someone is choking?
+How can I start a fire without matches?
+How can I purify water in the wilderness?
+Why is the sky blue?
+What is photosynthesis?
+What is the difference between a virus and a bacterium?
+Who was the first person to walk on the Moon and when did it happen?

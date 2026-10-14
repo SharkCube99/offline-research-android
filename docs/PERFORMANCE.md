@@ -400,3 +400,7 @@ The released `offline-research-0.6.0.apk` replaced the debug build on the phone 
 - Low profile, "What causes the tides?": model loaded in 3.9 s, 547 prompt tokens read in 96.5 s, first word 113 s after asking, 47 tokens at 3.3 tok/s, one correct citation. In line with the debug build.
 - High profile: the BigMoeOnEdge engine started from the signed build and loaded the 12.3 GB model in about 26 s (log line "system info: BigMoeOnEdge, qwen35moe"). No question was asked in this check.
 - The phone asked for a tap to allow the install over USB; without it `adb install` fails with `INSTALL_FAILED_USER_RESTRICTED`.
+
+## M5: speed and quality on a 12 GB phone
+
+**Not measured.** There is no M4 baseline yet and no 12 GB phone has run the app. The procedure, the decision rules and the expert-cache design are in `docs/M5_PLAN.md`; the runner is `scripts/m5_run.sh` and the comparison `scripts/m5_compare.py`. The tuning done earlier on the 8 GB Redmi with the 4B model (section "Speed work on the Redmi 12 5G") is not the M5 result. Do not fill in any cell that was not measured.
